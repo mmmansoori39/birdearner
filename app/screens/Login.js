@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons'; // For Google and Social icons
+import { FontAwesome } from '@expo/vector-icons'; 
+import { Link } from 'expo-router'; 
 
-const LoginScreen = () => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  console.log("Checking login status...");
 
   return (
     <View style={styles.container}>
       {/* Logo */}
-      <Image source={require('./assets/logo.png')} style={styles.logo} />
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
 
       {/* App Name */}
       <Text style={styles.title}>BirdEARNER</Text>
@@ -41,14 +44,14 @@ const LoginScreen = () => {
       </TouchableOpacity>
 
       {/* Forget Password */}
-      <TouchableOpacity>
+      <Link href="/screens/ForgotPassword">
         <Text style={styles.linkText}>Forget Password</Text>
-      </TouchableOpacity>
+      </Link>
 
       {/* Create Account */}
-      <TouchableOpacity>
+      <Link href="/screens/Signup">
         <Text style={styles.linkText}>New Here? Create Your Account Here!</Text>
-      </TouchableOpacity>
+      </Link>
 
       {/* Google Login */}
       <TouchableOpacity style={styles.googleButton}>
@@ -90,7 +93,7 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    height: 50,
+    height: 44,
     backgroundColor: '#fff',
     borderRadius: 25,
     paddingHorizontal: 20,
@@ -141,4 +144,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default Login;

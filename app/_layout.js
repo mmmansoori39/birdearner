@@ -1,14 +1,14 @@
-import { View, Text } from "react-native";
-import React from "react";
-import LoginScreen from "./pages/Login";
+import { Stack } from "expo-router";
 
 const RootLayout = () => {
   return (
-    <View>
-      <Text>
-        <LoginScreen />
-      </Text>
-    </View>
+    <Stack >
+      <Stack.Screen name="screens/Intro" options={{headerShown: false}} />
+      <Stack.Screen name="screens/Login" options={{headerShown: false}} />
+      <Stack.Screen name="screens/Signup" options={{headerShown: false}} />
+      <Stack.Screen name="screens/DescribeRole" options={{headerShown: false}} />
+      <Stack.Screen name="screens/Home" options={{headerShown: false}} />
+    </Stack>
   );
 };
 
