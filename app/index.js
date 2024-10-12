@@ -9,7 +9,7 @@ const Intro = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace('/screens/Login');
-    }, 2000);
+    }, 700);
 
     return () => clearTimeout(timer);
   }, [router]);
