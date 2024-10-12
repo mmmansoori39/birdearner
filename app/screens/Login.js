@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons'; 
-import { Link } from 'expo-router'; 
+import { Link, useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext'; // Import useAuth to access authentication
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login, user } = useAuth(); // Use login and user from AuthContext
+  const router = useRouter();
 
-  console.log("Checking login status...");
+  const handleLogin = async () => {
+    try {
+      await login(email, password);
+      router.push('/screens/Home'); // Redirect to home if login is successful
+    } catch (error) {
+      console.error("Login failed", error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      router.push('/screens/Home'); // Redirect to home if user is already logged in
+    }
+  }, [user]);
 
   return (
     <View style={styles.container}>
@@ -39,7 +55,7 @@ const Login = () => {
       />
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.loginButton}>
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Log In</Text>
       </TouchableOpacity>
 

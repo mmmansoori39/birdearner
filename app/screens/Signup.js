@@ -2,28 +2,21 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
 import { account } from "../lib/appwrite"; // Import account from appwrite.js
 import { ID } from "react-native-appwrite";
+import { useAuth } from '../context/AuthContext'; // Import useAuth to access authentication
 
 const Signup = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { user } = useAuth(); // Use login and user from AuthContext
+  const router = useRouter();
 
-  
   useEffect(() => {
-    // Check if the user is already logged in
-    const checkLoginStatus = async () => {
-      try {
-        const user = await account.get(); // Get the currently logged-in user
-        console.log("User is logged in:", user);
-        // Redirect to the home screen if the user is already logged in
-        router.push('/screens/Home');
-      } catch (error) {
-        console.log("User not logged in");
-      }
-    };
-    checkLoginStatus();
-  }, []);
+    if (user) {
+      router.push('/screens/Home'); // Redirect to home if user is already logged in
+    }
+  }, [user]);
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
@@ -40,7 +33,7 @@ const Signup = () => {
       console.log(result);
 
       
-      const session = await account.createEmailPasswordSession(email, password);
+      await account.createEmailPasswordSession(email, password);
 
       // Redirect to Home screen after successful resigtration
       router.push('/screens/Home');
