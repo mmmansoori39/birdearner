@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } fro
 import { account } from "../lib/appwrite"; // Import account from appwrite.js
 import { ID } from "react-native-appwrite";
 import { useAuth } from '../context/AuthContext'; // Import useAuth to access authentication
+import { useRouter } from "expo-router";
 
 const Signup = () => {
   const [fullName, setFullName] = useState("");

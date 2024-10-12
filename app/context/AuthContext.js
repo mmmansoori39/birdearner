@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { account } from '../lib/appwrite'; // Import Appwrite account instance
 import { Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 
 // Create the context
 const AuthContext = createContext();
@@ -9,6 +10,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Function to check the user's authentication status
   const checkAuthStatus = async () => {
@@ -39,6 +41,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await account.deleteSession('current');
+      router.push('/screens/Home'); // Redirect to home if user is already logged in
       setUser(null);
       Alert.alert("Logout Success", "You have been logged out successfully!");
     } catch (error) {
