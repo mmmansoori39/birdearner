@@ -9,6 +9,22 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  
+  useEffect(() => {
+    // Check if the user is already logged in
+    const checkLoginStatus = async () => {
+      try {
+        const user = await account.get(); // Get the currently logged-in user
+        console.log("User is logged in:", user);
+        // Redirect to the home screen if the user is already logged in
+        router.push('/screens/Home');
+      } catch (error) {
+        console.log("User not logged in");
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
   const handleSignup = async () => {
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
@@ -23,6 +39,11 @@ const Signup = () => {
       // You can also log the result or navigate the user to the login screen
       console.log(result);
 
+      
+      const session = await account.createEmailPasswordSession(email, password);
+
+      // Redirect to Home screen after successful resigtration
+      router.push('/screens/Home');
     } catch (error) {
       Alert.alert("Error", error.message);
       console.error("Signup error: ", error);
