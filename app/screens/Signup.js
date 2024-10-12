@@ -15,7 +15,7 @@ const Signup = () => {
 
   useEffect(() => {
     if (user) {
-      router.push('/screens/Home'); // Redirect to home if user is already logged in
+      router.replace('/screens/Home'); // Redirect to home if user is already logged in
     }
   }, [user]);
 

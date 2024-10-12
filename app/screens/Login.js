@@ -13,7 +13,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       await login(email, password);
-      router.push('/screens/Home'); // Redirect to home if login is successful
+      router.replace('/screens/Home'); // Redirect to home if login is successful
     } catch (error) {
       console.error("Login failed", error);
     }
