@@ -1,13 +1,7 @@
-import { Link } from "expo-router";
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
+import { account } from "../lib/appwrite"; // Import account from appwrite.js
+import { ID } from "react-native-appwrite";
 
 const Signup = () => {
   const [fullName, setFullName] = useState("");
@@ -15,49 +9,64 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSignup = () => {
-    // Implement signup logic here
+  const handleSignup = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    try {
+      // Create a new user with email and password
+      const result = await account.create(ID.unique(), email, password, fullName);
+      Alert.alert("Success", "User registered successfully!");
+
+      // You can also log the result or navigate the user to the login screen
+      console.log(result);
+
+    } catch (error) {
+      Alert.alert("Error", error.message);
+      console.error("Signup error: ", error);
+    }
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.heading}>Register</Text>
 
-    <Text style={styles.heading} >Register</Text>
-
-      {/* Full Name Label and Input */}
+      {/* Full Name Input */}
       <Text style={styles.label}>Full Name</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
+        placeholder="Enter your full name"
         value={fullName}
         onChangeText={setFullName}
       />
 
-      {/* Email Label and Input */}
+      {/* Email Input */}
       <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
+        placeholder="Enter your email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
       />
 
-      {/* Password Label and Input */}
-      <Text style={styles.label}>Mobile Number</Text>
+      {/* Password Input */}
+      <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
+        placeholder="Enter your password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry={true}
       />
 
-      {/* Confirm Password Label and Input */}
-      <Text style={styles.label}>Password</Text>
+      {/* Confirm Password Input */}
+      <Text style={styles.label}>Confirm Password</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
+        placeholder="Confirm your password"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry={true}
@@ -65,14 +74,8 @@ const Signup = () => {
 
       {/* Signup Button */}
       <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-        <Link href="/screens/DescribeRole" ><Text style={styles.signupButtonText}>Sign Up</Text></Link>
+        <Text style={styles.signupButtonText}>Sign Up</Text>
       </TouchableOpacity>
-
-      <Link href="/screens/Login"style={styles.linkText} >
-        <Text >Already have an account? Login</Text>
-      </Link>
-
-      <Image source={require("../assets/logo.png")} style={styles.logo} />
     </View>
   );
 };
@@ -83,14 +86,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#4B0082",
     padding: 20,
     justifyContent: "center",
-  },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
-    position: "absolute",
-    bottom: 10,
-    left: "44%",
   },
   label: {
     fontSize: 18,
@@ -108,17 +103,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 16,
   },
-  linkText: {
-    color: "white",
-    marginVertical: 15,
-    fontSize: 14,
-    textDecorationLine: "underline",
-    margin: "auto"
-  },
   signupButton: {
     width: "100%",
     height: 50,
-    backgroundColor: "#6A0DAD", // Dark purple for button
+    backgroundColor: "#6A0DAD",
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
@@ -134,8 +122,7 @@ const styles = StyleSheet.create({
     color: "white",
     marginBottom: 32,
     textAlign: "center",
-    fontWeight: "normal",
-  }
+  },
 });
 
 export default Signup;
