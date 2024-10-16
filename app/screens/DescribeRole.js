@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Import from the new package
+import { router } from 'expo-router';
 
 const DescribeRole = () => {
   const [role, setRole] = useState('');
@@ -118,7 +119,7 @@ const DescribeRole = () => {
 
       {/* Next Button */}
       <TouchableOpacity style={styles.nextButton}>
-        <Text style={styles.nextButtonText}>Next</Text>
+        <Text style={styles.nextButtonText} onPress={() => router.push("/screens/TellUsAboutYou")} >Next</Text>
       </TouchableOpacity>
     </View>
   );
@@ -175,14 +176,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nextButton: {
-    width: "35%",
-    height: 44,
+    width: "32%",
+    height: 40,
     backgroundColor: "#fff", // Dark purple for button
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
-    marginLeft: 225
+    marginLeft: 230
   },
   nextButtonText: {
     color: '#6A0DAD',

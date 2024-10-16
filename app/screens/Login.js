@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { FontAwesome } from '@expo/vector-icons'; 
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext'; // Import useAuth to access authentication
+import { Toast } from 'react-native-toast-message/lib/src/Toast'; // Import Toast
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,9 +14,21 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       await login(email, password);
+      Toast.show({
+        type: 'success',
+        text1: 'Login Successful!',
+        text2: 'Redirecting to Home...',
+        position: 'bottom',
+      });
       router.replace('/screens/Home'); // Redirect to home if login is successful
     } catch (error) {
-      console.error("Login failed", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: error.message || 'An unexpected error occurred',
+        position: 'bottom',
+      });
+      console.error('Login failed', error);
     }
   };
 
@@ -41,7 +54,7 @@ const Login = () => {
         placeholderTextColor="#999"
         keyboardType="email-address"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={setEmail} 
       />
 
       {/* Password Input */}
@@ -80,6 +93,9 @@ const Login = () => {
         <FontAwesome name="instagram" size={24} color="white" style={styles.socialIcon} />
         <FontAwesome name="facebook" size={24} color="white" style={styles.socialIcon} />
       </View>
+
+      {/* Toast container for displaying messages */}
+      <Toast />
     </View>
   );
 };

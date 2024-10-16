@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await account.deleteSession('current');
-      router.push('/screens/Home'); // Redirect to home if user is already logged in
+      router.push('/screens/Login'); // Redirect to home if user is already logged in
       setUser(null);
       Alert.alert("Logout Success", "You have been logged out successfully!");
     } catch (error) {
