@@ -83,7 +83,7 @@ const TellUsAboutYouScreen = () => {
   };
 
   const skipScreen = () => {
-    router.push('/screens/Home'); // Redirect to home screen when skip is clicked
+    router.push("/screens/Home"); // Redirect to home screen when skip is clicked
   };
 
   return (
@@ -186,18 +186,17 @@ const TellUsAboutYouScreen = () => {
 
       {/* Navigation Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.nextButton}>
-          <Text style={styles.nextButtonText} onPress={() => router.back()}>
-            Previous
-          </Text>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.nextButtonText}>Previous</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton}>
-          <Text
-            style={styles.nextButtonText}
-            onPress={() => router.push("/screens/Portfolio")}
-          >
-            Next
-          </Text>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => router.push("/screens/Portfolio")}
+        >
+          <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -223,15 +222,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   skipButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     right: 20,
     padding: 10,
     borderRadius: 8,
   },
   skipButtonText: {
-    color: '#ffffff',
-    fontWeight: '350',
+    color: "#ffffff",
+    fontWeight: "350",
     fontSize: 20,
   },
   smallInput: {

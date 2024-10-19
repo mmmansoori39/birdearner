@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext"; // Import the auth context to get the user data
+import { router } from "expo-router";
 
 const HomeScreen = () => {
   const { user } = useAuth(); // Get the user object from context
@@ -15,7 +16,9 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safeContainer}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.notificationIcon} onPress={useAuth().logout} >
+        <TouchableOpacity style={styles.notificationIcon} onPress={() => {
+          router.push("/screens/Notification")
+        }} >
           <MaterialIcons name="notifications" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.welcomeText}>Welcome Back</Text>

@@ -1,27 +1,33 @@
 import React, { useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext'; 
 
 const Intro = () => {
-
-  const router = useRouter()
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push('Login');
-    }, 2000);
+    if (loading) {
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [router]);
+    if (user) {
+      router.push('/screens/Home'); 
+    } else {
+      router.push('/screens/Login');
+    }
+  }, [loading, user, router]);
+
   return (
     <View style={styles.container}>
       {/* Logo Image */}
       <Image
-        source={require('../assets/logo.png')} 
+        source={require('../assets/logo.png')}
         style={styles.logo}
         resizeMode="contain"
       />
-      
+
       {/* Heading */}
       <Text style={styles.heading}>BirdEarner</Text>
 
