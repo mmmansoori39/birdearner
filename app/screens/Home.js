@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     color: "#3b006b",
   },
   notificationIcon: {
-    backgroundColor: "#ff9800",
+    backgroundColor: "#3b006b",
     padding: 10,
     borderRadius: 50,
     position: "absolute",
@@ -151,8 +151,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#3b006b",
     paddingVertical: 8,
     paddingHorizontal: 10,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
     textAlign: "center",
   },
   statsContainer: {
@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     flexWrap: "wrap",
+    borderBottomRightRadius: 20,
   },
   statItem: {
     alignItems: "center",
@@ -180,11 +181,11 @@ const styles = StyleSheet.create({
   earningsContainer: {
     backgroundColor: "#ffffff",
     padding: 10,
-    borderRadius: 10,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 5,
     justifyContent: "space-between",
+    borderBottomRightRadius: 20,
   },
   earningItem: {
     alignItems: "center",
@@ -205,6 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     flexDirection: "row",
     justifyContent: "space-between",
+    borderBottomRightRadius: 20,
   },
   orderItem: {
     alignItems: "center",
@@ -227,6 +229,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flexDirection: "row",
     alignItems: "center",
+    borderBottomRightRadius: 20,
   },
   whatsNewText: {
     fontSize: 16,

@@ -7,30 +7,29 @@ import { useAuth } from "./context/AuthContext";
 import HomeScreen from "./screens/Home";
 import LoginScreen from "./screens/Login";
 import LeaderboardScreen from "./screens/Leaderboard";
-import IntroScreen from "./screens/Intro";
 import MarketplaceScreen from "./screens/Marketplace";
 import JobDescriptionScreen from "./screens/JobDescription";
 import SettingsScreen from "./screens/Settings";
+import IntroScreen from "./screens/Intro";
 
-// Create the Tab Navigator
 const Tab = createBottomTabNavigator();
 
 export default function App() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <IntroScreen />; 
+    return <IntroScreen />;
   }
 
   return user ? (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false, 
-        tabBarShowLabel: false, 
+        headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: "#370F54", 
-          borderTopWidth: 0, 
-          height: 56, 
+          backgroundColor: "#370F54",
+          borderTopWidth: 0,
+          height: 56,
         },
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -56,7 +55,6 @@ export default function App() {
               iconName = "circle";
           }
 
-      
           return (
             <View style={focused ? styles.activeTab : styles.inactiveTab}>
               {focused ? (
@@ -74,15 +72,34 @@ export default function App() {
         },
       })}
     >
-  
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
-      <Tab.Screen name="Marketplace" component={MarketplaceScreen} />
-      <Tab.Screen name="Profile" component={JobDescriptionScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ unmountOnBlur: false }}  // Retains the state when navigating between tabs
+      />
+      <Tab.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{ unmountOnBlur: false }}  // Keeps screen state intact
+      />
+      <Tab.Screen
+        name="Marketplace"
+        component={MarketplaceScreen}
+        options={{ unmountOnBlur: false }}  // Ensures state persistence
+      />
+      <Tab.Screen
+        name="Profile"
+        component={JobDescriptionScreen}
+        options={{ unmountOnBlur: false }}  // Screen won't reset
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ unmountOnBlur: false }}  // Keeps settings state intact
+      />
     </Tab.Navigator>
   ) : (
-    <LoginScreen /> 
+    <LoginScreen />
   );
 }
 
@@ -92,7 +109,6 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    color: "#fff"
   },
   inactiveTab: {
     justifyContent: "center",
