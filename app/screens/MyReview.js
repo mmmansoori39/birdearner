@@ -12,61 +12,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "expo-router";
 import ReviewCard from "../components/ReviewCard";
+import { reviews } from "../assets/data";
 
 export default function ReviewsScreen() {
   const navigation = useNavigation();
 
-  // Dummy data for reviews
-  const reviews = [
-    {
-      reviewerName: "Josaph Niloy",
-      reviewerLocation: "United States of America",
-      starRating: 5,
-      reviewText: "Lorem Ipsum is simply dummy text of the printing industry...",
-    },
-    {
-      reviewerName: "Alina Broke",
-      reviewerLocation: "Canada",
-      starRating: 5,
-      reviewText: "Lorem Ipsum has been the industry's standard dummy text...",
-    },
-    {
-        reviewerName: "Josaph Niloy",
-        reviewerLocation: "United States of America",
-        starRating: 5,
-        reviewText: "Lorem Ipsum is simply dummy text of the printing industry...",
-      },
-      {
-        reviewerName: "Alina Broke",
-        reviewerLocation: "Canada",
-        starRating: 5,
-        reviewText: "Lorem Ipsum has been the industry's standard dummy text...",
-      },
-      {
-        reviewerName: "Josaph Niloy",
-        reviewerLocation: "United States of America",
-        starRating: 5,
-        reviewText: "Lorem Ipsum is simply dummy text of the printing industry...",
-      },
-      {
-        reviewerName: "Alina Broke",
-        reviewerLocation: "Canada",
-        starRating: 5,
-        reviewText: "Lorem Ipsum has been the industry's standard dummy text...",
-      },
-      {
-        reviewerName: "Josaph Niloy",
-        reviewerLocation: "United States of America",
-        starRating: 5,
-        reviewText: "Lorem Ipsum is simply dummy text of the printing industry...",
-      },
-      {
-        reviewerName: "Alina Broke",
-        reviewerLocation: "Canada",
-        starRating: 5,
-        reviewText: "Lorem Ipsum has been the industry's standard dummy text...",
-      },
-  ];
 
   return (
     <SafeAreaView>
