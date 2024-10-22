@@ -282,6 +282,7 @@ const styles = StyleSheet.create({
   priorityButton: {
     width: "100%",
     padding: 10,
+    paddingHorizontal: 20,
     borderRadius: 34,
     marginBottom: 12,
     alignItems: "baseline",
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
   priorityText: {
     color: "#fff",
     fontWeight: "semibold",
-    fontSize: 24,
+    fontSize: 20,
   },
   prioritySubText: {
     color: "#fff",
