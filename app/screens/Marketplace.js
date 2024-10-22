@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   },
   allJobsText: {
     color: "#fff",
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "semibold",
   },
 });
