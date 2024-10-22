@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "normal",
     textAlign: "center",
     marginBottom: 15,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   priorityText: {
     color: "#fff",
     fontWeight: "semibold",
-    fontSize: 24,
+    fontSize: 22,
   },
   prioritySubText: {
     color: "#fff",

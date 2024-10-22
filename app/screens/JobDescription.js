@@ -5,10 +5,11 @@ import { FontAwesome } from '@expo/vector-icons';
 const JobDescriptionScreen = () => {
   return (
     <ScrollView style={styles.container}>
+      <ScrollView style={styles.scrollContent} >
       {/* Job Header */}
       <View style={styles.jobHeader}>
         <Image
-          source={{ uri: 'https://via.placeholder.com/60' }}
+          source={require("../assets/profile.png")}
           style={styles.avatar}
         />
         <View style={styles.jobInfo}>
@@ -69,6 +70,7 @@ const JobDescriptionScreen = () => {
       {/* Report Job Link */}
       <Text style={styles.reportText}>Report this job</Text>
     </ScrollView>
+    </ScrollView>
   );
 };
 
@@ -78,16 +80,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 20,
-    marginTop: 20
+    marginTop: 30
+  },
+  scrollContent: {
+    padding: 20,
   },
   jobHeader: {
     flexDirection: 'row',
     marginBottom: 20,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     marginRight: 20,
   },
   jobInfo: {

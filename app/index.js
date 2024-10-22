@@ -8,7 +8,7 @@ import HomeScreen from "./screens/Home";
 import LoginScreen from "./screens/Login";
 import LeaderboardScreen from "./screens/Leaderboard";
 import MarketplaceScreen from "./screens/Marketplace";
-import JobDescriptionScreen from "./screens/JobDescription";
+import ProfileStack from "./stacks/ProfileStack";
 import SettingsScreen from "./screens/Settings";
 import IntroScreen from "./screens/Intro";
 
@@ -75,27 +75,27 @@ export default function App() {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ unmountOnBlur: false }}  // Retains the state when navigating between tabs
+        options={{ unmountOnBlur: false }}
       />
       <Tab.Screen
         name="Leaderboard"
         component={LeaderboardScreen}
-        options={{ unmountOnBlur: false }}  // Keeps screen state intact
+        options={{ unmountOnBlur: false }}
       />
       <Tab.Screen
         name="Marketplace"
         component={MarketplaceScreen}
-        options={{ unmountOnBlur: false }}  // Ensures state persistence
+        options={{ unmountOnBlur: false }}
       />
       <Tab.Screen
         name="Profile"
-        component={JobDescriptionScreen}
-        options={{ unmountOnBlur: false }}  // Screen won't reset
+        component={ProfileStack}
+        options={{ unmountOnBlur: false }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{ unmountOnBlur: false }}  // Keeps settings state intact
+        options={{ unmountOnBlur: false }}
       />
     </Tab.Navigator>
   ) : (
