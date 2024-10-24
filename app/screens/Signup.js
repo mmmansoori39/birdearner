@@ -1,55 +1,47 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
-import { account } from "../lib/appwrite"; // Import account from appwrite.js
+// Updated Signup.js
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { account } from "../lib/appwrite";
 import { ID } from "react-native-appwrite";
-import { useAuth } from '../context/AuthContext'; // Import useAuth to access authentication
-import { useRouter } from "expo-router";
-import Toast from 'react-native-toast-message'; // Import Toast for notifications
+import { useLocalSearchParams, useRouter, useSearchParams } from "expo-router";
+import Toast from 'react-native-toast-message';
 
 const Signup = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { user } = useAuth(); // Use login and user from AuthContext
   const router = useRouter();
-
-  useEffect(() => {
-    if (user) {
-      router.replace('/screens/Home'); // Redirect to home if user is already logged in
-    }
-  }, [user]);
+  const { role } = useLocalSearchParams();
 
   const showToast = (type, text1, text2) => {
     Toast.show({
-      type: type,  // 'success' | 'error' | 'info'
-      text1: text1,
-      text2: text2,
-      position: 'bottom'
+      type,
+      text1,
+      text2,
+      position: 'top'
     });
   };
 
   const handleSignup = async () => {
+    router.push("/screens/DescribeRole");
     // if (password !== confirmPassword) {
     //   showToast('error', 'Error', 'Passwords do not match');
     //   return;
     // }
 
-    router.push('/screens/DescribeRole');
-
     // try {
-    //   // Create a new user with email and password
     //   const result = await account.create(ID.unique(), email, password, fullName);
     //   showToast('success', 'Success', 'User registered successfully!');
-
-    //   // Log the result or navigate the user to the home screen
-    //   console.log(result);
-
-    //   // Automatically log the user in after registration
+      
     //   await account.createEmailPasswordSession(email, password);
 
-    //   // Redirect to Home screen after successful registration
-    //   router.push('/screens/TellUsAboutYou');
+    //   // Redirect based on role
+    //   if (role === "client") {
+    //     router.push("/screens/TellUsAboutYou");
+    //   } else {
+    //     router.push("/screens/DescribeRole");
+    //   }
     // } catch (error) {
     //   if (error.code === 409) {
     //     showToast('error', 'Signup Failed', 'User with this email already exists.');

@@ -164,14 +164,14 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#fff",
-    borderRadius: 8,
+    borderRadius: 20,
     paddingHorizontal: 10,
     marginBottom: 20,
     height: 44,
   },
   dropdown: {
     backgroundColor: "#fff",
-    borderRadius: 8,
+    borderRadius: 20,
     marginBottom: 20,
     height: 44,
   },

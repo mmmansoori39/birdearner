@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const notificationsData = [
   {
@@ -200,10 +201,10 @@ const NotificationScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 16,
+    // flex: 1,
+    // padding: 16,
     backgroundColor: '#fff',
-    marginTop: 20
+    // marginTop: 20
   },
   title: {
     fontSize: 24,

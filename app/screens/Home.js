@@ -7,17 +7,18 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { useAuth } from "../context/AuthContext"; // Import the auth context to get the user data
-import { router } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { useNavigation } from "expo-router";
 
 const HomeScreen = () => {
-  const { user } = useAuth(); // Get the user object from context
+  const { user, logout } = useAuth();
+  const navigation = useNavigation()
 
   return (
     <SafeAreaView style={styles.safeContainer}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.notificationIcon} onPress={() => {
-          router.push("/screens/Notification")
+          navigation.navigate("Notification")
         }} >
           <MaterialIcons name="notifications" size={24} color="#fff" />
         </TouchableOpacity>
@@ -103,7 +104,9 @@ const HomeScreen = () => {
         <View style={styles.whatsNewContainer}>
           {/* You can add new content here */}
           <Text style={styles.whatsNewText}>Enjoy Earning</Text>
-          <TouchableOpacity style={styles.chatIcon}>
+          <TouchableOpacity style={styles.chatIcon} onPress={() => {
+            logout()
+          }} >
             <FontAwesome name="comments" size={24} color="#fff" />
           </TouchableOpacity>
         </View>

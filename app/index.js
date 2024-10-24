@@ -4,13 +4,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { View, StyleSheet } from "react-native";
 import { useAuth } from "./context/AuthContext";
-import HomeScreen from "./screens/Home";
 import LoginScreen from "./screens/Login";
 import LeaderboardScreen from "./screens/Leaderboard";
 import MarketplaceScreen from "./screens/Marketplace";
 import ProfileStack from "./stacks/ProfileStack";
 import SettingsScreen from "./screens/Settings";
 import IntroScreen from "./screens/Intro";
+import HomeStack from "./stacks/HomeStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -74,7 +74,7 @@ export default function App() {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomeStack}
         options={{ unmountOnBlur: false }}
       />
       <Tab.Screen
