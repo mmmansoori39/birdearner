@@ -1,10 +1,20 @@
-// Updated Signup.js
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import { account } from "../lib/appwrite";
 import { ID } from "react-native-appwrite";
-import { useLocalSearchParams, useRouter, useSearchParams } from "expo-router";
-import Toast from 'react-native-toast-message';
+import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
+
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(String(email).toLowerCase());
+};
 
 const Signup = () => {
   const [fullName, setFullName] = useState("");
@@ -12,46 +22,54 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
-  const { role } = useLocalSearchParams();
 
   const showToast = (type, text1, text2) => {
     Toast.show({
       type,
       text1,
       text2,
-      position: 'top'
+      position: "top",
     });
   };
 
   const handleSignup = async () => {
-    router.push("/screens/DescribeRole");
-    // if (password !== confirmPassword) {
-    //   showToast('error', 'Error', 'Passwords do not match');
-    //   return;
-    // }
+    if (!email || !password || !fullName) {
+      showToast("info", "Warning", "All fields are required");
+      return;
+    }
+    if (!validateEmail(email)) {
+      showToast("error", "Error", "Please enter a valid email address");
+      return;
+    }
+    if (password !== confirmPassword) {
+      showToast("error", "Error", "Passwords do not match");
+      return;
+    }
 
-    // try {
-    //   const result = await account.create(ID.unique(), email, password, fullName);
-    //   showToast('success', 'Success', 'User registered successfully!');
-      
-    //   await account.createEmailPasswordSession(email, password);
+    try {
+      await account.create(ID.unique(), email, password, fullName);
+      showToast("success", "Success", "User registered successfully!");
 
-    //   // Redirect based on role
-    //   if (role === "client") {
-    //     router.push("/screens/TellUsAboutYou");
-    //   } else {
-    //     router.push("/screens/DescribeRole");
-    //   }
-    // } catch (error) {
-    //   if (error.code === 409) {
-    //     showToast('error', 'Signup Failed', 'User with this email already exists.');
-    //   } else if (error.code === 400) {
-    //     showToast('error', 'Signup Failed', 'Invalid email or password.');
-    //   } else {
-    //     showToast('error', 'Signup Failed', 'An unexpected error occurred.');
-    //   }
-    //   console.error("Signup error: ", error);
-    // }
+      router.push({
+        pathname: "/screens/DescribeRole",
+        params: {
+          fullName,
+          email,
+          password,
+        },
+      });
+    } catch (error) {
+      if (error.code === 409) {
+        showToast(
+          "error",
+          "Signup Failed",
+          "User with this email already exists."
+        );
+      } else {
+        showToast("error", "Signup Failed", "An unexpected error occurred.");
+      }
+      console.error("Signup error: ", error);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,18 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker"; // Import from the new package
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import {
+  account,
+  databases,
+  appwriteConfig,
+} from "../lib/appwrite";
+import Toast from "react-native-toast-message";
+import { Picker } from "@react-native-picker/picker";
+import { ID } from "react-native-appwrite";
 
 const DescribeRole = () => {
-  const [role, setRole] = useState("");
+  const { fullName, email, password } = useLocalSearchParams();
   const [qualification, setQualification] = useState("");
   const [experience, setExperience] = useState("");
   const [heading, setHeading] = useState("");
@@ -19,6 +26,7 @@ const DescribeRole = () => {
   const [zipCode, setZipCode] = useState("");
   const [country, setCountry] = useState("");
   const [roles, setRoles] = useState([]);
+  const [role, setRole] = useState("");
 
   const addRole = () => {
     if (role) {
@@ -26,6 +34,82 @@ const DescribeRole = () => {
       setRole("");
     }
   };
+
+  const showToast = (type, message) => {
+    Toast.show({
+      type,
+      text1: type === "success" ? "Success" : "Error",
+      text2: message,
+    });
+  };
+
+  const validateForm = () => {
+    if (
+      !roles.length ||
+      !qualification ||
+      !experience ||
+      !heading ||
+      !city ||
+      !state ||
+      !zipCode ||
+      !country
+    ) {
+      showToast("info", "All fields are required.");
+      return false;
+    }
+    return true;
+  };
+
+  const authenticateUser = async () => {
+    try {
+      const session = await account.getSession("current");
+      return session;
+    } catch (error) {
+      console.log(error)
+      await account.createEmailSession(email, password);
+    }
+  };
+
+  const saveFreelancerDetails = async () => {
+    if (!validateForm()) return;
+  
+    try {
+      await authenticateUser();
+      const user = await account.get(); 
+      console.log("Authenticated User:", user); 
+  
+      const userId = user.$id;
+  
+      // Create the document
+      const document = await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        ID.unique(),
+        {
+          full_name: fullName,
+          email: email,
+          password: password,
+          role_designation: roles.join(", "),
+          highest_qualification: qualification,
+          experience: parseInt(experience),
+          profile_heading: heading,
+          city,
+          state,
+          zipcode: zipCode,
+          country,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      );
+  
+      showToast("success", "Freelancer details saved successfully.");
+      router.push("/screens/TellUsAboutYou");
+    } catch (error) {
+      console.error("Error saving details:", error);
+      showToast("error", `Failed to save freelancer details: ${error.message}`);
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -54,7 +138,7 @@ const DescribeRole = () => {
         <Text style={styles.addMoreRole}>+ Add 1 more role</Text>
       </TouchableOpacity>
 
-      {/* Highest Qualification */}
+      {/* Qualification */}
       <Text style={styles.label}>Highest Qualification</Text>
       <View style={styles.dropdown}>
         <Picker
@@ -78,7 +162,7 @@ const DescribeRole = () => {
         onChangeText={setExperience}
       />
 
-      {/* Heading on your profile */}
+      {/* Profile Heading */}
       <Text style={styles.label}>Heading on your profile</Text>
       <TextInput
         style={styles.input}
@@ -137,10 +221,12 @@ const DescribeRole = () => {
       {/* Next Button */}
       <TouchableOpacity
         style={styles.nextButton}
-        onPress={() => router.push("/screens/TellUsAboutYou")}
+        onPress={saveFreelancerDetails}
       >
         <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
+
+      <Toast />
     </View>
   );
 };

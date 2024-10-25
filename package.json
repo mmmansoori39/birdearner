@@ -25,6 +25,7 @@
     "expo-image-picker": "~15.0.7",
     "expo-linear-gradient": "~13.0.2",
     "expo-linking": "~6.3.1",
+    "expo-location": "~17.0.1",
     "expo-router": "~3.5.23",
     "expo-status-bar": "~1.12.1",
     "nativewind": "^2.0.11",
@@ -41,8 +42,7 @@
     "react-native-tailwindcss": "^1.1.11",
     "react-native-toast-message": "^2.2.1",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-vector-icons": "^10.2.0",
-    "expo-location": "~17.0.1"
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
