@@ -38,3 +38,4 @@ yarn-error.*
 
 .env
 %ProgramData%
+package-lock.json
