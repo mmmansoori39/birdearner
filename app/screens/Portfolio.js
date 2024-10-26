@@ -1,20 +1,33 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, Button, StyleSheet } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
-import Checkbox from 'expo-checkbox'; // Use checkbox for the agreements
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import Checkbox from "expo-checkbox"; // Use checkbox for the agreements
+import { useNavigation } from "@react-navigation/native"; // For navigation control
 
 const PortfolioScreen = () => {
   const [portfolioImages, setPortfolioImages] = useState([null, null, null]); // For 3 portfolio slots
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeTnC, setAgreeTnC] = useState(false);
   const router = useRouter();
+  const navigation = useNavigation(); // Using navigation for tab-based navigation
 
   // Function to handle image upload
   const uploadPortfolioImage = async (index) => {
-    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    let permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
-      Alert.alert("Permission required", "You need to grant permission to access your photos.");
+      Alert.alert(
+        "Permission required",
+        "You need to grant permission to access your photos."
+      );
       return;
     }
 
@@ -34,22 +47,28 @@ const PortfolioScreen = () => {
 
   const handleSubmit = () => {
     if (!agreeTerms || !agreeTnC) {
-      Alert.alert("Error", "You need to agree to the terms and conditions before proceeding.");
+      Alert.alert(
+        "Error",
+        "You need to agree to the terms and conditions before proceeding."
+      );
       return;
     }
 
     if (portfolioImages.every((img) => img === null)) {
-      Alert.alert("Portfolio Missing", "Please upload at least one portfolio image.");
+      Alert.alert(
+        "Portfolio Missing",
+        "Please upload at least one portfolio image."
+      );
       return;
     }
 
     // Proceed with submission
     Alert.alert("Success", "Portfolio submitted successfully!");
-    router.push('/screens/Home'); // Adjust this route as per your navigation
+    navigation.navigate("screens/Home"); // Use navigation.navigate for tab-based navigation
   };
 
   const skipScreen = () => {
-    router.push('/screens/Home'); // Redirect to home screen when skip is clicked
+    navigation.navigate("screens/Home"); // Redirect to the home screen, which should be part of the tab navigator
   };
 
   return (
@@ -63,9 +82,15 @@ const PortfolioScreen = () => {
       <Text style={styles.instructions}>
         Please read before adding your portfolio on BirdEARNER:
       </Text>
-      <Text style={styles.bulletPoint}>1. Upload your image in 1080x1080 px</Text>
-      <Text style={styles.bulletPoint}>2. Image size should be between 100 KB-2 MB.</Text>
-      <Text style={styles.bulletPoint}>3. Don’t upload any inappropriate or NSFW content.</Text>
+      <Text style={styles.bulletPoint}>
+        1. Upload your image in 1080x1080 px
+      </Text>
+      <Text style={styles.bulletPoint}>
+        2. Image size should be between 100 KB-2 MB.
+      </Text>
+      <Text style={styles.bulletPoint}>
+        3. Don’t upload any inappropriate or NSFW content.
+      </Text>
 
       <View style={styles.imageContainer}>
         {portfolioImages.map((image, index) => (
@@ -85,11 +110,15 @@ const PortfolioScreen = () => {
 
       {/* Display uploaded images */}
       <View style={styles.uploadedImages}>
-        {portfolioImages.map((image, index) => (
+        {portfolioImages.map((image, index) =>
           image ? (
-            <Image key={index} source={{ uri: image }} style={styles.uploadedImage} />
+            <Image
+              key={index}
+              source={{ uri: image }}
+              style={styles.uploadedImage}
+            />
           ) : null
-        ))}
+        )}
       </View>
 
       <View style={styles.checkboxContainer}>
@@ -99,7 +128,8 @@ const PortfolioScreen = () => {
           color={agreeTerms ? "#ff9800" : undefined}
         />
         <Text style={styles.checkboxLabel}>
-          I accept that all the work uploaded on BirdEARNER by me is authentic and belongs to me.
+          I accept that all the work uploaded on BirdEARNER by me is authentic
+          and belongs to me.
         </Text>
       </View>
 
@@ -116,18 +146,14 @@ const PortfolioScreen = () => {
 
       {/* Navigation Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.nextButton}>
-          <Text style={styles.nextButtonText} onPress={() => router.back()}>
-            Previous
-          </Text>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => navigation.goBack()} // Use goBack() for previous screen
+        >
+          <Text style={styles.nextButtonText}>Previous</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton}>
-          <Text
-            style={styles.nextButtonText}
-            onPress={handleSubmit}
-          >
-            Next
-          </Text>
+        <TouchableOpacity style={styles.nextButton} onPress={handleSubmit}>
+          <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -137,82 +163,82 @@ const PortfolioScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3b006b',
+    backgroundColor: "#3b006b",
     padding: 25,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
     fontSize: 24,
-    color: '#ffffff',
-    textAlign: 'center',
+    color: "#ffffff",
+    textAlign: "center",
     marginBottom: 20,
   },
   skipButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     right: 20,
     padding: 10,
     borderRadius: 8,
   },
   skipButtonText: {
-    color: '#ffffff',
-    fontWeight: '350',
+    color: "#ffffff",
+    fontWeight: "350",
     fontSize: 20,
   },
   instructions: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
     marginBottom: 10,
   },
   bulletPoint: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
     marginLeft: 10,
   },
   imageContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginVertical: 20,
   },
   imageBox: {
     width: 90,
     height: 90,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 8,
   },
   plusText: {
     fontSize: 36,
-    color: '#000000',
+    color: "#000000",
   },
   uploadedImages: {
     marginTop: 20,
   },
   uploadedImage: {
-    width: '100%',
+    width: "100%",
     height: 100,
     borderRadius: 8,
     marginBottom: 10,
   },
   checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 10,
   },
   checkboxLabel: {
-    color: '#ffffff',
+    color: "#ffffff",
     marginLeft: 10,
     fontSize: 14,
   },
   link: {
-    textDecorationLine: 'underline',
-    color: '#ff9800',
+    textDecorationLine: "underline",
+    color: "#ff9800",
   },
   buttonRow: {
     flexDirection: "row",

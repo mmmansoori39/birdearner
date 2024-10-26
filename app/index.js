@@ -1,60 +1,123 @@
-import React, { useEffect } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import React from "react";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { View, StyleSheet } from "react-native";
+import { useAuth } from "./context/AuthContext";
+import LoginScreen from "./screens/Login";
+import LeaderboardScreen from "./screens/Leaderboard";
+import MarketplaceScreen from "./screens/Marketplace";
+import ProfileStack from "./stacks/ProfileStack";
+import SettingsScreen from "./screens/Settings";
+import IntroScreen from "./screens/Intro";
+import HomeStack from "./stacks/HomeStack";
 
-const Intro = () => {
+const Tab = createBottomTabNavigator();
 
-  const router = useRouter()
+export default function App() {
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace('/screens/Login');
-    }, 700);
+  if (loading) {
+    return <IntroScreen />;
+  }
 
-    return () => clearTimeout(timer);
-  }, [router]);
-  return (
-    <View style={styles.container}>
-      {/* Logo Image */}
-      <Image
-        source={require('../assets/logo.png')} 
-        style={styles.logo}
-        resizeMode="contain"
+  return user ? (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: "#370F54",
+          borderTopWidth: 0,
+          height: 56,
+        },
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          let iconColor = focused ? "#FFF" : "#aaa";
+
+          switch (route.name) {
+            case "Home":
+              iconName = "home";
+              break;
+            case "Leaderboard":
+              iconName = "leaderboard";
+              break;
+            case "Marketplace":
+              iconName = "storefront";
+              break;
+            case "Profile":
+              iconName = "person";
+              break;
+            case "Settings":
+              iconName = "settings";
+              break;
+            default:
+              iconName = "circle";
+          }
+
+          return (
+            <View style={focused ? styles.activeTab : styles.inactiveTab}>
+              {focused ? (
+                <LinearGradient
+                  colors={["#300E49", "#762BAD"]}
+                  style={styles.gradientBackground}
+                >
+                  <MaterialIcons name={iconName} color={iconColor} size={30} />
+                </LinearGradient>
+              ) : (
+                <MaterialIcons name={iconName} color={iconColor} size={30} />
+              )}
+            </View>
+          );
+        },
+      })}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeStack}
+        options={{ unmountOnBlur: false }}
       />
-      
-      {/* Heading */}
-      <Text style={styles.heading}>BirdEarner</Text>
-
-      {/* Description */}
-      <Text style={styles.description}>Be BirdEarner, Become Bread Earner!</Text>
-    </View>
+      <Tab.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{ unmountOnBlur: false }}
+      />
+      <Tab.Screen
+        name="Marketplace"
+        component={MarketplaceScreen}
+        options={{ unmountOnBlur: false }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{ unmountOnBlur: false }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ unmountOnBlur: false }}
+      />
+    </Tab.Navigator>
+  ) : (
+    <LoginScreen />
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#4B0082', // Background color
+  activeTab: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
+  inactiveTab: {
+    justifyContent: "center",
+    alignItems: "center",
   },
-  heading: {
-    fontSize: 52,
-    fontWeight: 'bold',
-    color: '#fff', // Heading color
-  },
-  description: {
-    fontSize: 13,
-    color: '#f0f0f0', // Description color
-    marginTop: 0,
-    textAlign: 'center',
-    paddingHorizontal: 20,
+  gradientBackground: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
-
-export default Intro;

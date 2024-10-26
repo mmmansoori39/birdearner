@@ -1,15 +1,21 @@
-// /app/lib/appwrite.js
+// lib/appwrite.js
+import { Client, Account, Databases, Permission, Role } from "react-native-appwrite"; // Added Permission and Role
 
-import { Client, Account } from "react-native-appwrite";
+export const appwriteConfig = {
+  endpoint: "https://cloud.appwrite.io/v1",
+  projectId: "66f1b80b000d880e1d85",
+  databaseId: "66f1b9d70005c7d69a8f",
+  freelancerCollectionId: "66f1b9ee0012317673e9"
+};
 
-// Initialize the Appwrite Client
 const client = new Client();
 
 client
-  .setEndpoint("https://cloud.appwrite.io/v1") // Your Appwrite endpoint
-  .setProject("66f1b80b000d880e1d85");         // Your Appwrite project ID
+  .setEndpoint(appwriteConfig.endpoint) 
+  .setProject(appwriteConfig.projectId);
 
-// Initialize Account API (used to manage user authentication and account details)
 const account = new Account(client);
+const databases = new Databases(client);
 
-export { client, account };
+// Export Permission and Role along with other configurations
+export { client, account, databases, Permission, Role };

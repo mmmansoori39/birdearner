@@ -1,25 +1,115 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // Import from the new package
-import { router } from 'expo-router';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import {
+  account,
+  databases,
+  appwriteConfig,
+} from "../lib/appwrite";
+import Toast from "react-native-toast-message";
+import { Picker } from "@react-native-picker/picker";
+import { ID } from "react-native-appwrite";
 
 const DescribeRole = () => {
-  const [role, setRole] = useState('');
-  const [qualification, setQualification] = useState('');
-  const [experience, setExperience] = useState('');
-  const [heading, setHeading] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [country, setCountry] = useState('');
+  const { fullName, email, password } = useLocalSearchParams();
+  const [qualification, setQualification] = useState("");
+  const [experience, setExperience] = useState("");
+  const [heading, setHeading] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [country, setCountry] = useState("");
   const [roles, setRoles] = useState([]);
+  const [role, setRole] = useState("");
 
   const addRole = () => {
     if (role) {
       setRoles([...roles, role]);
-      setRole('');
+      setRole("");
     }
   };
+
+  const showToast = (type, message) => {
+    Toast.show({
+      type,
+      text1: type === "success" ? "Success" : "Error",
+      text2: message,
+    });
+  };
+
+  const validateForm = () => {
+    if (
+      !roles.length ||
+      !qualification ||
+      !experience ||
+      !heading ||
+      !city ||
+      !state ||
+      !zipCode ||
+      !country
+    ) {
+      showToast("info", "All fields are required.");
+      return false;
+    }
+    return true;
+  };
+
+  const authenticateUser = async () => {
+    try {
+      const session = await account.getSession("current");
+      return session;
+    } catch (error) {
+      console.log(error)
+      await account.createEmailSession(email, password);
+    }
+  };
+
+  const saveFreelancerDetails = async () => {
+    if (!validateForm()) return;
+  
+    try {
+      await authenticateUser();
+      const user = await account.get(); 
+      console.log("Authenticated User:", user); 
+  
+      const userId = user.$id;
+  
+      // Create the document
+      const document = await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        ID.unique(),
+        {
+          full_name: fullName,
+          email: email,
+          password: password,
+          role_designation: roles.join(", "),
+          highest_qualification: qualification,
+          experience: parseInt(experience),
+          profile_heading: heading,
+          city,
+          state,
+          zipcode: zipCode,
+          country,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      );
+  
+      showToast("success", "Freelancer details saved successfully.");
+      router.push("/screens/TellUsAboutYou");
+    } catch (error) {
+      console.error("Error saving details:", error);
+      showToast("error", `Failed to save freelancer details: ${error.message}`);
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -28,24 +118,33 @@ const DescribeRole = () => {
       {/* Role/Designation */}
       <Text style={styles.label}>Role/Designation</Text>
       <View style={styles.dropdown}>
-        <Picker selectedValue={role} onValueChange={(itemValue) => setRole(itemValue)}>
+        <Picker
+          selectedValue={role}
+          onValueChange={(itemValue) => setRole(itemValue)}
+        >
           <Picker.Item label="Select Role" value="" />
           <Picker.Item label="Designer" value="Designer" />
           <Picker.Item label="Developer" value="Developer" />
           <Picker.Item label="Manager" value="Manager" />
         </Picker>
       </View>
-      {roles.length > 0 && roles.map((r, index) => (
-        <Text key={index} style={styles.addedRole}>+ {r}</Text>
-      ))}
+      {roles.length > 0 &&
+        roles.map((r, index) => (
+          <Text key={index} style={styles.addedRole}>
+            + {r}
+          </Text>
+        ))}
       <TouchableOpacity onPress={addRole}>
         <Text style={styles.addMoreRole}>+ Add 1 more role</Text>
       </TouchableOpacity>
 
-      {/* Highest Qualification */}
+      {/* Qualification */}
       <Text style={styles.label}>Highest Qualification</Text>
       <View style={styles.dropdown}>
-        <Picker selectedValue={qualification} onValueChange={(itemValue) => setQualification(itemValue)}>
+        <Picker
+          selectedValue={qualification}
+          onValueChange={(itemValue) => setQualification(itemValue)}
+        >
           <Picker.Item label="Select Qualification" value="" />
           <Picker.Item label="Bachelor's Degree" value="Bachelor's Degree" />
           <Picker.Item label="Master's Degree" value="Master's Degree" />
@@ -63,7 +162,7 @@ const DescribeRole = () => {
         onChangeText={setExperience}
       />
 
-      {/* Heading on your profile */}
+      {/* Profile Heading */}
       <Text style={styles.label}>Heading on your profile</Text>
       <TextInput
         style={styles.input}
@@ -76,16 +175,15 @@ const DescribeRole = () => {
       <View style={styles.row}>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>City</Text>
-          <TextInput
-            style={styles.input}
-            value={city}
-            onChangeText={setCity}
-          />
+          <TextInput style={styles.input} value={city} onChangeText={setCity} />
         </View>
         <View style={styles.dropdownContainer}>
           <Text style={styles.label}>State</Text>
           <View style={styles.dropdown}>
-            <Picker selectedValue={state} onValueChange={(itemValue) => setState(itemValue)}>
+            <Picker
+              selectedValue={state}
+              onValueChange={(itemValue) => setState(itemValue)}
+            >
               <Picker.Item label="Select State" value="" />
               <Picker.Item label="New York" value="New York" />
               <Picker.Item label="California" value="California" />
@@ -108,7 +206,10 @@ const DescribeRole = () => {
         <View style={styles.dropdownContainer}>
           <Text style={styles.label}>Country</Text>
           <View style={styles.dropdown}>
-            <Picker selectedValue={country} onValueChange={(itemValue) => setCountry(itemValue)}>
+            <Picker
+              selectedValue={country}
+              onValueChange={(itemValue) => setCountry(itemValue)}
+            >
               <Picker.Item label="Select Country" value="" />
               <Picker.Item label="USA" value="USA" />
               <Picker.Item label="India" value="India" />
@@ -118,9 +219,14 @@ const DescribeRole = () => {
       </View>
 
       {/* Next Button */}
-      <TouchableOpacity style={styles.nextButton}>
-        <Text style={styles.nextButtonText} onPress={() => router.push("/screens/TellUsAboutYou")} >Next</Text>
+      <TouchableOpacity
+        style={styles.nextButton}
+        onPress={saveFreelancerDetails}
+      >
+        <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
+
+      <Toast />
     </View>
   );
 };
@@ -129,43 +235,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#4B0082',
-    justifyContent:"center"
+    backgroundColor: "#4B0082",
+    justifyContent: "center",
   },
   title: {
     fontSize: 28,
-    textAlign: 'center',
-    color: '#f0f0f0',
+    textAlign: "center",
+    color: "#f0f0f0",
     marginBottom: 20,
   },
   label: {
-    color: '#f0f0f0',
+    color: "#f0f0f0",
     marginBottom: 10,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: "#fff",
+    borderRadius: 20,
     paddingHorizontal: 10,
     marginBottom: 20,
     height: 44,
   },
   dropdown: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: "#fff",
+    borderRadius: 20,
     marginBottom: 20,
     height: 44,
   },
   addedRole: {
-    color: '#fff',
+    color: "#fff",
     marginBottom: 10,
   },
   addMoreRole: {
-    color: '#fff',
+    color: "#fff",
     marginBottom: 20,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
   inputContainer: {
@@ -183,11 +289,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
-    marginLeft: 230
+    marginLeft: 230,
   },
   nextButtonText: {
-    color: '#6A0DAD',
-    fontWeight: 'bold',
+    color: "#6A0DAD",
+    fontWeight: "bold",
     fontSize: 20,
   },
 });

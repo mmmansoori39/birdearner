@@ -1,47 +1,51 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons'; 
-import { Link, useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext'; // Import useAuth to access authentication
-import { Toast } from 'react-native-toast-message/lib/src/Toast'; // Import Toast
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { Link, useNavigation, useRouter } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { Toast } from "react-native-toast-message/lib/src/Toast"; 
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, user } = useAuth(); // Use login and user from AuthContext
-  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { login} = useAuth(); 
+  const navigation = useNavigation()
 
   const handleLogin = async () => {
     try {
-      await login(email, password);
+      await login(email, password); 
       Toast.show({
-        type: 'success',
-        text1: 'Login Successful!',
-        text2: 'Redirecting to Home...',
-        position: 'bottom',
+        type: "success",
+        text1: "Login Successful!",
+        text2: "Redirecting to Home...",
+        position: "top",
       });
-      router.replace('/screens/Home'); // Redirect to home if login is successful
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      }); 
     } catch (error) {
       Toast.show({
-        type: 'error',
-        text1: 'Login Failed',
-        text2: error.message || 'An unexpected error occurred',
-        position: 'bottom',
+        type: "error",
+        text1: "Login Failed",
+        text2: error.message || "An unexpected error occurred",
+        position: "top",
       });
-      console.error('Login failed', error);
+      console.error("Login failed", error);
     }
   };
-
-  useEffect(() => {
-    if (user) {
-      router.push('/screens/Home'); // Redirect to home if user is already logged in
-    }
-  }, [user]);
 
   return (
     <View style={styles.container}>
       {/* Logo */}
-      <Image source={require('../assets/logo.png')} style={styles.logo} />
+      <Image source={require("../assets/logo.png")} style={styles.logo} />
 
       {/* App Name */}
       <Text style={styles.title}>BirdEARNER</Text>
@@ -54,7 +58,7 @@ const Login = () => {
         placeholderTextColor="#999"
         keyboardType="email-address"
         value={email}
-        onChangeText={setEmail} 
+        onChangeText={setEmail}
       />
 
       {/* Password Input */}
@@ -78,7 +82,7 @@ const Login = () => {
       </Link>
 
       {/* Create Account */}
-      <Link href="/screens/Signup">
+      <Link href="/screens/Role">
         <Text style={styles.linkText}>New Here? Create Your Account Here!</Text>
       </Link>
 
@@ -90,8 +94,18 @@ const Login = () => {
 
       {/* Social Icons */}
       <View style={styles.socialContainer}>
-        <FontAwesome name="instagram" size={24} color="white" style={styles.socialIcon} />
-        <FontAwesome name="facebook" size={24} color="white" style={styles.socialIcon} />
+        <FontAwesome
+          name="instagram"
+          size={24}
+          color="white"
+          style={styles.socialIcon}
+        />
+        <FontAwesome
+          name="facebook"
+          size={24}
+          color="white"
+          style={styles.socialIcon}
+        />
       </View>
 
       {/* Toast container for displaying messages */}
@@ -103,9 +117,9 @@ const Login = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#4B0082', // Purple background
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#4B0082", // Purple background
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   logo: {
@@ -115,49 +129,49 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   subtitle: {
     fontSize: 16,
-    color: 'white',
+    color: "white",
     marginBottom: 40,
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 44,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 25,
     paddingHorizontal: 20,
     marginBottom: 20,
     fontSize: 16,
   },
   loginButton: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    backgroundColor: '#6A0DAD', // Dark purple for button
+    backgroundColor: "#6A0DAD", // Dark purple for button
     borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 20,
   },
   loginButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   linkText: {
-    color: 'white',
+    color: "white",
     marginVertical: 10,
     fontSize: 14,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    width: "100%",
     height: 50,
     borderRadius: 25,
     marginTop: 20,
@@ -165,10 +179,10 @@ const styles = StyleSheet.create({
   googleButtonText: {
     marginLeft: 10,
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
   socialContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 40,
   },
   socialIcon: {

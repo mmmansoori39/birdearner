@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { account } from "../lib/appwrite"; // Assuming AppWrite is used
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
+import { Picker } from "@react-native-picker/picker";
 
 const TellUsAboutYouScreen = () => {
   const [gender, setGender] = useState("");
@@ -83,7 +84,7 @@ const TellUsAboutYouScreen = () => {
   };
 
   const skipScreen = () => {
-    router.push('/screens/Home'); // Redirect to home screen when skip is clicked
+    router.push("/screens/Home"); // Redirect to home screen when skip is clicked
   };
 
   return (
@@ -96,29 +97,38 @@ const TellUsAboutYouScreen = () => {
 
       {/* Gender and DOB Inputs */}
       <View style={styles.row}>
-        <TextInput
-          style={styles.smallInput}
-          placeholder="Gender"
-          value={gender}
-          onChangeText={setGender}
-        />
+        <View style={styles.dropdownContainer}>
+          <Text style={styles.label}>Gender</Text>
+          <View style={styles.dropdown}>
+            <Picker
+              selectedValue={gender}
+              onValueChange={(itemValue) => setGender(itemValue)}
+            >
+              <Picker.Item label="Select State" value="" />
+              <Picker.Item label="New York" value="New York" />
+              <Picker.Item label="California" value="California" />
+            </Picker>
+          </View>
+        </View>
 
-        {/* DOB Input with Calendar */}
-        <TouchableOpacity
-          style={styles.smallInput}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text>{dob ? dob.toDateString() : "DOB"}</Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={dob}
-            mode="date"
-            display="default"
-            onChange={onChangeDob}
-            maximumDate={new Date()} // Ensure users can't select future dates
-          />
-        )}
+        <View>
+          <Text style={styles.label}>Date of Birth</Text>
+          <TouchableOpacity
+            style={styles.dob}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text>{dob ? dob.toDateString() : "DOB"}</Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={dob}
+              mode="date"
+              display="default"
+              onChange={onChangeDob}
+              maximumDate={new Date()} // Ensure users can't select future dates
+            />
+          )}
+        </View>
       </View>
 
       {/* Certifications Section */}
@@ -186,18 +196,17 @@ const TellUsAboutYouScreen = () => {
 
       {/* Navigation Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.nextButton}>
-          <Text style={styles.nextButtonText} onPress={() => router.back()}>
-            Previous
-          </Text>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.nextButtonText}>Previous</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton}>
-          <Text
-            style={styles.nextButtonText}
-            onPress={() => router.push("/screens/Portfolio")}
-          >
-            Next
-          </Text>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => router.push("/screens/Portfolio")}
+        >
+          <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -220,18 +229,19 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 10,
+    gap: 20
   },
   skipButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     right: 20,
     padding: 10,
     borderRadius: 8,
   },
   skipButtonText: {
-    color: '#ffffff',
-    fontWeight: '350',
+    color: "#ffffff",
+    fontWeight: "350",
     fontSize: 20,
   },
   smallInput: {
@@ -240,6 +250,16 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
     borderWidth: 1,
     borderRadius: 24,
+    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+  },
+  dob: {
+    width: "100%",
+    height: 44,
+    borderColor: "#fff",
+    borderWidth: 1,
+    borderRadius: 20,
     paddingHorizontal: 10,
     backgroundColor: "#fff",
     justifyContent: "center",
@@ -313,6 +333,15 @@ const styles = StyleSheet.create({
     color: "#6A0DAD",
     fontWeight: "bold",
     fontSize: 20,
+  },
+  dropdownContainer: {
+    flex: 1,
+  },
+  dropdown: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 20,
+    height: 44,
   },
 });
 

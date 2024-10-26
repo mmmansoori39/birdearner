@@ -7,15 +7,19 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { useAuth } from "../context/AuthContext"; // Import the auth context to get the user data
+import { useAuth } from "../context/AuthContext";
+import { useNavigation } from "expo-router";
 
 const HomeScreen = () => {
-  const { user } = useAuth(); // Get the user object from context
+  const { user, logout } = useAuth();
+  const navigation = useNavigation()
 
   return (
     <SafeAreaView style={styles.safeContainer}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.notificationIcon} onPress={useAuth().logout} >
+        <TouchableOpacity style={styles.notificationIcon} onPress={() => {
+          navigation.navigate("Notification")
+        }} >
           <MaterialIcons name="notifications" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.welcomeText}>Welcome Back</Text>
@@ -100,7 +104,9 @@ const HomeScreen = () => {
         <View style={styles.whatsNewContainer}>
           {/* You can add new content here */}
           <Text style={styles.whatsNewText}>Enjoy Earning</Text>
-          <TouchableOpacity style={styles.chatIcon}>
+          <TouchableOpacity style={styles.chatIcon} onPress={() => {
+            logout()
+          }} >
             <FontAwesome name="comments" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -132,7 +138,7 @@ const styles = StyleSheet.create({
     color: "#3b006b",
   },
   notificationIcon: {
-    backgroundColor: "#ff9800",
+    backgroundColor: "#3b006b",
     padding: 10,
     borderRadius: 50,
     position: "absolute",
@@ -148,8 +154,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#3b006b",
     paddingVertical: 8,
     paddingHorizontal: 10,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
     textAlign: "center",
   },
   statsContainer: {
@@ -159,6 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     flexWrap: "wrap",
+    borderBottomRightRadius: 20,
   },
   statItem: {
     alignItems: "center",
@@ -177,11 +184,11 @@ const styles = StyleSheet.create({
   earningsContainer: {
     backgroundColor: "#ffffff",
     padding: 10,
-    borderRadius: 10,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 5,
     justifyContent: "space-between",
+    borderBottomRightRadius: 20,
   },
   earningItem: {
     alignItems: "center",
@@ -202,6 +209,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     flexDirection: "row",
     justifyContent: "space-between",
+    borderBottomRightRadius: 20,
   },
   orderItem: {
     alignItems: "center",
@@ -224,6 +232,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     flexDirection: "row",
     alignItems: "center",
+    borderBottomRightRadius: 20,
   },
   whatsNewText: {
     fontSize: 16,
