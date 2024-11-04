@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { account, databases, appwriteConfig, storage } from "../lib/appwrite";
+import { account, databases, appwriteConfig, uploadFile } from "../lib/appwrite";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
@@ -57,7 +57,7 @@ const TellUsAboutYouScreen = () => {
       });
 
       if (!pickerResult.canceled) {
-        setProfileImage(pickerResult.assets[0].uri);
+        setProfileImage(pickerResult.assets[0]);
       }
     } catch (error) {
       console.error("Image Picker Error:", error);
@@ -119,34 +119,19 @@ const TellUsAboutYouScreen = () => {
         }
       }
 
-      let profileImageFileId = null;
+      let profileImageFileURL = null;
 
       if (profileImage) {
         try {
-          // Convert image URI to Blob
-          const response = await fetch(profileImage);
-          const blob = await response.blob();
-
-          // Ensure the Blob type and file name are correct
-          const file = new File([blob], "profile_image.jpg", {
-            type: blob.type || "image/jpeg",
-          });
-
-          // Upload the file to Appwrite
-          const fileResponse = await storage.createFile(
-            appwriteConfig.bucketId,
-            ID.unique(),
-            file
-          );
-
-          console.log("File uploaded successfully:", fileResponse);
-          profileImageFileId = fileResponse.$id;
+          profileImageFileURL = await uploadFile(profileImage, "image");
+          console.log("Image uploaded successfully:", profileImageFileURL);
+          
         } catch (uploadError) {
           console.error("File Upload Error:", uploadError);
-          Alert.alert("Error", "Failed to upload profile image.");
+          Alert.alert("Error", uploadError);
           return;
         }
-      }
+      }      
 
       // Update user document with new details
       await databases.updateDocument(
@@ -159,7 +144,7 @@ const TellUsAboutYouScreen = () => {
           certifications,
           social_media_links: socialLinks,
           profile_description: bio,
-          profile_photo: "kjhgfcxg",
+          profile_photo: profileImageFileURL,
           updated_at: new Date().toISOString(),
         }
       );
@@ -281,7 +266,7 @@ const TellUsAboutYouScreen = () => {
           <Text>Click here to upload</Text>
         </TouchableOpacity>
         {profileImage && (
-          <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          <Image source={{ uri: profileImage?.uri }} style={styles.profileImage} />
         )}
       </View>
 
