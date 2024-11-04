@@ -18,8 +18,6 @@ const colors = {
   Standard: ["#34660C", "#77CB35"],
 };
 
-
-
 const JobPriority = () => {
   const { priority } = useLocalSearchParams();
   const [jobs, setJobs] = useState([]);
@@ -35,18 +33,26 @@ const JobPriority = () => {
 
   const renderJobs = () => {
     return jobs.map((job, index) => (
-      <View key={index} style={styles.jobCard}>
-        <Image
-          source={require("../assets/profile.png")}
-          style={styles.profileImage}
-        />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.jobTitle}>{job.title}</Text>
-          <Text style={styles.jobDetails}>
-            Budget: {job.budget} Deadline: {job.deadline}
-          </Text>
-          <Text style={styles.jobDescription}>{job.description}</Text>
-        </View>
+      <View key={index}>
+        <TouchableOpacity style={styles.jobCard}
+        onPress={() => {
+          router.push({
+            pathname: "/components/JobDescription",
+            params: job,
+          });
+        }}>
+          <Image
+            source={require("../assets/profile.png")}
+            style={styles.profileImage}
+          />
+          <View style={{ flex: 1, paddingVertical: 2 }}>
+            <Text style={styles.jobTitle}>{job.title}</Text>
+            <Text style={styles.jobDetails}>
+              Budget: {job.budget} Deadline: {job.deadline}
+            </Text>
+            <Text style={styles.jobDescription} numberOfLines={2} >{job.description}</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     ));
   };
@@ -81,9 +87,12 @@ const JobPriority = () => {
         end={{ x: 1, y: 0 }}
         style={styles.allJobsContainer}
       >
-        <TouchableOpacity style={styles.allJobsButton} onPress={() => {
-            router.back()
-        }} >
+        <TouchableOpacity
+          style={styles.allJobsButton}
+          onPress={() => {
+            router.back();
+          }}
+        >
           <Text style={styles.allJobsText}>
             {priority} {priority === "Immediate" ? "Attention" : "Priority"}
           </Text>
@@ -143,8 +152,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f5f5f5",
-    padding: 15,
-    borderRadius: 10,
+    // padding: 15,
+    borderTopLeftRadius: 100,
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 10,
+    borderTopRightRadius: 10,
     marginVertical: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -153,9 +165,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 95,
+    height: 95,
+    borderRadius: 100,
     marginRight: 10,
   },
   jobTitle: {

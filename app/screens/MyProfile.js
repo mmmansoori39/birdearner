@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,18 +7,58 @@ import {
   TouchableOpacity,
   StyleSheet,
   ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { databases, appwriteConfig } from "../lib/appwrite";
+import { ID, Query } from "react-native-appwrite";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
+  const { user, loading } = useAuth();
+  const [freelancerData, setFreelancerData] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchFreelancerProfileByEmail(user.email);
+    }
+  }, [user]);
+
+  const fetchFreelancerProfileByEmail = async (email) => {
+    try {
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        [Query.equal("email", email)]
+      );
+
+      if (response.documents) {
+        setFreelancerData(response.documents[0]);
+      } else {
+        console.error("No freelancer found with the provided email.");
+      }
+    } catch (error) {
+      console.error("Failed to fetch freelancer data:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  if (loading || loadingProfile) {
+    return (
+      <SafeAreaView style={styles.centered}>
+        <ActivityIndicator size="large" color="#000" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView>
       <ScrollView style={styles.container}>
-
         <View style={styles.tab}>
           <TouchableOpacity style={styles.tabButtonL}>
             <Text style={styles.tabTextL}>My Profile</Text>
@@ -38,7 +78,7 @@ export default function ProfileScreen() {
           style={styles.backgroundImg}
         >
           <Image
-            source={require("../assets/userProfile.png")}
+            source={{ uri: freelancerData?.profile_photo }}
             style={styles.profileImage}
           />
           <View style={styles.share}>
@@ -47,10 +87,13 @@ export default function ProfileScreen() {
         </ImageBackground>
 
         <View style={styles.userDetails}>
-          <Text style={styles.nameText}>John Smith</Text>
-          <Text style={styles.roleText}>Graphic Designer</Text>
+          <Text style={styles.nameText}>{freelancerData?.full_name}</Text>
+          <Text style={styles.roleText}>
+            {freelancerData?.role_designation} 
+          </Text>
           <Text style={styles.statusText}>
-            Status: Active{" "}
+            Status:{" "}
+            {freelancerData?.currently_available ? "Active" : "Inactive"}{" "}
             <FontAwesome name="circle" size={12} color="#6BCD2F" />
           </Text>
         </View>
@@ -59,27 +102,30 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Experience</Text>
           <Text style={styles.sectionContent}>
-            Company 1 - Graphic Designer
+            {freelancerData?.experience} years of experience
           </Text>
 
           <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
             Certifications
           </Text>
-          <Text style={styles.sectionContent}>Certification 1</Text>
+          {/* {freelancerData?.certifications.map((cert, index) => (
+            <Text key={index} style={styles.sectionContent}>
+              {cert}
+            </Text>
+          ))} */}
         </View>
 
         {/* Portfolio Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Portfolio</Text>
           <View style={styles.portfolioImages}>
-            <Image
-              source={require("../assets/portfolio_img1.png")}
-              style={styles.portfolioImage}
-            />
-            <Image
-              source={require("../assets/portfolio_img2.png")}
-              style={styles.portfolioImage}
-            />
+            {/* {freelancerData?.portfolio_images.map((image, index) => (
+              <Image
+                key={index}
+                source={{ uri: image }}
+                style={styles.portfolioImage}
+              />
+            ))} */}
           </View>
         </View>
 
@@ -100,6 +146,11 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   tab: {
     display: "flex",

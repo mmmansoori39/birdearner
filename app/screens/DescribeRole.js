@@ -7,14 +7,10 @@ import {
   StyleSheet,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import {
-  account,
-  databases,
-  appwriteConfig,
-} from "../lib/appwrite";
+import { account, databases, appwriteConfig } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
-import { ID } from "react-native-appwrite";
+import { ID} from "react-native-appwrite";
 
 const DescribeRole = () => {
   const { fullName, email, password } = useLocalSearchParams();
@@ -65,8 +61,7 @@ const DescribeRole = () => {
       const session = await account.getSession("current");
       return session;
     } catch (error) {
-      console.log(error)
-      await account.createEmailSession(email, password);
+      await account.createEmailPasswordSession(email, password);
     }
   };
 
@@ -74,13 +69,10 @@ const DescribeRole = () => {
     if (!validateForm()) return;
   
     try {
+      // Authenticate and fetch user details
       await authenticateUser();
-      const user = await account.get(); 
-      console.log("Authenticated User:", user); 
   
-      const userId = user.$id;
-  
-      // Create the document
+      // Create the document with permissions set to the user's ID
       const document = await databases.createDocument(
         appwriteConfig.databaseId,
         appwriteConfig.freelancerCollectionId,
@@ -89,27 +81,26 @@ const DescribeRole = () => {
           full_name: fullName,
           email: email,
           password: password,
-          role_designation: roles.join(", "),
+          role_designation: roles,
           highest_qualification: qualification,
           experience: parseInt(experience),
           profile_heading: heading,
           city,
           state,
-          zipcode: zipCode,
+          zipcode: parseInt(zipCode),
           country,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
       );
   
-      showToast("success", "Freelancer details saved successfully.");
       router.push("/screens/TellUsAboutYou");
+      showToast("success", "Freelancer details saved successfully.");
     } catch (error) {
       console.error("Error saving details:", error);
       showToast("error", `Failed to save freelancer details: ${error.message}`);
     }
   };
-  
 
   return (
     <View style={styles.container}>
@@ -233,10 +224,10 @@ const DescribeRole = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
-    backgroundColor: "#4B0082",
     justifyContent: "center",
+    backgroundColor: "#4B0082",
   },
   title: {
     fontSize: 28,

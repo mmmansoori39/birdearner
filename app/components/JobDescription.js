@@ -1,8 +1,13 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 
 const JobDescriptionScreen = () => {
+
+  const job = useLocalSearchParams()
+  console.log(job)
+
   return (
     <ScrollView style={styles.container}>
       <ScrollView style={styles.scrollContent} >
@@ -14,7 +19,7 @@ const JobDescriptionScreen = () => {
         />
         <View style={styles.jobInfo}>
           <Text style={styles.jobTitle}>
-            Looking for graphic designer for branding project
+            {job.title}
           </Text>
           <FontAwesome name="flag" size={20} color="black" style={styles.flagIcon} />
         </View>
@@ -23,13 +28,13 @@ const JobDescriptionScreen = () => {
       {/* Job Details */}
       <View style={styles.jobDetails}>
         <Text style={styles.detailText}>
-          <Text style={styles.boldText}>Budget:</Text> $300
+          <Text style={styles.boldText}>Budget:</Text> {job.budget}
         </Text>
         <Text style={styles.detailText}>
           <Text style={styles.boldText}>Location:</Text> IND (Global)
         </Text>
         <Text style={styles.detailText}>
-          <Text style={styles.boldText}>Deadline:</Text> 5-7 Days
+          <Text style={styles.boldText}>Deadline:</Text> {job.deadline}
         </Text>
         <Text style={styles.detailText}>
           <Text style={styles.boldText}>Skills:</Text> Design, Sketching, Adobe Suits
@@ -39,6 +44,9 @@ const JobDescriptionScreen = () => {
       {/* Job Description */}
       <View style={styles.jobDescription}>
         <Text style={styles.descriptionText}>
+          {job.description}
+        </Text>
+        {/* <Text style={styles.descriptionText}>
           We need a designer for a health agency rebranding that deals with various sectors...
         </Text>
         <Text style={styles.descriptionText}>
@@ -46,10 +54,7 @@ const JobDescriptionScreen = () => {
         </Text>
         <Text style={styles.descriptionText}>
           We need a designer for a health agency rebranding that deals with various sectors...
-        </Text>
-        <Text style={styles.descriptionText}>
-          We need a designer for a health agency rebranding that deals with various sectors...
-        </Text>
+        </Text> */}
       </View>
 
       {/* Attached Files */}
@@ -112,9 +117,16 @@ const styles = StyleSheet.create({
   },
   jobDetails: {
     backgroundColor: '#f9f9f9',
-    padding: 15,
+    padding: 10,
     borderRadius: 10,
     marginBottom: 20,
+
+    backgroundColor: "#f5f5f5",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   detailText: {
     fontSize: 14,

@@ -11,10 +11,11 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { account } from "../lib/appwrite"; // Assuming AppWrite is used
+import { account, databases, appwriteConfig, storage } from "../lib/appwrite";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
+import { ID, Query } from "react-native-appwrite";
 
 const TellUsAboutYouScreen = () => {
   const [gender, setGender] = useState("");
@@ -23,68 +24,157 @@ const TellUsAboutYouScreen = () => {
   const [certifications, setCertifications] = useState([""]);
   const [socialLinks, setSocialLinks] = useState([""]);
   const [bio, setBio] = useState("");
-  const [profileImage, setProfileImage] = useState(null); // For the profile image
+  const [profileImage, setProfileImage] = useState(null);
   const router = useRouter();
 
-  // Function to dynamically add more certifications
+  // Add a new certification input field
   const addCertification = () => {
     setCertifications([...certifications, ""]);
   };
 
-  // Function to dynamically add more social media links
+  // Add a new social link input field
   const addSocialLink = () => {
     setSocialLinks([...socialLinks, ""]);
   };
 
-  // Handle profile picture upload
+  // Handle profile image upload
   const handleProfileUpload = async () => {
-    // Request permission to access media library
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permission Denied",
+          "You need to grant camera roll permissions to upload a profile picture."
+        );
+        return;
+      }
 
-    if (!permissionResult.granted) {
-      Alert.alert(
-        "Permission Denied",
-        "You need to grant camera roll permissions to upload a profile picture."
-      );
-      return;
-    }
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
-    // Let the user pick an image from the gallery
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1], // Square aspect ratio for profile picture
-      quality: 1,
-    });
-
-    if (!pickerResult.canceled) {
-      setProfileImage(pickerResult.assets[0].uri);
+      if (!pickerResult.canceled) {
+        setProfileImage(pickerResult.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Image Picker Error:", error);
+      Alert.alert("Error", "Image Picker encountered an issue.");
     }
   };
 
-  // Handle Date Picker for DOB
+  // Handle date of birth selection
   const onChangeDob = (event, selectedDate) => {
     const currentDate = selectedDate || dob;
-    setShowDatePicker(false); // Close the date picker
-    setDob(currentDate); // Update the selected DOB
+    setShowDatePicker(false);
+    setDob(currentDate);
   };
 
-  const handleNext = () => {
-    // Handle form validation and data submission here
-    if (!gender || !dob) {
-      Alert.alert("Error", "Please fill in the required fields.");
-      return;
+  const isValidURL = (string) => {
+    const regex = /^(ftp|http|https):\/\/[^ "]+$/;
+    return regex.test(string);
+  };
+
+  const authenticateUser = async () => {
+    try {
+      const session = await account.getSession("current");
+      return session;
+    } catch (error) {
+      await account.createEmailPasswordSession("mmm@gmail.com", "Mmm@12345");
     }
-    // Assuming you want to save or submit the data
-    Alert.alert(
-      "Success",
-      "Your data has been saved. Proceeding to the next step."
-    );
-    router.push("/NextScreen"); // Navigate to next screen
   };
 
+  // Save user details to AppWrite database
+  const saveDetails = async () => {
+    try {
+
+      await authenticateUser()
+      
+      const user = await account.get();
+
+      // Fetch the user's document based on their email
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        [Query.equal("email", user.email)]
+      );
+
+      if (response.documents.length === 0) {
+        Alert.alert("Error", "No user document found with the provided email.");
+        return;
+      }
+
+      const userDocumentId = response.documents[0].$id;
+
+      // Validate social links
+      for (const link of socialLinks) {
+        if (link && !isValidURL(link)) {
+          Alert.alert(
+            "Invalid URL",
+            "Please enter valid URLs for your social media links."
+          );
+          return;
+        }
+      }
+
+      let profileImageFileId = null;
+
+      if (profileImage) {
+        try {
+          // Convert image URI to Blob
+          const response = await fetch(profileImage);
+          const blob = await response.blob();
+
+          // Ensure the Blob type and file name are correct
+          const file = new File([blob], "profile_image.jpg", {
+            type: blob.type || "image/jpeg",
+          });
+
+          // Upload the file to Appwrite
+          const fileResponse = await storage.createFile(
+            appwriteConfig.bucketId,
+            ID.unique(),
+            file
+          );
+
+          console.log("File uploaded successfully:", fileResponse);
+          profileImageFileId = fileResponse.$id;
+        } catch (uploadError) {
+          console.error("File Upload Error:", uploadError);
+          Alert.alert("Error", "Failed to upload profile image.");
+          return;
+        }
+      }
+
+      // Update user document with new details
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        userDocumentId,
+        {
+          gender,
+          dob: dob.toISOString(),
+          certifications,
+          social_media_links: socialLinks,
+          profile_description: bio,
+          profile_photo: "kjhgfcxg",
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Success", "Your details have been updated successfully.");
+      router.push("/screens/Portfolio");
+    } catch (error) {
+      console.error("Error updating details:", error);
+      Alert.alert("Error", `Failed to update details: ${error.message}`);
+    }
+  };
+
+  // Skip the current screen
   const skipScreen = () => {
-    router.push("/screens/Home"); // Redirect to home screen when skip is clicked
+    router.push("/screens/Home");
   };
 
   return (
@@ -104,9 +194,10 @@ const TellUsAboutYouScreen = () => {
               selectedValue={gender}
               onValueChange={(itemValue) => setGender(itemValue)}
             >
-              <Picker.Item label="Select State" value="" />
-              <Picker.Item label="New York" value="New York" />
-              <Picker.Item label="California" value="California" />
+              <Picker.Item label="Select Gender" value="" />
+              <Picker.Item label="Male" value="Male" />
+              <Picker.Item label="Female" value="Female" />
+              <Picker.Item label="Others" value="Others" />
             </Picker>
           </View>
         </View>
@@ -125,7 +216,7 @@ const TellUsAboutYouScreen = () => {
               mode="date"
               display="default"
               onChange={onChangeDob}
-              maximumDate={new Date()} // Ensure users can't select future dates
+              maximumDate={new Date()}
             />
           )}
         </View>
@@ -202,10 +293,7 @@ const TellUsAboutYouScreen = () => {
         >
           <Text style={styles.nextButtonText}>Previous</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.nextButton}
-          onPress={() => router.push("/screens/Portfolio")}
-        >
+        <TouchableOpacity style={styles.nextButton} onPress={saveDetails}>
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
@@ -219,6 +307,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#4B0082", // Deep purple background
     justifyContent: "center",
+    paddingVertical: 40,
   },
   title: {
     fontSize: 24,
@@ -230,7 +319,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
-    gap: 20
+    gap: 20,
   },
   skipButton: {
     position: "absolute",
