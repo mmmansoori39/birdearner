@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { account } from "../lib/appwrite";
 import { ID } from "react-native-appwrite";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 
 const validateEmail = (email) => {
@@ -22,6 +22,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const router = useRouter();
+  const {role} = useLocalSearchParams()
 
   const showToast = (type, text1, text2) => {
     Toast.show({
@@ -56,6 +57,7 @@ const Signup = () => {
           fullName,
           email,
           password,
+          role
         },
       });
     } catch (error) {

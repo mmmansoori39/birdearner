@@ -10,10 +10,10 @@ import { router, useLocalSearchParams } from "expo-router";
 import { account, databases, appwriteConfig } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
-import { ID} from "react-native-appwrite";
+import { ID } from "react-native-appwrite";
 
 const DescribeRole = () => {
-  const { fullName, email, password } = useLocalSearchParams();
+  const { fullName, email, password, role } = useLocalSearchParams();
   const [qualification, setQualification] = useState("");
   const [experience, setExperience] = useState("");
   const [heading, setHeading] = useState("");
@@ -21,13 +21,16 @@ const DescribeRole = () => {
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [country, setCountry] = useState("");
-  const [roles, setRoles] = useState([]);
-  const [role, setRole] = useState("");
+  const [designations, setDesignations] = useState([]);
+  const [designation, setDesignation] = useState("");
+  const [bio, setBio] = useState("");
+
+
 
   const addRole = () => {
-    if (role) {
-      setRoles([...roles, role]);
-      setRole("");
+    if (designation) {
+      setDesignations([...designations, designation]);
+      setDesignation("");
     }
   };
 
@@ -40,18 +43,33 @@ const DescribeRole = () => {
   };
 
   const validateForm = () => {
-    if (
-      !roles.length ||
-      !qualification ||
-      !experience ||
-      !heading ||
-      !city ||
-      !state ||
-      !zipCode ||
-      !country
-    ) {
-      showToast("info", "All fields are required.");
-      return false;
+    if(role === "client"){
+      if (
+        !designation.length ||
+        !heading ||
+        !city ||
+        !state ||
+        !zipCode ||
+        !country ||
+        !bio
+      ) {
+        showToast("info", "All fields are required.");
+        return false;
+      }
+    } else{
+      if (
+        !designations.length ||
+        !qualification ||
+        !experience ||
+        !heading ||
+        !city ||
+        !state ||
+        !zipCode ||
+        !country
+      ) {
+        showToast("info", "All fields are required.");
+        return false;
+      }
     }
     return true;
   };
@@ -67,97 +85,159 @@ const DescribeRole = () => {
 
   const saveFreelancerDetails = async () => {
     if (!validateForm()) return;
-  
+
     try {
       // Authenticate and fetch user details
       await authenticateUser();
-  
+
       // Create the document with permissions set to the user's ID
-      const document = await databases.createDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        ID.unique(),
-        {
-          full_name: fullName,
-          email: email,
-          password: password,
-          role_designation: roles,
-          highest_qualification: qualification,
-          experience: parseInt(experience),
-          profile_heading: heading,
-          city,
-          state,
-          zipcode: parseInt(zipCode),
-          country,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-      );
-  
-      router.push("/screens/TellUsAboutYou");
+      if(role === "client"){
+        const document = await databases.createDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          ID.unique(),
+          {
+            full_name: fullName,
+            email: email,
+            password: password,
+            role: role,
+            organization_type: designation,
+            company_name: heading,
+            city,
+            state,
+            zipcode: parseInt(zipCode),
+            country,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            profile_description: bio
+          }
+        );
+      } else {
+        const document = await databases.createDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          ID.unique(),
+          {
+            full_name: fullName,
+            email: email,
+            password: password,
+            role: role,
+            role_designation: designations,
+            highest_qualification: qualification,
+            experience: parseInt(experience),
+            profile_heading: heading,
+            city,
+            state,
+            zipcode: parseInt(zipCode),
+            country,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+        );
+      }
+
+      router.push({pathname: "/screens/TellUsAboutYou", params: {role}});
+
       showToast("success", "Freelancer details saved successfully.");
     } catch (error) {
       console.error("Error saving details:", error);
-      showToast("error", `Failed to save freelancer details: ${error.message}`);
+      showToast("error", `Failed to save ${role} details: ${error.message}`);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Describe Your Role</Text>
+      <Text style={styles.title}>
+        {role === "client" ? "Tell us about yourself" : "Describe Your Role"}
+      </Text>
 
       {/* Role/Designation */}
-      <Text style={styles.label}>Role/Designation</Text>
-      <View style={styles.dropdown}>
-        <Picker
-          selectedValue={role}
-          onValueChange={(itemValue) => setRole(itemValue)}
-        >
-          <Picker.Item label="Select Role" value="" />
-          <Picker.Item label="Designer" value="Designer" />
-          <Picker.Item label="Developer" value="Developer" />
-          <Picker.Item label="Manager" value="Manager" />
-        </Picker>
-      </View>
-      {roles.length > 0 &&
-        roles.map((r, index) => (
+      <Text style={styles.label}>
+        {role === "client" ? "Type of you organisation" : "Role/Designation"}
+      </Text>
+      {role === "client" ? (
+        <View style={styles.dropdown}>
+          <Picker
+            selectedValue={designation}
+            onValueChange={(itemValue) => setDesignation(itemValue)}
+          >
+            <Picker.Item label="Select Organization Type" value="" />
+            <Picker.Item label="Personal" value="personal" />
+            <Picker.Item label="Company" value="Company" />
+            <Picker.Item label="Manager" value="Manager" />
+          </Picker>
+        </View>
+      ) : (
+        <>
+        <View style={styles.dropdown}>
+          <Picker
+            selectedValue={designation}
+            onValueChange={(itemValue) => setDesignation(itemValue)}
+          >
+            <Picker.Item label="Select Role" value="" />
+            <Picker.Item label="Designer" value="Designer" />
+            <Picker.Item label="Developer" value="Developer" />
+            <Picker.Item label="Manager" value="Manager" />
+          </Picker>
+        </View>
+
+        {designations.length > 0 &&
+        designations.map((r, index) => (
           <Text key={index} style={styles.addedRole}>
             + {r}
           </Text>
         ))}
       <TouchableOpacity onPress={addRole}>
-        <Text style={styles.addMoreRole}>+ Add 1 more role</Text>
+        <Text style={styles.addMoreRole}>
+           + Add 1 more role
+        </Text>
       </TouchableOpacity>
+      </>
+      )}
 
-      {/* Qualification */}
-      <Text style={styles.label}>Highest Qualification</Text>
-      <View style={styles.dropdown}>
-        <Picker
-          selectedValue={qualification}
-          onValueChange={(itemValue) => setQualification(itemValue)}
-        >
-          <Picker.Item label="Select Qualification" value="" />
-          <Picker.Item label="Bachelor's Degree" value="Bachelor's Degree" />
-          <Picker.Item label="Master's Degree" value="Master's Degree" />
-          <Picker.Item label="PhD" value="PhD" />
-        </Picker>
-      </View>
+      {role === "freelancer" && (
+        <>
+          {/* Qualification */}
+          <Text style={styles.label}>Highest Qualification</Text>
+          <View style={styles.dropdown}>
+            <Picker
+              selectedValue={qualification}
+              onValueChange={(itemValue) => setQualification(itemValue)}
+            >
+              <Picker.Item label="Select Qualification" value="" />
+              <Picker.Item
+                label="Bachelor's Degree"
+                value="Bachelor's Degree"
+              />
+              <Picker.Item label="Master's Degree" value="Master's Degree" />
+              <Picker.Item label="PhD" value="PhD" />
+            </Picker>
+          </View>
 
-      {/* Experience */}
-      <Text style={styles.label}>Experience (In months)</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="numeric"
-        placeholder="E.g. 24"
-        value={experience}
-        onChangeText={setExperience}
-      />
+          {/* Experience */}
+          <Text style={styles.label}>Experience (In months)</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            placeholder="E.g. 24"
+            value={experience}
+            onChangeText={setExperience}
+          />
+        </>
+      )}
 
       {/* Profile Heading */}
-      <Text style={styles.label}>Heading on your profile</Text>
+      <Text style={styles.label}>
+        {" "}
+        {role === "client"
+          ? "Company Name (Optional)"
+          : "Heading on your profile"}
+      </Text>
       <TextInput
         style={styles.input}
-        placeholder="E.g. I am a designer"
+        placeholder={
+          role === "client" ? "Company name" : "E.g. I am a designer"
+        }
         value={heading}
         onChangeText={setHeading}
       />
@@ -209,6 +289,16 @@ const DescribeRole = () => {
         </View>
       </View>
 
+      {/* Description (Bio) Section */}
+      <Text style={styles.label}>Describe yourself</Text>
+        <TextInput
+          style={styles.textArea}
+          placeholder="Describe yourself"
+          value={bio}
+          multiline
+          onChangeText={setBio}
+        />
+
       {/* Next Button */}
       <TouchableOpacity
         style={styles.nextButton}
@@ -238,6 +328,16 @@ const styles = StyleSheet.create({
   label: {
     color: "#f0f0f0",
     marginBottom: 10,
+  },
+  textArea: {
+    height: 120,
+    borderColor: "#fff",
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+    color: "#000",
+    textAlignVertical: "top",
   },
   input: {
     backgroundColor: "#fff",

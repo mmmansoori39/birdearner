@@ -8,8 +8,9 @@ import {
   StyleSheet,
   ImageBackground,
   ActivityIndicator,
+  Share,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router";
 import { useAuth } from "../context/AuthContext";
@@ -18,12 +19,14 @@ import { ID, Query } from "react-native-appwrite";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
-  const { user, loading } = useAuth();
-  const [freelancerData, setFreelancerData] = useState(null);
+  const { user, loading, role } = useAuth();
+  const [data, setata] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (role === "client") {
+      fetchClientProfileByEmail(user.email);
+    } else {
       fetchFreelancerProfileByEmail(user.email);
     }
   }, [user]);
@@ -35,9 +38,9 @@ export default function ProfileScreen() {
         appwriteConfig.freelancerCollectionId,
         [Query.equal("email", email)]
       );
-
+      console.log(response.documents[0]);
       if (response.documents) {
-        setFreelancerData(response.documents[0]);
+        setata(response.documents[0]);
       } else {
         console.error("No freelancer found with the provided email.");
       }
@@ -45,6 +48,47 @@ export default function ProfileScreen() {
       console.error("Failed to fetch freelancer data:", error);
     } finally {
       setLoadingProfile(false);
+    }
+  };
+
+  const fetchClientProfileByEmail = async (email) => {
+    try {
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.clientCollectionId,
+        [Query.equal("email", email)]
+      );
+      console.log(response.documents[0]);
+      if (response.documents) {
+        setata(response.documents[0]);
+      } else {
+        console.error("No freelancer found with the provided email.");
+      }
+    } catch (error) {
+      console.error("Failed to fetch freelancer data:", error);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  const onShare = async () => {
+    try {
+      const result = await Share.share({
+        message: `Check out my profile on our app! Name: ${data?.full_name}`,
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with specific activity
+          console.log("Shared with activity:", result.activityType);
+        } else {
+          // shared without specific activity
+          console.log("Profile shared successfully.");
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log("Share dismissed.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to share the profile.");
     }
   };
 
@@ -74,63 +118,97 @@ export default function ProfileScreen() {
         </View>
 
         <ImageBackground
-          source={require("../assets/backGroungBanner.png")}
+          source={
+            { uri: data?.cover_photo } ||
+            require("../assets/backGroungBanner.png")
+          }
           style={styles.backgroundImg}
         >
           <Image
-            source={{ uri: freelancerData?.profile_photo }}
+            source={
+              { uri: data?.profile_photo } ||
+              require("../assets/userProfile.png")
+            }
             style={styles.profileImage}
           />
-          <View style={styles.share}>
+          <TouchableOpacity
+            style={styles.settings}
+            onPress={() => {
+              navigation.navigate("Settings");
+            }}
+          >
+            <MaterialIcons name="settings" size={30} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.share} onPress={onShare}>
             <FontAwesome name="share" size={24} />
-          </View>
+          </TouchableOpacity>
         </ImageBackground>
 
         <View style={styles.userDetails}>
-          <Text style={styles.nameText}>{freelancerData?.full_name}</Text>
+          <Text style={styles.nameText}>{data?.full_name}</Text>
           <Text style={styles.roleText}>
-            {freelancerData?.role_designation} 
+            {role === "client"
+              ? data?.organization_type
+              : data?.role_designation}
           </Text>
           <Text style={styles.statusText}>
-            Status:{" "}
-            {freelancerData?.currently_available ? "Active" : "Inactive"}{" "}
+            Status:
+            {data?.currently_available ? "Active" : "Inactive"}
             <FontAwesome name="circle" size={12} color="#6BCD2F" />
           </Text>
         </View>
 
-        {/* Experience & Certifications */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Experience</Text>
-          <Text style={styles.sectionContent}>
-            {freelancerData?.experience} years of experience
-          </Text>
+        <Text style={styles.Profile_heading}>
+          {role === "client"
+            ? `Company Name: ${data?.company_name}`
+            : data?.profile_heading}
+        </Text>
 
-          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-            Certifications
-          </Text>
-          {/* {freelancerData?.certifications.map((cert, index) => (
-            <Text key={index} style={styles.sectionContent}>
-              {cert}
-            </Text>
-          ))} */}
-        </View>
+        <Text style={styles.about}>About myself</Text>
+        <Text style={styles.about_des}>{data.profile_description}</Text>
 
         {/* Portfolio Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Portfolio</Text>
-          <View style={styles.portfolioImages}>
-            {/* {freelancerData?.portfolio_images.map((image, index) => (
-              <Image
-                key={index}
-                source={{ uri: image }}
-                style={styles.portfolioImage}
-              />
-            ))} */}
+        {role === "freelancer" && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Portfolio</Text>
+            <View style={styles.portfolioImages}>
+              {data?.portfolio_images.map((image, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: image }}
+                  style={styles.portfolioImage}
+                />
+              ))}
+            </View>
           </View>
-        </View>
+        )}
+
+        {/* Experience & Certifications */}
+        {role === "freelancer" && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Experience</Text>
+            <Text style={styles.sectionContent}>
+              {data?.experience} months of experience
+            </Text>
+
+            <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
+              Certifications
+            </Text>
+            {data?.certifications.map((cert, index) => (
+              <Text key={index} style={styles.sectionContent}>
+                {cert}
+              </Text>
+            ))}
+          </View>
+        )}
 
         {/* Edit Profile Button */}
-        <TouchableOpacity style={styles.editProfileButton}>
+        <TouchableOpacity
+          style={styles.editProfileButton}
+          onPress={() => {
+            navigation.navigate("Settings");
+          }}
+        >
           <Text style={styles.buttonText}>Edit Your Profile</Text>
         </TouchableOpacity>
 
@@ -206,6 +284,18 @@ const styles = StyleSheet.create({
   share: {
     position: "absolute",
     bottom: 5,
+    right: 80,
+    backgroundColor: "#fff",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  settings: {
+    position: "absolute",
+    bottom: 5,
     right: 20,
     backgroundColor: "#fff",
     width: 40,
@@ -239,6 +329,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
+    textAlign: "center",
   },
   sectionContent: {
     color: "#333",
@@ -249,9 +340,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   portfolioImage: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     marginRight: 10,
+    borderRadius: 6,
   },
   editProfileButton: {
     backgroundColor: "#5732a8",
@@ -259,6 +351,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 25,
     marginBottom: 15,
+    marginTop: 40
   },
   buttonText: {
     color: "#fff",
@@ -269,5 +362,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#5732a8",
     marginBottom: 20,
+  },
+  Profile_heading: {
+    textAlign: "center",
+    marginTop: 10,
+    fontWeight: "500",
+    fontStyle: "italic",
+    fontSize: 13,
+  },
+  about: {
+    textAlign: "center",
+    marginTop: 10,
+    fontWeight: "600",
+    fontSize: 17,
+  },
+  about_des: {
+    textAlign: "justify",
+    marginTop: 10,
+    fontWeight: "400",
+    fontSize: 13,
+    paddingHorizontal: 25,
   },
 });

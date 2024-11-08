@@ -8,44 +8,57 @@ import {
   StyleSheet,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
-import Checkbox from "expo-checkbox"; // Use checkbox for the agreements
-import { useNavigation } from "@react-navigation/native"; // For navigation control
+import Checkbox from "expo-checkbox";
+import { useNavigation } from "@react-navigation/native";
+import {
+  appwriteConfig,
+  databases,
+  uploadFile,
+  account,
+} from "../lib/appwrite";
+import { Query } from "react-native-appwrite";
 
 const PortfolioScreen = () => {
-  const [portfolioImages, setPortfolioImages] = useState([null, null, null]); // For 3 portfolio slots
+  const [portfolioImages, setPortfolioImages] = useState([]);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeTnC, setAgreeTnC] = useState(false);
-  const router = useRouter();
-  const navigation = useNavigation(); // Using navigation for tab-based navigation
+  const navigation = useNavigation();
 
-  // Function to handle image upload
-  const uploadPortfolioImage = async (index) => {
-    let permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      Alert.alert(
-        "Permission required",
-        "You need to grant permission to access your photos."
-      );
-      return;
-    }
+  // Function to handle multiple image uploads
+  const uploadPortfolioImages = async () => {
+    try {
+      let permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permissionResult.granted === false) {
+        Alert.alert(
+          "Permission required",
+          "You need to grant permission to access your photos."
+        );
+        return;
+      }
 
-    let pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1], // Square images (1080x1080 px ratio)
-      quality: 1,
-    });
+      let pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        aspect: [1, 1],
+        quality: 1,
+        allowsMultipleSelection: true,
+      });
 
-    if (!pickerResult.canceled) {
-      const newImages = [...portfolioImages];
-      newImages[index] = pickerResult.uri; // Save the selected image URI
-      setPortfolioImages(newImages);
+      if (!pickerResult.canceled) {
+        const newImages = pickerResult.assets.map((asset) => asset.uri);
+        setPortfolioImages([...portfolioImages, ...newImages]);
+      }
+    } catch (error) {
+      Alert.alert("Error", `Failed to pick images: ${error.message}`);
     }
   };
 
-  const handleSubmit = () => {
+  const removeImage = (index) => {
+    setPortfolioImages(portfolioImages.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
     if (!agreeTerms || !agreeTnC) {
       Alert.alert(
         "Error",
@@ -54,7 +67,7 @@ const PortfolioScreen = () => {
       return;
     }
 
-    if (portfolioImages.every((img) => img === null)) {
+    if (portfolioImages.length === 0) {
       Alert.alert(
         "Portfolio Missing",
         "Please upload at least one portfolio image."
@@ -62,13 +75,55 @@ const PortfolioScreen = () => {
       return;
     }
 
-    // Proceed with submission
-    Alert.alert("Success", "Portfolio submitted successfully!");
-    navigation.navigate("screens/Home"); // Use navigation.navigate for tab-based navigation
+    try {
+      const user = await account.get();
+
+      // Fetch the user's document based on their email
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        [Query.equal("email", user.email)]
+      );
+
+      if (response.documents.length === 0) {
+        Alert.alert("Error", "No user document found with the provided email.");
+        return;
+      }
+
+      const userDocumentId = response.documents[0].$id;
+
+      // Upload each image and get URLs
+      const uploadedImageURLs = await Promise.all(
+        portfolioImages.map(async (imageUri) => {
+          const fileResponse = await uploadFile({ uri: imageUri }, "image");
+          return fileResponse;
+        })
+      );
+
+      // Update freelancer collection with image URLs
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        userDocumentId,
+        {
+          portfolio_images: uploadedImageURLs,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Success", "Portfolio submitted successfully!");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Error", `Failed to submit portfolio: ${error.message}`);
+    }
   };
 
   const skipScreen = () => {
-    navigation.navigate("screens/Home"); // Redirect to the home screen, which should be part of the tab navigator
+    navigation.navigate("screens/Home");
   };
 
   return (
@@ -92,35 +147,32 @@ const PortfolioScreen = () => {
         3. Don’t upload any inappropriate or NSFW content.
       </Text>
 
-      <View style={styles.imageContainer}>
+      {/* Upload button */}
+      <TouchableOpacity
+        style={styles.imageUploadButton}
+        onPress={uploadPortfolioImages}
+      >
+        <Text style={styles.imageUploadButtonText}>
+          Upload Portfolio Images
+        </Text>
+      </TouchableOpacity>
+
+      {/* Display uploaded images with remove button */}
+      <View style={styles.uploadedImages}>
         {portfolioImages.map((image, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.imageBox}
-            onPress={() => uploadPortfolioImage(index)}
-          >
-            {image ? (
-              <Image source={{ uri: image }} style={styles.image} />
-            ) : (
-              <Text style={styles.plusText}>+</Text>
-            )}
-          </TouchableOpacity>
+          <View key={index} style={styles.imagePreviewContainer}>
+            <Image source={{ uri: image }} style={styles.uploadedImage} />
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => removeImage(index)}
+            >
+              <Text style={styles.removeButtonText}>Remove</Text>
+            </TouchableOpacity>
+          </View>
         ))}
       </View>
 
-      {/* Display uploaded images */}
-      <View style={styles.uploadedImages}>
-        {portfolioImages.map((image, index) =>
-          image ? (
-            <Image
-              key={index}
-              source={{ uri: image }}
-              style={styles.uploadedImage}
-            />
-          ) : null
-        )}
-      </View>
-
+      {/* Terms and Conditions Checkboxes */}
       <View style={styles.checkboxContainer}>
         <Checkbox
           value={agreeTerms}
@@ -148,12 +200,12 @@ const PortfolioScreen = () => {
       <View style={styles.buttonRow}>
         <TouchableOpacity
           style={styles.nextButton}
-          onPress={() => navigation.goBack()} // Use goBack() for previous screen
+          onPress={() => navigation.goBack()}
         >
           <Text style={styles.nextButtonText}>Previous</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.nextButton} onPress={handleSubmit}>
-          <Text style={styles.nextButtonText}>Next</Text>
+          <Text style={styles.nextButtonText}>Submit</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -195,36 +247,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 10,
   },
-  imageContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 20,
-  },
-  imageBox: {
-    width: 90,
-    height: 90,
-    backgroundColor: "#ffffff",
+  imageUploadButton: {
+    backgroundColor: "#ff9800",
+    padding: 15,
     borderRadius: 8,
-    justifyContent: "center",
     alignItems: "center",
   },
-  image: {
+  imageUploadButtonText: {
+    color: "#ffffff",
+    fontWeight: "bold",
+  },
+  uploadedImages: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 20,
+  },
+  imagePreviewContainer: {
+    position: "relative",
+    width: 100,
+    height: 100,
+    margin: 5,
+  },
+  uploadedImage: {
     width: "100%",
     height: "100%",
     borderRadius: 8,
   },
-  plusText: {
-    fontSize: 36,
-    color: "#000000",
-  },
-  uploadedImages: {
-    marginTop: 20,
-  },
-  uploadedImage: {
-    width: "100%",
-    height: 100,
+  removeButton: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    backgroundColor: "#F87A53",
+    padding: 5,
     borderRadius: 8,
-    marginBottom: 10,
+  },
+  removeButtonText: {
+    color: "#ffffff",
+    fontSize: 10,
   },
   checkboxContainer: {
     flexDirection: "row",
@@ -248,7 +307,7 @@ const styles = StyleSheet.create({
   nextButton: {
     width: "32%",
     height: 40,
-    backgroundColor: "#fff", // Dark purple for button
+    backgroundColor: "#fff",
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",

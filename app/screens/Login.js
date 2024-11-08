@@ -82,7 +82,7 @@ const Login = () => {
       </Link>
 
       {/* Create Account */}
-      <Link href="/screens/Signup">
+      <Link href="/screens/Role">
         <Text style={styles.linkText}>New Here? Create Your Account Here!</Text>
       </Link>
 

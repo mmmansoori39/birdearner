@@ -5,7 +5,7 @@ export const appwriteConfig = {
   projectId: "671cc8860027b96d7f3d",
   databaseId: "671cc8b0001ff969ee76",
   freelancerCollectionId: "671cc8be00219424fe65",
-  clientCollectionId: "66f1bdfd0037e91d2064",
+  clientCollectionId: "671cceb9002cacc68e57",
   bucketId: "671d0e22001ee9f5b509",
 };
 
@@ -14,21 +14,20 @@ export const client = new Client();
 client
   .setEndpoint(appwriteConfig.endpoint)
   .setProject(appwriteConfig.projectId)
-  .setPlatform("*  ");
+  .setPlatform("*");
 
 export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
 
 // Upload File
-export async function uploadFile(file, type) {
-  if (!file) return;
-  console.log("Uploading file", file);
+export async function uploadFile(file, type = "application/octet-stream") {
+  if (!file || !file.uri) return;
 
   const fileData = {
-    name: file.name || file.fileName,
-    type: file.mimeType || file.type,
-    size: file.size || file.fileSize,
+    name: file.name || file.fileName || `file_${ID.unique()}`,
+    type: file.mimeType || file.type || "application/octet-stream", 
+    size: file.size || file.fileSize || 0,
     uri: file.uri,
   };
 
@@ -43,34 +42,32 @@ export async function uploadFile(file, type) {
       fileData
     );
 
-    const fileUrl = await getFilePreview(uniqueID, type);
+    // Generate URL based on file type
+    const fileUrl = await getFileURL(uniqueID, fileData.type);
 
     return fileUrl;
   } catch (error) {
+    console.error("Error uploading file:", error.message);
     throw new Error(error);
   }
 }
 
-// Get File Preview
-export async function getFilePreview(fileId, type) {
-  let fileUrl;
-
+// Get File URL based on type
+export async function getFileURL(fileId, mimeType) {
   try {
-    if (type === "video") {
-      fileUrl = storage.getFileView(appwriteConfig.bucketId, fileId);
-    } else if (type === "image") {
-      fileUrl = storage.getFilePreview(
-        appwriteConfig.bucketId,
-        fileId
-      );
+    // Use getFilePreview for images and getFileView for other types
+    let fileUrl;
+    if (mimeType.startsWith("image")) {
+      fileUrl = storage.getFilePreview(appwriteConfig.bucketId, fileId);
     } else {
-      throw new Error("Invalid file type");
+      fileUrl = storage.getFileView(appwriteConfig.bucketId, fileId);
     }
 
-    if (!fileUrl) throw Error;
+    if (!fileUrl) throw new Error("Failed to retrieve file URL");
 
     return fileUrl;
   } catch (error) {
+    console.error("Error getting file URL:", error.message);
     throw new Error(error);
   }
 }

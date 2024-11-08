@@ -1,26 +1,92 @@
+import { useNavigation } from 'expo-router';
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 
 const settingsData = [
   {
     title: 'Account Settings',
-    options: ['Availability', 'My profile', 'Password update', 'Change your email'],
+    options: [
+      {
+        name: "Availability",
+        stack_name: "Availability"
+      },
+      {
+        name: "My profile",
+        stack_name: "MyProfile"
+      },
+      {
+        name: "Password update",
+        stack_name: "Password update"
+      },
+      {
+        name: "Change your email",
+        stack_name: "Email update"
+      },
+    ]
   },
   {
     title: 'Payment Settings',
-    options: ['Withdrawal Earning', 'Link your wallet/Bank account', 'Your Wallet & History'],
+    options: [
+      {
+        name: "Withdrawal Earning",
+        stack_name: "Withdrawal Earning"
+      },
+      {
+        name: "Link your wallet/Bank account",
+        stack_name: "Bank Account details"
+      },
+      {
+        name: "Your Wallet & History",
+        stack_name: "Wallet"
+      },
+    ]
   },
   {
     title: 'Preferences',
-    options: ['Notifications', 'In-app Currency', 'Appearance', 'Security'],
+    options: [
+      {
+        name: "Notifications",
+        stack_name: "Notifications Setting"
+      },
+      {
+        name: "In-app Currency",
+        stack_name: "Availability"
+      },
+      {
+        name: "Appearance",
+        stack_name: "Appearance"
+      },
+      {
+        name: "Security",
+        stack_name: "Availability"
+      },
+    ]
   },
   {
     title: 'About',
-    options: ['Terms & Conditions', 'Feedback', 'Privacy Policy', 'Blogs & Forum'],
+    options: [
+      {
+        name: "Terms & Conditions",
+        stack_name: "Availability"
+      },
+      {
+        name: "Feedback",
+        stack_name: "Availability"
+      },
+      {
+        name: "Privacy Policy",
+        stack_name: "Availability"
+      },
+      {
+        name: "Blogs & Forum",
+        stack_name: "Availability"
+      },
+    ]
   },
 ];
 
 const SettingsScreen = () => {
+  const navigation = useNavigation()
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -41,8 +107,10 @@ const SettingsScreen = () => {
           <View key={index} style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.options.map((option, idx) => (
-              <TouchableOpacity key={idx} style={styles.optionContainer}>
-                <Text style={styles.optionText}>{option}</Text>
+              <TouchableOpacity key={idx} style={styles.optionContainer} onPress={() => {
+              navigation.navigate(option.stack_name);
+            }} >
+              <Text style={styles.optionText} >{option.name}</Text>
                 <Text style={styles.arrowIcon}>›</Text>
               </TouchableOpacity>
             ))}

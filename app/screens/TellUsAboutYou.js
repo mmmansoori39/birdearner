@@ -10,8 +10,13 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { account, databases, appwriteConfig, uploadFile } from "../lib/appwrite";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+  account,
+  databases,
+  appwriteConfig,
+  uploadFile,
+} from "../lib/appwrite";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
@@ -25,7 +30,9 @@ const TellUsAboutYouScreen = () => {
   const [socialLinks, setSocialLinks] = useState([""]);
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
   const router = useRouter();
+  const { role } = useLocalSearchParams();
 
   // Add a new certification input field
   const addCertification = () => {
@@ -65,6 +72,33 @@ const TellUsAboutYouScreen = () => {
     }
   };
 
+  // Handle cover image upload
+  const handleCoverUpload = async () => {
+    try {
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permission Denied",
+          "You need to grant camera roll permissions to upload a profile picture."
+        );
+        return;
+      }
+
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (!pickerResult.canceled) {
+        setCoverImage(pickerResult.assets[0]);
+      }
+    } catch (error) {
+      console.error("Image Picker Error:", error);
+      Alert.alert("Error", "Image Picker encountered an issue.");
+    }
+  };
+
   // Handle date of birth selection
   const onChangeDob = (event, selectedDate) => {
     const currentDate = selectedDate || dob;
@@ -77,80 +111,135 @@ const TellUsAboutYouScreen = () => {
     return regex.test(string);
   };
 
-  const authenticateUser = async () => {
-    try {
-      const session = await account.getSession("current");
-      return session;
-    } catch (error) {
-      await account.createEmailPasswordSession("mmm@gmail.com", "Mmm@12345");
-    }
-  };
-
   // Save user details to AppWrite database
   const saveDetails = async () => {
-    try {
+    // Validate social links
+    for (const link of socialLinks) {
+      if (link && !isValidURL(link)) {
+        Alert.alert(
+          "Invalid URL",
+          "Please enter valid URLs for your social media links."
+        );
+        return;
+      }
+    }
 
-      await authenticateUser()
-      
+    try {
       const user = await account.get();
 
       // Fetch the user's document based on their email
-      const response = await databases.listDocuments(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        [Query.equal("email", user.email)]
-      );
+      if (role === "client") {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          [Query.equal("email", user.email)]
+        );
 
-      if (response.documents.length === 0) {
-        Alert.alert("Error", "No user document found with the provided email.");
-        return;
-      }
-
-      const userDocumentId = response.documents[0].$id;
-
-      // Validate social links
-      for (const link of socialLinks) {
-        if (link && !isValidURL(link)) {
+        if (response.documents.length === 0) {
           Alert.alert(
-            "Invalid URL",
-            "Please enter valid URLs for your social media links."
+            "Error",
+            "No user document found with the provided email."
           );
           return;
         }
-      }
 
-      let profileImageFileURL = null;
+        const userDocumentId = response.documents[0].$id;
 
-      if (profileImage) {
-        try {
-          profileImageFileURL = await uploadFile(profileImage, "image");
-          console.log("Image uploaded successfully:", profileImageFileURL);
-          
-        } catch (uploadError) {
-          console.error("File Upload Error:", uploadError);
-          Alert.alert("Error", uploadError);
+        let profileImageFileURL = null;
+        let coverImageFileURL = null;
+
+        if (profileImage) {
+          try {
+            profileImageFileURL = await uploadFile(profileImage, "image");
+          } catch (uploadError) {
+            Alert.alert("Error", uploadError);
+            return;
+          }
+        }
+
+        if (coverImage) {
+          try {
+            coverImageFileURL = await uploadFile(coverImage, "image");
+          } catch (uploadError) {
+            Alert.alert("Error", uploadError);
+            return;
+          }
+        }
+
+        // Update user document with new details
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          userDocumentId,
+          {
+            gender,
+            dob: dob.toISOString(),
+            website_link: socialLinks,
+            profile_photo: profileImageFileURL,
+            cover_photo : coverImageFileURL,
+            updated_at: new Date().toISOString(),
+          }
+        );
+
+
+      } else {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          [Query.equal("email", user.email)]
+        );
+
+        if (response.documents.length === 0) {
+          Alert.alert(
+            "Error",
+            "No user document found with the provided email."
+          );
           return;
         }
-      }      
 
-      // Update user document with new details
-      await databases.updateDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        userDocumentId,
-        {
-          gender,
-          dob: dob.toISOString(),
-          certifications,
-          social_media_links: socialLinks,
-          profile_description: bio,
-          profile_photo: profileImageFileURL,
-          updated_at: new Date().toISOString(),
+        const userDocumentId = response.documents[0].$id;
+
+        let profileImageFileURL = null;
+        let coverImageFileURL = null;
+
+        if (profileImage) {
+          try {
+            profileImageFileURL = await uploadFile(profileImage, "image");
+          } catch (uploadError) {
+            Alert.alert("Error", uploadError);
+            return;
+          }
         }
-      );
+
+        if (coverImage) {
+          try {
+            coverImageFileURL = await uploadFile(coverImage, "image");
+          } catch (uploadError) {
+            Alert.alert("Error", uploadError);
+            return;
+          }
+        }
+
+        // Update user document with new details
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          userDocumentId,
+          {
+            gender,
+            dob: dob.toISOString(),
+            certifications,
+            social_media_links: socialLinks,
+            profile_description: bio,
+            profile_photo: profileImageFileURL,
+            cover_photo : coverImageFileURL,
+            updated_at: new Date().toISOString(),
+          }
+        );
+      }
 
       Alert.alert("Success", "Your details have been updated successfully.");
-      router.push("/screens/Portfolio");
+      router.push({pathname: "/screens/Portfolio", params: {role}});
     } catch (error) {
       console.error("Error updating details:", error);
       Alert.alert("Error", `Failed to update details: ${error.message}`);
@@ -208,23 +297,27 @@ const TellUsAboutYouScreen = () => {
       </View>
 
       {/* Certifications Section */}
-      <Text style={styles.label}>Certifications</Text>
-      {certifications.map((cert, index) => (
-        <TextInput
-          key={index}
-          style={styles.input}
-          placeholder="Certification"
-          value={cert}
-          onChangeText={(text) => {
-            const updatedCerts = [...certifications];
-            updatedCerts[index] = text;
-            setCertifications(updatedCerts);
-          }}
-        />
-      ))}
-      <TouchableOpacity onPress={addCertification}>
-        <Text style={styles.addMore}>+ Add more certifications</Text>
-      </TouchableOpacity>
+      {role === "freelancer" && (
+        <>
+          <Text style={styles.label}>Certifications</Text>
+          {certifications.map((cert, index) => (
+            <TextInput
+              key={index}
+              style={styles.input}
+              placeholder="Certification"
+              value={cert}
+              onChangeText={(text) => {
+                const updatedCerts = [...certifications];
+                updatedCerts[index] = text;
+                setCertifications(updatedCerts);
+              }}
+            />
+          ))}
+          <TouchableOpacity onPress={addCertification}>
+            <Text style={styles.addMore}>+ Add more certifications</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
       {/* Social Media Links Section */}
       <Text style={styles.label}>Your Social Media Links</Text>
@@ -247,14 +340,18 @@ const TellUsAboutYouScreen = () => {
       </TouchableOpacity>
 
       {/* Description (Bio) Section */}
-      <Text style={styles.label}>Describe yourself</Text>
-      <TextInput
-        style={styles.textArea}
-        placeholder="Describe yourself"
-        value={bio}
-        multiline
-        onChangeText={setBio}
-      />
+      {role === "freelancer" && (
+        <>
+          <Text style={styles.label}>Describe yourself</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Describe yourself"
+            value={bio}
+            multiline
+            onChangeText={setBio}
+          />
+        </>
+      )}
 
       {/* Profile Image Upload */}
       <Text style={styles.label}>Add your profile picture</Text>
@@ -266,7 +363,24 @@ const TellUsAboutYouScreen = () => {
           <Text>Click here to upload</Text>
         </TouchableOpacity>
         {profileImage && (
-          <Image source={{ uri: profileImage?.uri }} style={styles.profileImage} />
+          <Image
+            source={{ uri: profileImage?.uri }}
+            style={styles.profileImage}
+          />
+        )}
+      </View>
+
+      {/* Profile Image Upload */}
+      <Text style={styles.label}>Add your cover art</Text>
+      <View style={styles.profileUploadContainer}>
+        <TouchableOpacity
+          onPress={handleCoverUpload}
+          style={styles.uploadButton}
+        >
+          <Text>Click here to upload</Text>
+        </TouchableOpacity>
+        {coverImage && (
+          <Image source={{ uri: coverImage?.uri }} style={styles.coverImage} />
         )}
       </View>
 
@@ -388,6 +502,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
+    marginLeft: 20,
+  },
+  coverImage: {
+    width: 150,
+    height: 90,
+    borderRadius: 0,
     marginLeft: 20,
   },
   buttonRow: {

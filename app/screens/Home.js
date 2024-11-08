@@ -11,8 +11,10 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigation } from "expo-router";
 
 const HomeScreen = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, userRole } = useAuth();
   const navigation = useNavigation()
+
+  console.log(userRole)
 
   return (
     <SafeAreaView style={styles.safeContainer}>

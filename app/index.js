@@ -1,25 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Image } from "react-native";
 import { useAuth } from "./context/AuthContext";
 import LoginScreen from "./screens/Login";
 import LeaderboardScreen from "./screens/Leaderboard";
 import MarketplaceScreen from "./screens/Marketplace";
 import ProfileStack from "./stacks/ProfileStack";
-import SettingsScreen from "./screens/Settings";
 import IntroScreen from "./screens/Intro";
 import HomeStack from "./stacks/HomeStack";
+import Bird from "./screens/Bird";
+import JobsPostedScreen from "./screens/JobsPosted";
+import JobSubmissionScreen from "./screens/JobSubmissionTimmer";
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, role } = useAuth();
+
+  console.log(role)
 
   if (loading) {
     return <IntroScreen />;
   }
+  
 
   return user ? (
     <Tab.Navigator
@@ -35,24 +40,60 @@ export default function App() {
           let iconName;
           let iconColor = focused ? "#FFF" : "#aaa";
 
-          switch (route.name) {
-            case "Home":
-              iconName = "home";
-              break;
-            case "Leaderboard":
-              iconName = "leaderboard";
-              break;
-            case "Marketplace":
-              iconName = "storefront";
-              break;
-            case "Profile":
-              iconName = "person";
-              break;
-            case "Settings":
-              iconName = "settings";
-              break;
-            default:
-              iconName = "circle";
+          if (route.name === "Job Posted") {
+            return (
+              <View style={focused ? styles.activeTab : styles.inactiveTab}>
+                {focused ? (
+                  <LinearGradient
+                    colors={["#300E49", "#762BAD"]}
+                    style={styles.gradientBackground}
+                  >
+                    <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
+                  </LinearGradient>
+                ) : (
+                  <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
+                )}
+              </View>
+            );
+          } else if(route.name === "AI Bird"){
+            return (
+              <View style={focused ? styles.activeTab : styles.inactiveTab}>
+                {focused ? (
+                  <LinearGradient
+                    colors={["#300E49", "#762BAD"]}
+                    style={styles.gradientBackground}
+                  >
+                    <Image source={require("./assets/bird.png")} style={styles.bird} />
+                  </LinearGradient>
+                ) : (
+                  <Image source={require("./assets/bird.png")} style={styles.bird} />
+                )}
+              </View>
+            );
+          }
+           else {
+            switch (route.name) {
+              case "Home":
+                iconName = "home";
+                break;
+              case "Leaderboard":
+                iconName = "leaderboard";
+                break;
+              case "Marketplace":
+                iconName = "storefront";
+                break;
+              case "Job Requirements":
+                iconName = "add";
+                break;
+              case "Profile":
+                iconName = "person";
+                break;
+              case "Settings":
+                iconName = "settings";
+                break;
+              default:
+                iconName = "circle";
+            }
           }
 
           return (
@@ -72,31 +113,63 @@ export default function App() {
         },
       })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeStack}
-        options={{ unmountOnBlur: false }}
-      />
-      <Tab.Screen
-        name="Leaderboard"
-        component={LeaderboardScreen}
-        options={{ unmountOnBlur: false }}
-      />
-      <Tab.Screen
-        name="Marketplace"
-        component={MarketplaceScreen}
-        options={{ unmountOnBlur: false }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileStack}
-        options={{ unmountOnBlur: false }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ unmountOnBlur: false }}
-      />
+      {role === "client" ? (
+        <>
+          <Tab.Screen
+            name="Home"
+            component={HomeStack}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="Job Posted"
+            component={JobsPostedScreen}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="Job Requirements"
+            component={JobSubmissionScreen}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="AI Bird"
+            component={Bird}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="Profile"
+            component={ProfileStack}
+            options={{ unmountOnBlur: false }}
+          />
+        </>
+      ) : (
+        <>
+          <Tab.Screen
+            name="Home"
+            component={HomeStack}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="Leaderboard"
+            component={LeaderboardScreen}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="Marketplace"
+            component={MarketplaceScreen}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="AI Bird"
+            component={Bird}
+            options={{ unmountOnBlur: false }}
+          />
+          <Tab.Screen
+            name="Profile"
+            component={ProfileStack}
+            options={{ unmountOnBlur: false }}
+          />
+        </>
+      )}
     </Tab.Navigator>
   ) : (
     <LoginScreen />
@@ -119,5 +192,13 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+  },
+  uploadedImage: {
+    width: 25,
+    height: 25,
+  },
+  bird: {
+    width: 40,
+    height: 45,
   },
 });
