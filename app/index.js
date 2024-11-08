@@ -13,6 +13,8 @@ import HomeStack from "./stacks/HomeStack";
 import Bird from "./screens/Bird";
 import JobsPostedScreen from "./screens/JobsPosted";
 import JobSubmissionScreen from "./screens/JobSubmissionTimmer";
+import JobRequirementsScreen from "./screens/JobRequirements";
+import JobRequirementStack from "./stacks/JobRequirementStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -127,7 +129,7 @@ export default function App() {
           />
           <Tab.Screen
             name="Job Requirements"
-            component={JobSubmissionScreen}
+            component={JobRequirementStack}
             options={{ unmountOnBlur: false }}
           />
           <Tab.Screen
