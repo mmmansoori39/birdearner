@@ -25,12 +25,12 @@ const ClientHomeScreen = ({navigation}) => {
         <Text style={styles.welcomeText}>Welcome Back</Text>
         {/* Make sure to wrap dynamic content with Text component */}
         <Text style={styles.usernameText}>
-          {user ? `${user.name}` : "Loading..."}
+          {user ? `${userData.full_name}` : "Loading..."}
         </Text>
       </View>
 
       {/* Your Statistics Section */}
-      <View style={styles.sectionContainer}>
+      {/* <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Your Statistics</Text>
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
@@ -54,10 +54,10 @@ const ClientHomeScreen = ({navigation}) => {
             <Text style={styles.statLabel}>Your Level</Text>
           </View>
         </View>
-      </View>
+      </View> */}
 
       {/* Your Earnings Section */}
-      <View style={styles.sectionContainer}>
+      {/* <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Your Earnings</Text>
         <View style={styles.earningsContainer}>
           <View style={styles.earningItem}>
@@ -77,10 +77,10 @@ const ClientHomeScreen = ({navigation}) => {
             <Text style={styles.earningLabel}>For Withdrawal</Text>
           </View>
         </View>
-      </View>
+      </View> */}
 
       {/* Your Orders Section */}
-      <View style={styles.sectionContainer}>
+      {/* <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Your Orders</Text>
         <View style={styles.ordersContainer}>
           <View style={styles.orderItem}>
@@ -96,7 +96,7 @@ const ClientHomeScreen = ({navigation}) => {
             <Text style={styles.orderLabel}>Cancelled Orders</Text>
           </View>
         </View>
-      </View>
+      </View> */}
 
       {/* What's New Section */}
       <View style={styles.sectionContainer}>
