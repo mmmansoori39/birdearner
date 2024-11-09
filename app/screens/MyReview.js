@@ -16,8 +16,6 @@ import { useNavigation } from "expo-router";
 import ReviewCard from "../components/ReviewCard";
 import { reviews } from "../assets/data";
 import { useAuth } from "../context/AuthContext";
-import { Query } from "react-native-appwrite";
-import { appwriteConfig, databases } from "../lib/appwrite";
 
 export default function ReviewsScreen() {
   const navigation = useNavigation();
