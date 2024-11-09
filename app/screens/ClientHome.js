@@ -12,7 +12,6 @@ import { useAuth } from "../context/AuthContext";
 const ClientHomeScreen = ({navigation}) => {
   const { user, logout, userData } = useAuth();
 
-  console.log(userData)
 
   return (
     <SafeAreaView style={styles.safeContainer}>

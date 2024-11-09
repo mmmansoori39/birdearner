@@ -5,15 +5,67 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../context/AuthContext";
+import { account, appwriteConfig, databases } from "../lib/appwrite";
 
 const EmailUpdateScreen = ({ navigation }) => {
-  const [oldEmail, setOldEmail] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
+  const [password, setPassword] = useState("");
 
+  const { userData, setUser } = useAuth();
 
+  const handleEmailUpdate = async () => {
+    if (!newEmail || !confirmEmail || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (newEmail !== confirmEmail) {
+      Alert.alert("Error", "New email and confirm email do not match");
+      return;
+    }
+
+    try {
+
+      // Update the email in Appwrite
+      await account.updateEmail(newEmail, password);
+
+      // Update the email in the relevant Appwrite database collection
+      if (userData?.role === "client") {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          userData.$id,
+          {
+            email: confirmEmail,
+          }
+        );
+      } else {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          userData.$id,
+          {
+            email: confirmEmail,
+          }
+        );
+      }
+
+      // Update the user session data
+      const session = await account.get();
+      setUser(session);
+
+      Alert.alert("Success", "Email updated successfully");
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error updating email:", error);
+      Alert.alert("Error", "Failed to update email. Please try again.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -27,15 +79,6 @@ const EmailUpdateScreen = ({ navigation }) => {
         <Text style={styles.header}>Change your email</Text>
       </View>
 
-      {/* Full Name Input */}
-      <Text style={styles.label}>Enter your current email address</Text>
-      <TextInput
-        style={styles.input}
-        placeholder=""
-        value={oldEmail}
-        onChangeText={setOldEmail}
-        keyboardType="email-address"
-      />
 
       {/* Password Input */}
       <Text style={styles.label}>Enter your new email address</Text>
@@ -57,7 +100,16 @@ const EmailUpdateScreen = ({ navigation }) => {
         keyboardType="email-address"
       />
 
-      <TouchableOpacity style={styles.signupButton}>
+      <Text style={styles.label}>Enter your password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <TouchableOpacity style={styles.signupButton} onPress={handleEmailUpdate}>
         <Text style={styles.signupButtonText}>Save</Text>
       </TouchableOpacity>
     </View>
@@ -69,7 +121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#FFF",
-    paddingHorizontal: 30
+    paddingHorizontal: 30,
   },
   main: {
     marginTop: 45,
@@ -110,7 +162,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
-    margin: "auto"
+    margin: "auto",
   },
   signupButtonText: {
     color: "white",

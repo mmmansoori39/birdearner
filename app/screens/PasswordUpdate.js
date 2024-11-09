@@ -5,15 +5,62 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { account, appwriteConfig, databases } from "../lib/appwrite";
+import { useAuth } from "../context/AuthContext";
 
 const PasswordUpdateScreen = ({ navigation }) => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const { userData } = useAuth();
 
+  const handlePasswordUpdate = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    // Check if new password and confirm password match
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "New password and confirm password do not match.");
+      return;
+    }
+
+    try {
+      // Update password in Appwrite
+      await account.updatePassword(newPassword, oldPassword);
+
+      if (userData?.role === "client") {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          userData.$id,
+          {
+            password: confirmPassword,
+          }
+        );
+      } else {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          userData.$id,
+          {
+            password: confirmPassword,
+          }
+        );
+      }
+
+      Alert.alert("Success", "Password updated successfully.");
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error updating password:", error);
+      Alert.alert("Error", "Failed to update password. Please check your current password and try again.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -27,7 +74,6 @@ const PasswordUpdateScreen = ({ navigation }) => {
         <Text style={styles.header}>Password update</Text>
       </View>
 
-      {/* Full Name Input */}
       <Text style={styles.label}>Enter your current password</Text>
       <TextInput
         style={styles.input}
@@ -37,7 +83,6 @@ const PasswordUpdateScreen = ({ navigation }) => {
         secureTextEntry={true}
       />
 
-      {/* Password Input */}
       <Text style={styles.label}>Enter your new password</Text>
       <TextInput
         style={styles.input}
@@ -57,7 +102,7 @@ const PasswordUpdateScreen = ({ navigation }) => {
         secureTextEntry={true}
       />
 
-      <TouchableOpacity style={styles.signupButton}>
+      <TouchableOpacity style={styles.signupButton} onPress={handlePasswordUpdate} >
         <Text style={styles.signupButtonText}>Save</Text>
       </TouchableOpacity>
     </View>

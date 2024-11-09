@@ -11,10 +11,9 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigation } from "expo-router";
 
 const HomeScreen = () => {
-  const { user, logout, userRole } = useAuth();
+  const { user, logout, userData} = useAuth();
   const navigation = useNavigation()
 
-  console.log(userRole)
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -27,7 +26,7 @@ const HomeScreen = () => {
         <Text style={styles.welcomeText}>Welcome Back</Text>
         {/* Make sure to wrap dynamic content with Text component */}
         <Text style={styles.usernameText}>
-          {user ? `${user.name}` : "Loading..."}
+          {user ? `${userData.email}` : "Loading..."}
         </Text>
       </View>
 

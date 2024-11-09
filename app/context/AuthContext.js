@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkUserSession();
-  }, []);
+  }, [user, setUser]);
 
   const login = async (email, password) => {
     try {
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading , userData}}>
+    <AuthContext.Provider value={{ user, login, logout, loading , userData, setUser}}>
       {children}
     </AuthContext.Provider>
   );
