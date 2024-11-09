@@ -15,13 +15,14 @@ import JobsPostedScreen from "./screens/JobsPosted";
 import JobSubmissionScreen from "./screens/JobSubmissionTimmer";
 import JobRequirementsScreen from "./screens/JobRequirements";
 import JobRequirementStack from "./stacks/JobRequirementStack";
+import ClientHomeScreen from "./screens/ClientHome";
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
-  const { user, loading, role } = useAuth();
+  const { user, loading, userData } = useAuth();
 
-  console.log(role)
+  const role = userData?.role
 
   if (loading) {
     return <IntroScreen />;
@@ -119,7 +120,7 @@ export default function App() {
         <>
           <Tab.Screen
             name="Home"
-            component={HomeStack}
+            component={ClientHomeScreen}
             options={{ unmountOnBlur: false }}
           />
           <Tab.Screen

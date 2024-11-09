@@ -14,62 +14,24 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router";
 import { useAuth } from "../context/AuthContext";
-import { databases, appwriteConfig } from "../lib/appwrite";
-import { ID, Query } from "react-native-appwrite";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
-  const { user, loading, role } = useAuth();
-  const [data, setata] = useState(null);
+  const { user, loading, userData } = useAuth();
+  const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const role = userData?.role
 
   useEffect(() => {
-    if (role === "client") {
-      fetchClientProfileByEmail(user.email);
-    } else {
-      fetchFreelancerProfileByEmail(user.email);
+    try {
+      setData(userData)
+    } catch (error) {
+      console.error("Failed to fetch freelancer data:", error);
+    } finally {
+      setLoadingProfile(false);
     }
   }, [user]);
 
-  const fetchFreelancerProfileByEmail = async (email) => {
-    try {
-      const response = await databases.listDocuments(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        [Query.equal("email", email)]
-      );
-      console.log(response.documents[0]);
-      if (response.documents) {
-        setata(response.documents[0]);
-      } else {
-        console.error("No freelancer found with the provided email.");
-      }
-    } catch (error) {
-      console.error("Failed to fetch freelancer data:", error);
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
-
-  const fetchClientProfileByEmail = async (email) => {
-    try {
-      const response = await databases.listDocuments(
-        appwriteConfig.databaseId,
-        appwriteConfig.clientCollectionId,
-        [Query.equal("email", email)]
-      );
-      console.log(response.documents[0]);
-      if (response.documents) {
-        setata(response.documents[0]);
-      } else {
-        console.error("No freelancer found with the provided email.");
-      }
-    } catch (error) {
-      console.error("Failed to fetch freelancer data:", error);
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
 
   const onShare = async () => {
     try {

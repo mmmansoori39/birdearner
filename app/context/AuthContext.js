@@ -7,7 +7,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState("");
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     const checkUserSession = async () => {
@@ -28,9 +28,9 @@ export const AuthProvider = ({ children }) => {
         );
     
         if (responseF.documents.length > 0) {
-          setRole(responseF.documents[0].role);
+          setUserData(responseF.documents[0]);
         } else {
-          setRole(responseC.documents[0].role);
+          setUserData(responseC.documents[0]);
         }
 
       } catch (error) {
@@ -62,9 +62,9 @@ export const AuthProvider = ({ children }) => {
       );
   
       if (responseF.documents.length > 0) {
-        setRole(responseF.documents[0].role);
+        setUserData(responseF.documents[0]);
       } else {
-        setRole(responseC.documents[0].role);
+        setUserData(responseC.documents[0]);
       }
 
 
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading , role}}>
+    <AuthContext.Provider value={{ user, login, logout, loading , userData}}>
       {children}
     </AuthContext.Provider>
   );
