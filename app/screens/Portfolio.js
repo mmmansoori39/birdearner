@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Checkbox from "expo-checkbox";
-import { useNavigation } from "@react-navigation/native";
 import {
   appwriteConfig,
   databases,
@@ -18,11 +17,10 @@ import {
 } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
 
-const PortfolioScreen = () => {
+const PortfolioScreen = ({navigation}) => {
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeTnC, setAgreeTnC] = useState(false);
-  const navigation = useNavigation();
 
   // Function to handle multiple image uploads
   const uploadPortfolioImages = async () => {
@@ -123,7 +121,10 @@ const PortfolioScreen = () => {
   };
 
   const skipScreen = () => {
-    navigation.navigate("screens/Home");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' }],
+    });
   };
 
   return (

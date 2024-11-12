@@ -22,7 +22,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
 
-const TellUsAboutYouScreen = () => {
+const TellUsAboutYouScreen = ({navigation}) => {
   const [gender, setGender] = useState("");
   const [dob, setDob] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -248,7 +248,10 @@ const TellUsAboutYouScreen = () => {
 
   // Skip the current screen
   const skipScreen = () => {
-    router.push("/screens/Home");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' }],
+    });
   };
 
   return (
