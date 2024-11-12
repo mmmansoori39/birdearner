@@ -166,7 +166,7 @@ const PortfolioScreen = () => {
               style={styles.removeButton}
               onPress={() => removeImage(index)}
             >
-              <Text style={styles.removeButtonText}>Remove</Text>
+              <Text style={styles.removeButtonText}>X</Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -277,13 +277,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 5,
     right: 5,
-    backgroundColor: "#F87A53",
-    padding: 5,
-    borderRadius: 8,
+    backgroundColor: "#3b006b",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 15,
   },
   removeButtonText: {
     color: "#ffffff",
     fontSize: 10,
+    fontWeight: "600"
   },
   checkboxContainer: {
     flexDirection: "row",
