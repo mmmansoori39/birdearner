@@ -10,7 +10,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { account, databases, appwriteConfig } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
-import { ID } from "react-native-appwrite";
+import { ID, Query } from "react-native-appwrite";
 
 const DescribeRole = () => {
   const { fullName, email, password, role } = useLocalSearchParams();
@@ -24,8 +24,18 @@ const DescribeRole = () => {
   const [designations, setDesignations] = useState([]);
   const [designation, setDesignation] = useState("");
   const [bio, setBio] = useState("");
+  const [services, setServices] = useState([]);
 
-
+  // List of Indian states
+  const indianStates = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+    "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
+    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+    "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi",
+    "Lakshadweep", "Puducherry"
+  ];
 
   const addRole = () => {
     if (designation) {
@@ -43,7 +53,7 @@ const DescribeRole = () => {
   };
 
   const validateForm = () => {
-    if(role === "client"){
+    if (role === "client") {
       if (
         !designation.length ||
         !heading ||
@@ -56,7 +66,7 @@ const DescribeRole = () => {
         showToast("info", "All fields are required.");
         return false;
       }
-    } else{
+    } else {
       if (
         !designations.length ||
         !qualification ||
@@ -91,7 +101,7 @@ const DescribeRole = () => {
       await authenticateUser();
 
       // Create the document with permissions set to the user's ID
-      if(role === "client"){
+      if (role === "client") {
         const document = await databases.createDocument(
           appwriteConfig.databaseId,
           appwriteConfig.clientCollectionId,
@@ -109,7 +119,7 @@ const DescribeRole = () => {
             country,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            profile_description: bio
+            profile_description: bio,
           }
         );
       } else {
@@ -136,7 +146,7 @@ const DescribeRole = () => {
         );
       }
 
-      router.push({pathname: "/screens/TellUsAboutYou", params: {role}});
+      router.push({ pathname: "/screens/TellUsAboutYou", params: { role } });
 
       showToast("success", "Freelancer details saved successfully.");
     } catch (error) {
@@ -144,6 +154,23 @@ const DescribeRole = () => {
       showToast("error", `Failed to save ${role} details: ${error.message}`);
     }
   };
+
+  useEffect(() => {
+
+    async function fetchServices() {
+      try {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.roleCollectionID,
+          [Query.equal("category", "freelance_service")]
+        );
+        setServices(response.documents[0].role);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      }
+    }
+    fetchServices();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -169,30 +196,32 @@ const DescribeRole = () => {
         </View>
       ) : (
         <>
-        <View style={styles.dropdown}>
-          <Picker
-            selectedValue={designation}
-            onValueChange={(itemValue) => setDesignation(itemValue)}
-          >
-            <Picker.Item label="Select Role" value="" />
-            <Picker.Item label="Designer" value="Designer" />
-            <Picker.Item label="Developer" value="Developer" />
-            <Picker.Item label="Manager" value="Manager" />
-          </Picker>
-        </View>
+          <View style={styles.dropdown}>
+            <Picker
+              selectedValue={designation}
+              onValueChange={(itemValue) => setDesignation(itemValue)}
+            >
+              <Picker.Item label="Select Role" value="" />
+              {services.map((service, id) => (
+                <Picker.Item
+                  key={id}
+                  label={service}
+                  value={service}
+                />
+              ))}
+            </Picker>
+          </View>
 
-        {designations.length > 0 &&
-        designations.map((r, index) => (
-          <Text key={index} style={styles.addedRole}>
-            + {r}
-          </Text>
-        ))}
-      <TouchableOpacity onPress={addRole}>
-        <Text style={styles.addMoreRole}>
-           + Add 1 more role
-        </Text>
-      </TouchableOpacity>
-      </>
+          {designations.length > 0 &&
+            designations.map((r, index) => (
+              <Text key={index} style={styles.addedRole}>
+                + {r}
+              </Text>
+            ))}
+          <TouchableOpacity onPress={addRole}>
+            <Text style={styles.addMoreRole}>+ Add 1 more role</Text>
+          </TouchableOpacity>
+        </>
       )}
 
       {role === "freelancer" && (
@@ -256,8 +285,9 @@ const DescribeRole = () => {
               onValueChange={(itemValue) => setState(itemValue)}
             >
               <Picker.Item label="Select State" value="" />
-              <Picker.Item label="New York" value="New York" />
-              <Picker.Item label="California" value="California" />
+              {indianStates.map((state, index) => (
+              <Picker.Item key={index} label={state} value={state} />
+            ))}
             </Picker>
           </View>
         </View>
@@ -282,7 +312,7 @@ const DescribeRole = () => {
               onValueChange={(itemValue) => setCountry(itemValue)}
             >
               <Picker.Item label="Select Country" value="" />
-              <Picker.Item label="USA" value="USA" />
+              {/* <Picker.Item label="USA" value="USA" /> */}
               <Picker.Item label="India" value="India" />
             </Picker>
           </View>
@@ -290,14 +320,18 @@ const DescribeRole = () => {
       </View>
 
       {/* Description (Bio) Section */}
-      <Text style={styles.label}>Describe yourself</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Describe yourself"
-          value={bio}
-          multiline
-          onChangeText={setBio}
-        />
+      {role === "client" && (
+        <>
+          <Text style={styles.label}>Describe yourself</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Describe yourself"
+            value={bio}
+            multiline
+            onChangeText={setBio}
+          />
+        </>
+      )}
 
       {/* Next Button */}
       <TouchableOpacity

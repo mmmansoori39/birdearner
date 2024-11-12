@@ -1,4 +1,5 @@
 import { ID, Account, Client, Databases, Storage } from "react-native-appwrite";
+import {freelance_service, household_service} from "./roleData.js"
 
 export const appwriteConfig = {
   endpoint: "https://cloud.appwrite.io/v1",
@@ -7,6 +8,7 @@ export const appwriteConfig = {
   freelancerCollectionId: "671cc8be00219424fe65",
   clientCollectionId: "671cceb9002cacc68e57",
   bucketId: "671d0e22001ee9f5b509",
+  roleCollectionID: "6733184d001684b89a24"
 };
 
 export const client = new Client();

@@ -102,7 +102,7 @@ const SettingsScreen = () => {
       </View>
 
       {/* Settings List */}
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {settingsData.map((section, index) => (
           <View key={index} style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>{section.title}</Text>

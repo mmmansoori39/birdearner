@@ -26,7 +26,7 @@ const HomeScreen = () => {
         <Text style={styles.welcomeText}>Welcome Back</Text>
         {/* Make sure to wrap dynamic content with Text component */}
         <Text style={styles.usernameText}>
-          {user ? `${userData.email}` : "Loading..."}
+          {user ? `${userData?.full_name}` : "User"}
         </Text>
       </View>
 
