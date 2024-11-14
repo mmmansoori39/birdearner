@@ -1,7 +1,5 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import NotificationScreen from '../screens/Notification';
-import HomeScreen from '../screens/Home';
 import JobRequirementsScreen from '../screens/JobRequirements';
 import JobDetailsScreen from '../screens/JobDetails';
 import JobSubmissionTimmerScreen from '../screens/JobSubmissionTimmer';

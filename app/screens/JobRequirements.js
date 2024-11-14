@@ -24,6 +24,7 @@ const JobRequirementsScreen = ({ navigation }) => {
   const [jobDes, setJobDes] = useState("");
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [jobTitle, setJobTitle] = useState("");
+  const [freelancerType, setFrelancerType] = useState("");
 
   const formData = {
     jobLocation,
@@ -32,7 +33,8 @@ const JobRequirementsScreen = ({ navigation }) => {
     skills,
     jobDes,
     portfolioImages,
-    jobTitle
+    jobTitle,
+    freelancerType,
   };
 
   const addSkills = () => {
@@ -109,8 +111,8 @@ const JobRequirementsScreen = ({ navigation }) => {
         <Text style={styles.label}>Freelancer Type</Text>
         <View style={styles.dropdown}>
           <Picker
-            selectedValue={jobLocation}
-            onValueChange={(itemValue) => setJobLocation(itemValue)}
+            selectedValue={freelancerType}
+            onValueChange={(itemValue) => setFrelancerType(itemValue)}
           >
             <Picker.Item label="Select Freelancer Type" value="" />
             <Picker.Item label="Part time" value="Part time" />
@@ -202,7 +204,7 @@ const JobRequirementsScreen = ({ navigation }) => {
                 style={styles.removeButton}
                 onPress={() => removeImage(index)}
               >
-                <Text style={styles.removeButtonText}>X</Text>
+                <Text style={styles.removeButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -356,7 +358,7 @@ const styles = StyleSheet.create({
   removeButtonText: {
     color: "#ffffff",
     fontSize: 10,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   buttonRow: {
     flexDirection: "row",

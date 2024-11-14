@@ -167,7 +167,7 @@ const PortfolioScreen = ({navigation}) => {
               style={styles.removeButton}
               onPress={() => removeImage(index)}
             >
-              <Text style={styles.removeButtonText}>X</Text>
+              <Text style={styles.removeButtonText}>✕</Text>
             </TouchableOpacity>
           </View>
         ))}

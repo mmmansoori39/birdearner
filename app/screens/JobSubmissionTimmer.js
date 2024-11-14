@@ -1,81 +1,120 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Svg, Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases, uploadFile } from "../lib/appwrite";
+import { ID } from "react-native-appwrite";
 
-const TOTAL_TIME = 30; // Total countdown time in seconds
+const TOTAL_TIME = 30;
 
-const JobSubmissionTimmerScreen = ({ navigation }) => {
+const JobSubmissionTimmerScreen = ({ route, navigation }) => {
   const [seconds, setSeconds] = useState(TOTAL_TIME);
-  const [progress, setProgress] = useState(1); // Start with a full circle
+  const [progress, setProgress] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
+  const { formData } = route.params;
+  const { userData } = useAuth();
+
+  const submitJob = async () => {
+    try {
+      const userDocumentId = userData.$id;
+
+      // Upload each image and get URLs
+      const uploadedImageURLs = await Promise.all(
+        formData.portfolioImages.map(async (imageUri) => {
+          const fileResponse = await uploadFile({ uri: imageUri }, "image");
+          return fileResponse;
+        })
+      );
+
+      // Create job document
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        ID.unique(),
+        {
+          title: formData.jobTitle,
+          description: formData.jobDes,
+          budget: parseInt(formData.budget, 10),
+          location: formData.jobLocation,
+          skills: formData.skills,
+          deadline: formData.deadline,
+          attached_files: uploadedImageURLs,
+          freelancer_type: formData.freelancerType,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          job_created_by: userDocumentId,
+        }
+      );
+
+      Alert.alert("Success", "Job has been created successfully.");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Job Posted" }],
+      });
+      setSubmitted(true); 
+    } catch (error) {
+      console.error("Error updating details:", error);
+      Alert.alert("Error", `Failed to update details: ${error.message}`);
+    }
+  };
 
   useEffect(() => {
+    // Countdown timer effect
     if (seconds > 0) {
       const interval = setInterval(() => {
         setSeconds((prev) => prev - 1);
+        setProgress((prev) => prev - 1 / TOTAL_TIME);
       }, 1000);
-
-      // Update progress as seconds decrease
-      setProgress(seconds / TOTAL_TIME);
 
       return () => clearInterval(interval);
     }
-  }, [seconds]);
 
-  const handleSubmit = () => {
-    navigation.navigate("HomeScreen");
+    if (!submitted) {
+      submitJob();
+    }
+  }, [seconds, submitted]);
+
+  const handleManualSubmit = () => {
+    if (!submitted) {
+      submitJob();
+    }
   };
 
   const handleCancel = () => {
     navigation.goBack();
   };
 
-  const strokeDashoffset = 251.2 * (1 - progress); // Adjust arc based on progress
+  const strokeDashoffset = 251.2 * (1 - progress);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
+      <TouchableOpacity onPress={navigation.goBack} style={styles.backButton}>
         <Ionicons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
       <Text style={styles.header}>Job Submission</Text>
 
       <View style={styles.timerWrapper}>
         <Svg width="150" height="150" viewBox="0 0 100 100">
-          {/* Background Circle */}
-          <Circle
-            cx="50"
-            cy="50"
-            r="40"
-            stroke="#ddd"
-            strokeWidth="10"
-            fill="none"
-          />
-          {/* Animated Progress Circle */}
+          <Circle cx="50" cy="50" r="40" stroke="#ddd" strokeWidth="10" fill="none" />
           <Circle
             cx="50"
             cy="50"
             r="40"
             stroke="#4B0082"
             strokeWidth="10"
-            strokeDasharray="251.2" // Circumference of the circle
+            strokeDasharray="251.2"
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
             fill="none"
-            rotation="-90" // Start at the top
+            rotation="-90"
             origin="50, 50"
           />
         </Svg>
         <Text style={styles.timerText}>{seconds}</Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.submitButton}
-        onPress={handleSubmit}
-        // disabled={seconds > 0}
-      >
+      <TouchableOpacity style={styles.submitButton} onPress={handleManualSubmit} disabled={submitted}>
         <Text style={styles.submitButtonText}>Submit</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleCancel}>

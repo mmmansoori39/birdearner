@@ -44,7 +44,6 @@ const jobData = [
 
 const JobsPostedScreen = ({ navigation }) => {
   const {user} = useAuth()
-  console.log(user.email)
   // Renders each job item in the list
   const renderJobItem = ({ item }) => (
     <View style={styles.jobContainer}>

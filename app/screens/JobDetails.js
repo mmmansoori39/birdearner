@@ -6,7 +6,7 @@ const JobDetailsScreen = ({ route, navigation }) => {
   const { formData } = route.params;
 
   const handleSubmit = () => {
-    navigation.navigate("JobSubmissionTimmer");
+    navigation.navigate("JobSubmissionTimmer", { formData });
   };
 
   return (
@@ -29,7 +29,7 @@ const JobDetailsScreen = ({ route, navigation }) => {
         {/* Job Details */}
         <View style={styles.jobDetails}>
           <Text style={styles.detailText}>
-            <Text style={styles.boldText}>Budget: $</Text>{formData.budget}
+            <Text style={styles.boldText}>Budget: ₹</Text>{formData.budget}
           </Text>
           <Text style={styles.detailText}>
             <Text style={styles.boldText}>Location:</Text> {formData.jobLocation || "N/A"}

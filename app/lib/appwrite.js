@@ -8,7 +8,8 @@ export const appwriteConfig = {
   freelancerCollectionId: "671cc8be00219424fe65",
   clientCollectionId: "671cceb9002cacc68e57",
   bucketId: "671d0e22001ee9f5b509",
-  roleCollectionID: "6733184d001684b89a24"
+  roleCollectionID: "6733184d001684b89a24",
+  jobCollectionID: "673327260000fb1f8aed",
 };
 
 export const client = new Client();
