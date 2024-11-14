@@ -16,6 +16,7 @@ import JobSubmissionScreen from "./screens/JobSubmissionTimmer";
 import JobRequirementsScreen from "./screens/JobRequirements";
 import JobRequirementStack from "./stacks/JobRequirementStack";
 import ClientHomeScreen from "./screens/ClientHome";
+import MarketPlaceStack from "./stacks/MarketPlaceStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -158,7 +159,7 @@ export default function App() {
           />
           <Tab.Screen
             name="Marketplace"
-            component={MarketplaceScreen}
+            component={MarketPlaceStack}
             options={{ unmountOnBlur: false }}
           />
           <Tab.Screen

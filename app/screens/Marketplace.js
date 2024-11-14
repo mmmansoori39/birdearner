@@ -12,7 +12,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import MapView, { Marker } from "react-native-maps";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
 const colors = {
   Immediate: ["#E22323", "#7C1313"],
@@ -20,11 +20,17 @@ const colors = {
   Standard: ["#34660C", "#77CB35"],
 };
 
-const MarketplaceScreen = () => {
+const MarketplaceScreen = ({ navigation }) => {
   const [distance, setDistance] = useState(60);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
-  const router = useRouter();
+  const [jobs, setJobs] = useState({
+    Immediate: [],
+    High: [],
+    Standard: [],
+  });
+  
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -37,13 +43,53 @@ const MarketplaceScreen = () => {
       let currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation.coords);
     })();
+
+    const fetchJobs = async () => {
+      try {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.jobCollectionID
+        );
+
+        const currentsJobs = response.documents;
+        const currentDate = new Date();
+
+        // Initialize the categories
+        const categorizedJobs = {
+          Immediate: [],
+          High: [],
+          Standard: []
+        };
+
+        currentsJobs.forEach((job) => {
+          const deadline = new Date(job.deadline);
+          const timeDiff = (deadline - currentDate) / (1000 * 60 * 60 * 24);
+
+          if (timeDiff < 2) {
+            categorizedJobs.Immediate.push(job);
+          } else if (timeDiff <= 10) {
+            categorizedJobs.High.push(job);
+          } else {
+            categorizedJobs.Standard.push(job);
+          }
+        });
+
+        setJobs(categorizedJobs)
+
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
   }, []);
 
+
   const handlePriorityPress = (priority) => {
-    router.push({
-      pathname: "/components/JobPriority",
-      params: { priority },
-    });
+    
+    navigation.navigate("JobPriority", { priority, jobs });
   };
 
   const renderLines = () => {
@@ -107,7 +153,7 @@ const MarketplaceScreen = () => {
               ? {
                   latitude: location.latitude,
                   longitude: location.longitude,
-                  latitudeDelta: 0.05, // Zoom level for closer view
+                  latitudeDelta: 0.05,
                   longitudeDelta: 0.05,
                 }
               : {
@@ -142,7 +188,7 @@ const MarketplaceScreen = () => {
               style={styles.priorityButton}
             >
               <Text style={styles.priorityText}>Immediate Attention</Text>
-              <Text style={styles.prioritySubText}>175+ Jobs</Text>
+              <Text style={styles.prioritySubText}>{jobs.Immediate.length}+ Jobs</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -152,7 +198,7 @@ const MarketplaceScreen = () => {
           >
             <LinearGradient colors={colors.High} style={styles.priorityButton}>
               <Text style={styles.priorityText}>High Priority</Text>
-              <Text style={styles.prioritySubText}>1,005+ Jobs</Text>
+              <Text style={styles.prioritySubText}>{jobs.High.length}+ Jobs</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -165,7 +211,7 @@ const MarketplaceScreen = () => {
               style={styles.priorityButton}
             >
               <Text style={styles.priorityText}>Standard Priority</Text>
-              <Text style={styles.prioritySubText}>4,125+ Jobs</Text>
+              <Text style={styles.prioritySubText}>{jobs.Standard.length}+ Jobs</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -177,19 +223,13 @@ const MarketplaceScreen = () => {
         end={{ x: 1, y: 0 }}
         style={styles.allJobsContainer}
       >
-        <TouchableOpacity
-          style={styles.allJobsButton}
-          onPress={() => {
-            router.push("/components/JobPriority");
-          }}
-        >
+        <TouchableOpacity style={styles.allJobsButton}>
           <Text style={styles.allJobsText}>All Jobs</Text>
         </TouchableOpacity>
       </LinearGradient>
     </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

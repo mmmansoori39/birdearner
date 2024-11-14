@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import {
   SafeAreaView,
   View,
@@ -10,7 +10,7 @@ import {
   Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { jobsData } from "../assets/data";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
 const colors = {
   Immediate: ["#E22323", "#7C1313"],
@@ -18,44 +18,100 @@ const colors = {
   Standard: ["#34660C", "#77CB35"],
 };
 
-const JobPriority = () => {
-  const { priority } = useLocalSearchParams();
-  const [jobs, setJobs] = useState([]);
+const JobPriority = ({ route, navigation }) => {
+  const { priority, jobs } = route.params;
+
+  const [priorityJob, setPriorityJob] = useState([]);
+  const [clientProfiles, setClientProfiles] = useState({});
 
   const currentColors = colors[priority] || ["#000", "#333"];
 
   useEffect(() => {
-    if (priority) {
-      const selectedJobs = jobsData[priority]?.jobs || [];
-      setJobs(selectedJobs);
+    if (priority === "Immediate") {
+      const selectedJobs = jobs.Immediate || [];
+      setPriorityJob(selectedJobs);
+    } else if (priority === "High") {
+      const selectedJobs = jobs.High || [];
+      setPriorityJob(selectedJobs);
+    } else if (priority === "Standard") {
+      const selectedJobs = jobs.Standard || [];
+      setPriorityJob(selectedJobs);
     }
+
   }, [priority]);
 
-  const renderJobs = () => {
-    return jobs.map((job, index) => (
-      <View key={index}>
-        <TouchableOpacity style={styles.jobCard}
-        onPress={() => {
-          router.push({
-            pathname: "/components/JobDescription",
-            params: job,
-          });
-        }}>
-          <Image
-            source={require("../assets/profile.png")}
-            style={styles.profileImage}
-          />
-          <View style={{ flex: 1, paddingVertical: 2 }}>
-            <Text style={styles.jobTitle}>{job.title}</Text>
-            <Text style={styles.jobDetails}>
-              Budget: {job.budget} Deadline: {job.deadline}
-            </Text>
-            <Text style={styles.jobDescription} numberOfLines={2} >{job.description}</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-    ));
+  useEffect(() => {
+    priorityJob.forEach((job) => {
+      getProfile(job.job_created_by);
+    });
+  }, [priorityJob]);
+
+  const getProfile = async (id) => {
+    try {
+      const response = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.clientCollectionId,
+        id
+      );
+      const profile = response;
+      setClientProfiles((prevProfiles) => ({
+        ...prevProfiles,
+        [id]: profile.profile_photo,
+      }));
+    } catch (error) {
+      console.error("Error fetching client profile:", error);
+    }
   };
+  console.log("profile",clientProfiles)
+
+  const formatDeadline = (deadline) => {
+    const currentDate = new Date();
+    const deadlineDate = new Date(deadline);
+    const timeDiff = Math.ceil(
+      (deadlineDate - currentDate) / (1000 * 60 * 60 * 24)
+    );
+    return timeDiff > 0 ? `${timeDiff} days` : "Deadline passed";
+  };
+
+  const formatBudget = (budget) => {
+    return budget >= 1000
+      ? `${(budget / 1000).toFixed(budget % 1000 === 0 ? 0 : 1)}k`
+      : `${budget}`;
+  };
+
+  const renderJobs = () => {
+    return priorityJob.map((job, index) => {
+      const clientProfileImage = clientProfiles[job.job_created_by];
+  
+      return (
+        <View key={index}>
+          <TouchableOpacity
+            style={styles.jobCard}
+            onPress={() => {
+              navigation.navigate("JobDescription", { job, clientProfileImage });
+            }}
+          >
+            {/* Displaying the client's profile image */}
+            <Image
+              source={{ uri: clientProfileImage || "../assets/profile.png" }}
+              style={styles.profileImage}
+            />
+            <View style={{ flex: 1, paddingVertical: 2 }}>
+              <Text style={styles.jobTitle}>{job.title}</Text>
+              <Text style={styles.jobDetails}>
+                Budget: ₹{formatBudget(job.budget)} Deadline:{" "}
+                {formatDeadline(job.deadline)}
+              </Text>
+              <Text style={styles.jobDescription} numberOfLines={2}>
+                {job.description}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      );
+    });
+  };
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,8 +127,7 @@ const JobPriority = () => {
               style={styles.priorityButton}
             >
               <Text style={styles.priorityText}>
-                {" "}
-                {priority} {priority === "Immediate" ? "Attention" : "Priority"}{" "}
+                {priority} {priority === "Immediate" ? "Attention" : "Priority"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
