@@ -1,73 +1,106 @@
-import React from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { appwriteConfig, databases } from '../lib/appwrite';
+import { Query } from 'react-native-appwrite';
+import { differenceInDays } from 'date-fns';
 
-// Placeholder data for job postings
-const jobData = [
-  {
-    id: '1',
-    title: 'Looking for graphic designer for branding project',
-    status: 'Under process',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-    color: '#FF3B30', // Red
-  },
-  {
-    id: '2',
-    title: 'Looking for graphic designer for branding project',
-    status: '4 Entries Received',
-    avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-    color: '#34C759', // Green
-  },
-  {
-    id: '3',
-    title: 'Looking for graphic designer for branding project',
-    status: 'Under process',
-    avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-    color: '#FFCC00', // Yellow
-  },
-  {
-    id: '4',
-    title: 'Looking for graphic designer for branding project',
-    status: 'Cancelled',
-    avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
-    color: '#34C759', // Green
-  },
-  {
-    id: '5',
-    title: 'Looking for graphic designer for branding project',
-    status: 'Completed',
-    avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
-    color: '#FFCC00', // Yellow
-  },
-];
+const categorizeJobs = (jobs) => {
+  const today = new Date();
+
+  return jobs.map((job) => {
+    const daysRemaining = differenceInDays(new Date(job.deadline), today);
+
+    let priority;
+    let color = '#FFCC00';
+
+    if(job.applied_freelancer.length === 0){
+      priority= 'Under process'
+    } else if(job.applied_freelancer.length === 1){
+      priority= `${job.applied_freelancer.length} Entery Recieved`
+    } else if(job.applied_freelancer.length > 1){
+      priority= `${job.applied_freelancer.length} Enteries Recieved`
+    }
+    
+
+    if (daysRemaining <= 2) {
+      color = '#FF3B30';
+    } else if (daysRemaining <= 10) {
+      color = '#34C759'; 
+    }
+
+    return {
+      ...job,
+      color,
+      priority,
+    };
+  });
+};
 
 const JobsPostedScreen = ({ navigation }) => {
-  const {user} = useAuth()
-  // Renders each job item in the list
+  const { userData } = useAuth();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.jobCollectionID,
+          [
+            Query.equal('job_created_by', userData.$id),
+            Query.orderDesc('created_at')
+          ]
+        );
+
+        const categorizedJobs = categorizeJobs(response.documents);
+        setJobs(categorizedJobs);
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+
+
   const renderJobItem = ({ item }) => (
     <View style={styles.jobContainer}>
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
+      <Image source={{ uri: "https://randomuser.me/api/portraits/women/3.jpg" }} style={styles.avatar} />
       <View style={styles.jobContent}>
         <Text style={styles.jobTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.jobStatus}>Status: {item.status}</Text>
+        <Text style={styles.jobStatus}>Status: {item.priority}</Text>
       </View>
       <View style={[styles.statusIndicator, { backgroundColor: item.color }]} />
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3b006b" />
+        <Text>Loading jobs...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.main}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
-      <Text style={styles.header}>Jobs Posted</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.header}>Jobs Posted</Text>
       </View>
       <FlatList
-        data={jobData}
+        data={jobs}
         renderItem={renderJobItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.$id}
         contentContainerStyle={styles.listContainer}
       />
     </View>
@@ -143,6 +176,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
   },
+  loadingContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    alignContent: "center",
+    marginTop: 350
+  }
 });
 
 export default JobsPostedScreen;

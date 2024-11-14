@@ -80,8 +80,48 @@ const JobRequirementsScreen = ({ navigation }) => {
     setPortfolioImages(portfolioImages.filter((_, i) => i !== index));
   };
 
+  // Validation function
+  const validateForm = () => {
+    if (!jobLocation) {
+      Alert.alert("Validation Error", "Please enter a job location.");
+      return false;
+    }
+    if (!jobTitle) {
+      Alert.alert("Validation Error", "Please enter a job title.");
+      return false;
+    }
+    if (!freelancerType) {
+      Alert.alert("Validation Error", "Please select a freelancer type.");
+      return false;
+    }
+    if (deadline < new Date()) {
+      Alert.alert("Validation Error", "Deadline must be a future date.");
+      return false;
+    }
+    if (!budget || isNaN(budget) || budget <= 0) {
+      Alert.alert("Validation Error", "Please enter a valid budget.");
+      return false;
+    }
+    if (skills.some(skill => skill === "")) {
+      Alert.alert("Validation Error", "Please enter all required skills.");
+      return false;
+    }
+    if (!jobDes) {
+      Alert.alert("Validation Error", "Please enter a job description.");
+      return false;
+    }
+    if (portfolioImages.length === 0) {
+      Alert.alert("Validation Error", "Please upload at least one portfolio image.");
+      return false;
+    }
+    return true;
+  };
+
+
   const handleSubmit = () => {
-    navigation.navigate("JobDetails", { formData });
+    if (validateForm()) {
+      navigation.navigate("JobDetails", { formData });
+    }
   };
 
   return (
