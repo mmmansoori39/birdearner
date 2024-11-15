@@ -44,6 +44,8 @@ const JobSubmissionTimmerScreen = ({ route, navigation }) => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           job_created_by: userDocumentId,
+          latitude: formData.latitude,
+          longitude: formData.longitude
         }
       );
 

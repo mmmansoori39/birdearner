@@ -14,6 +14,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
+import * as Location from "expo-location";
 
 const JobRequirementsScreen = ({ navigation }) => {
   const [jobLocation, setJobLocation] = useState("");
@@ -25,6 +26,8 @@ const JobRequirementsScreen = ({ navigation }) => {
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [jobTitle, setJobTitle] = useState("");
   const [freelancerType, setFrelancerType] = useState("");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
 
   const formData = {
     jobLocation,
@@ -35,6 +38,38 @@ const JobRequirementsScreen = ({ navigation }) => {
     portfolioImages,
     jobTitle,
     freelancerType,
+    latitude,
+    longitude,
+  };
+
+  const requestPermission = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission denied",
+        "Location access is needed to use this feature."
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const fetchCoordinates = async () => {
+    const hasPermission = await requestPermission();
+    if (!hasPermission) return;
+
+    try {
+      const [result] = await Location.geocodeAsync(jobLocation);
+      if (result) {
+        setLatitude(parseFloat(result.latitude));
+        setLongitude(parseFloat(result.longitude));
+      } else {
+        Alert.alert("Error", "Unable to fetch coordinates. Please try again.");
+      }
+    } catch (error) {
+      console.log(error.message);
+      Alert.alert("Error", `Failed to fetch coordinates: ${error.message}`);
+    }
   };
 
   const addSkills = () => {
@@ -102,7 +137,7 @@ const JobRequirementsScreen = ({ navigation }) => {
       Alert.alert("Validation Error", "Please enter a valid budget.");
       return false;
     }
-    if (skills.some(skill => skill === "")) {
+    if (skills.some((skill) => skill === "")) {
       Alert.alert("Validation Error", "Please enter all required skills.");
       return false;
     }
@@ -111,16 +146,23 @@ const JobRequirementsScreen = ({ navigation }) => {
       return false;
     }
     if (portfolioImages.length === 0) {
-      Alert.alert("Validation Error", "Please upload at least one portfolio image.");
+      Alert.alert(
+        "Validation Error",
+        "Please upload at least one portfolio image."
+      );
       return false;
     }
     return true;
   };
 
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      navigation.navigate("JobDetails", { formData });
+      await fetchCoordinates();
+      if (latitude && longitude) {
+        navigation.navigate("JobDetails", { formData });
+      } else {
+        Alert.alert("Validation Error", "Please enter a valid job location.");
+      }
     }
   };
 

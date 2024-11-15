@@ -29,39 +29,57 @@ const MarketplaceScreen = ({ navigation }) => {
     High: [],
     Standard: [],
   });
-  
+
   const [loading, setLoading] = useState(true);
 
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const toRad = (value) => (value * Math.PI) / 180;
+    const R = 6371; // Earth's radius in km
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied.");
-        return;
-      }
-
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation.coords);
-    })();
-
     const fetchJobs = async () => {
+      if (!location) return;
+
       try {
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
           appwriteConfig.jobCollectionID
         );
 
-        const currentsJobs = response.documents;
+        const currentJobs = response.documents;
+        const filteredJobs = currentJobs.filter((job) => {
+          const jobDistance = calculateDistance(
+            location.latitude,
+            location.longitude,
+            job.latitude,
+            job.longitude
+          );
+          return jobDistance <= distance;
+        });
+
         const currentDate = new Date();
 
-        // Initialize the categories
         const categorizedJobs = {
           Immediate: [],
           High: [],
-          Standard: []
+          Standard: [],
         };
 
-        currentsJobs.forEach((job) => {
+        filteredJobs.forEach((job) => {
           const deadline = new Date(job.deadline);
           const timeDiff = (deadline - currentDate) / (1000 * 60 * 60 * 24);
 
@@ -74,8 +92,7 @@ const MarketplaceScreen = ({ navigation }) => {
           }
         });
 
-        setJobs(categorizedJobs)
-
+        setJobs(categorizedJobs);
       } catch (error) {
         console.error("Failed to fetch jobs:", error);
       } finally {
@@ -84,11 +101,22 @@ const MarketplaceScreen = ({ navigation }) => {
     };
 
     fetchJobs();
+  }, [distance, location]);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied.");
+        return;
+      }
+
+      let currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation.coords);
+    })();
   }, []);
 
-
   const handlePriorityPress = (priority) => {
-    
     navigation.navigate("JobPriority", { priority, jobs });
   };
 
@@ -172,8 +200,51 @@ const MarketplaceScreen = ({ navigation }) => {
               }}
               title="Our Location"
               description="This is our current location"
+              pinColor="blue"
             />
           )}
+
+          {/* Show markers for Immediate Jobs */}
+          {jobs.Immediate.map((job, index) => (
+            <Marker
+              key={`immediate-${index}`}
+              coordinate={{
+                latitude: job.latitude,
+                longitude: job.longitude,
+              }}
+              title={job.title}
+              description={job.description}
+              pinColor="red"
+            />
+          ))}
+
+          {/* Show markers for High Priority Jobs */}
+          {jobs.High.map((job, index) => (
+            <Marker
+              key={`high-${index}`}
+              coordinate={{
+                latitude: job.latitude,
+                longitude: job.longitude,
+              }}
+              title={job.title}
+              description={job.description}
+              pinColor="orange"
+            />
+          ))}
+
+          {/* Show markers for Standard Priority Jobs */}
+          {jobs.Standard.map((job, index) => (
+            <Marker
+              key={`standard-${index}`}
+              coordinate={{
+                latitude: job.latitude,
+                longitude: job.longitude,
+              }}
+              title={job.title}
+              description={job.description}
+              pinColor="green"
+            />
+          ))}
         </MapView>
 
         <Text style={styles.jobsAround}>Jobs around...</Text>
@@ -188,7 +259,9 @@ const MarketplaceScreen = ({ navigation }) => {
               style={styles.priorityButton}
             >
               <Text style={styles.priorityText}>Immediate Attention</Text>
-              <Text style={styles.prioritySubText}>{jobs.Immediate.length}+ Jobs</Text>
+              <Text style={styles.prioritySubText}>
+                {jobs.Immediate.length}+ Jobs
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -198,7 +271,9 @@ const MarketplaceScreen = ({ navigation }) => {
           >
             <LinearGradient colors={colors.High} style={styles.priorityButton}>
               <Text style={styles.priorityText}>High Priority</Text>
-              <Text style={styles.prioritySubText}>{jobs.High.length}+ Jobs</Text>
+              <Text style={styles.prioritySubText}>
+                {jobs.High.length}+ Jobs
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -211,7 +286,9 @@ const MarketplaceScreen = ({ navigation }) => {
               style={styles.priorityButton}
             >
               <Text style={styles.priorityText}>Standard Priority</Text>
-              <Text style={styles.prioritySubText}>{jobs.Standard.length}+ Jobs</Text>
+              <Text style={styles.prioritySubText}>
+                {jobs.Standard.length}+ Jobs
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

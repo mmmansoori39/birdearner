@@ -5,6 +5,8 @@ import { FontAwesome } from '@expo/vector-icons';
 const JobDetailsScreen = ({ route, navigation }) => {
   const { formData } = route.params;
 
+  console.log(formData)
+
   const handleSubmit = () => {
     navigation.navigate("JobSubmissionTimmer", { formData });
   };
