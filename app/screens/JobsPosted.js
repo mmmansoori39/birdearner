@@ -67,18 +67,34 @@ const JobsPostedScreen = ({ navigation }) => {
     fetchJobs();
   }, []);
 
+  const renderJobItem = ({ item }) => {
 
+    const title = item.title
+    const freelancersId = item.applied_freelancer
+    const color = item.color
 
-  const renderJobItem = ({ item }) => (
-    <View style={styles.jobContainer}>
-      <Image source={{ uri: "https://randomuser.me/api/portraits/women/3.jpg" }} style={styles.avatar} />
-      <View style={styles.jobContent}>
-        <Text style={styles.jobTitle} numberOfLines={1}>{item.title}</Text>
-        <Text style={styles.jobStatus}>Status: {item.priority}</Text>
+    return (
+      <View>
+        <TouchableOpacity style={styles.jobContainer} onPress={() => {
+          navigation.navigate("AppliersScreen", {title, freelancersId, color})
+        }} >
+          <Image
+            source={{ uri: "https://randomuser.me/api/portraits/women/3.jpg" }}
+            style={styles.avatar}
+          />
+          <View style={styles.jobContent}>
+            <Text style={styles.jobTitle} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <Text style={styles.jobStatus}>Status: {item.priority}</Text>
+          </View>
+          <View
+            style={[styles.statusIndicator, { backgroundColor: item.color }]}
+          />
+        </TouchableOpacity>
       </View>
-      <View style={[styles.statusIndicator, { backgroundColor: item.color }]} />
-    </View>
-  );
+    )
+  };
 
   if (loading) {
     return (

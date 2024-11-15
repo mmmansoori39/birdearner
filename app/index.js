@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -6,17 +6,14 @@ import { View, StyleSheet, Image } from "react-native";
 import { useAuth } from "./context/AuthContext";
 import LoginScreen from "./screens/Login";
 import LeaderboardScreen from "./screens/Leaderboard";
-import MarketplaceScreen from "./screens/Marketplace";
 import ProfileStack from "./stacks/ProfileStack";
 import IntroScreen from "./screens/Intro";
 import HomeStack from "./stacks/HomeStack";
 import Bird from "./screens/Bird";
-import JobsPostedScreen from "./screens/JobsPosted";
-import JobSubmissionScreen from "./screens/JobSubmissionTimmer";
-import JobRequirementsScreen from "./screens/JobRequirements";
 import JobRequirementStack from "./stacks/JobRequirementStack";
 import ClientHomeScreen from "./screens/ClientHome";
 import MarketPlaceStack from "./stacks/MarketPlaceStack";
+import JobStack from "./stacks/JobStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -126,7 +123,7 @@ export default function App() {
           />
           <Tab.Screen
             name="Job Posted"
-            component={JobsPostedScreen}
+            component={JobStack}
             options={{ unmountOnBlur: false }}
           />
           <Tab.Screen

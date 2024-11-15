@@ -62,7 +62,6 @@ const JobPriority = ({ route, navigation }) => {
       console.error("Error fetching client profile:", error);
     }
   };
-  console.log("profile",clientProfiles)
 
   const formatDeadline = (deadline) => {
     const currentDate = new Date();

@@ -298,8 +298,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   portfolioImages: {
-    flexDirection: "row",
     marginTop: 10,
+    display: "flex",
+    flexWrap: "wrap",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    gap: 10,
   },
   portfolioImage: {
     width: 100,

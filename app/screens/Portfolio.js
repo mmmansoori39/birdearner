@@ -16,11 +16,13 @@ import {
   account,
 } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useNavigation } from "expo-router";
 
-const PortfolioScreen = ({navigation}) => {
+const PortfolioScreen = () => {
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeTnC, setAgreeTnC] = useState(false);
+  const navigation = useNavigation()
 
   // Function to handle multiple image uploads
   const uploadPortfolioImages = async () => {
@@ -113,7 +115,7 @@ const PortfolioScreen = ({navigation}) => {
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],
-      });
+      }); 
     } catch (error) {
       console.log(error);
       Alert.alert("Error", `Failed to submit portfolio: ${error.message}`);
