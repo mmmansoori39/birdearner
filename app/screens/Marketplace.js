@@ -20,8 +20,10 @@ const colors = {
   Standard: ["#34660C", "#77CB35"],
 };
 
+const maxDist = 6000;
+
 const MarketplaceScreen = ({ navigation }) => {
-  const [distance, setDistance] = useState(60);
+  const [distance, setDistance] = useState(600);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [jobs, setJobs] = useState({
@@ -148,6 +150,12 @@ const MarketplaceScreen = ({ navigation }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.sliderBackground}
+              onStartShouldSetResponder={(e) => {
+                const { locationX } = e.nativeEvent;
+                const percentage = (locationX / 307) * 100;
+                setDistance(parseInt((percentage / 100) * maxDist));
+                return true;
+              }}
             >
               <View style={styles.linesContainer}>{renderLines()}</View>
 
@@ -162,7 +170,7 @@ const MarketplaceScreen = ({ navigation }) => {
             </LinearGradient>
 
             <TouchableOpacity
-              onPress={() => setDistance(Math.min(100, distance + 1))}
+              onPress={() => setDistance(Math.min(maxDist, distance + 1))}
               style={styles.iconButton}
             >
               <Entypo name="circle-with-plus" size={24} color="black" />

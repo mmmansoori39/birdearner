@@ -42,7 +42,6 @@ const JobsPostedScreen = ({ navigation }) => {
   const { userData } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -64,8 +63,10 @@ const JobsPostedScreen = ({ navigation }) => {
       }
     };
 
-    fetchJobs();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', fetchJobs);
+
+    return unsubscribe;
+  }, [navigation]);
 
   const renderJobItem = ({ item }) => {
 
