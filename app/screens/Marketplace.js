@@ -107,14 +107,25 @@ const MarketplaceScreen = ({ navigation }) => {
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied.");
-        return;
-      }
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setErrorMsg("Permission to access location was denied.");
+          Alert.alert(
+            "Permission Denied",
+            "Location permissions are required to use this feature. Please enable them in your device settings."
+          );
+          return;
+        }
 
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation.coords);
+        let currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        setLocation(currentLocation.coords);
+      } catch (error) {
+        console.error("Error fetching location:", error);
+        setErrorMsg("Failed to fetch location. Please try again.");
+      }
     })();
   }, []);
 
@@ -129,7 +140,7 @@ const MarketplaceScreen = ({ navigation }) => {
     }
     return lines;
   };
- 
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -153,7 +164,11 @@ const MarketplaceScreen = ({ navigation }) => {
               onStartShouldSetResponder={(e) => {
                 const { locationX } = e.nativeEvent;
                 const percentage = (locationX / 307) * 100;
-                setDistance(parseInt((percentage / 100) * maxDist));
+                const newDistance = Math.min(
+                  maxDist,
+                  Math.max(0, (percentage / 100) * maxDist)
+                );
+                setDistance(parseInt(newDistance));
                 return true;
               }}
             >

@@ -203,3 +203,8 @@ const styles = StyleSheet.create({
     height: 45,
   },
 });
+
+
+
+// eas build --platform android --profile debug
+// builing an Apk for debuging purpose
