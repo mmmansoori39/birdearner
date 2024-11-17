@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { account, databases, appwriteConfig } from "../lib/appwrite";
@@ -28,13 +29,40 @@ const DescribeRole = () => {
 
   // List of Indian states
   const indianStates = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
-    "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
-    "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
-    "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi",
-    "Lakshadweep", "Puducherry"
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Lakshadweep",
+    "Puducherry",
   ];
 
   const addRole = () => {
@@ -156,7 +184,6 @@ const DescribeRole = () => {
   };
 
   useEffect(() => {
-
     async function fetchServices() {
       try {
         const response = await databases.listDocuments(
@@ -173,7 +200,7 @@ const DescribeRole = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
         {role === "client" ? "Tell us about yourself" : "Describe Your Role"}
       </Text>
@@ -203,11 +230,7 @@ const DescribeRole = () => {
             >
               <Picker.Item label="Select Role" value="" />
               {services.map((service, id) => (
-                <Picker.Item
-                  key={id}
-                  label={service}
-                  value={service}
-                />
+                <Picker.Item key={id} label={service} value={service} />
               ))}
             </Picker>
           </View>
@@ -286,8 +309,8 @@ const DescribeRole = () => {
             >
               <Picker.Item label="Select State" value="" />
               {indianStates.map((state, index) => (
-              <Picker.Item key={index} label={state} value={state} />
-            ))}
+                <Picker.Item key={index} label={state} value={state} />
+              ))}
             </Picker>
           </View>
         </View>
@@ -328,8 +351,13 @@ const DescribeRole = () => {
             placeholder="Describe yourself"
             value={bio}
             multiline
-            onChangeText={setBio}
+            onChangeText={(text) => {
+              if (text.length <= 255) {
+                setBio(text);
+              }
+            }}
           />
+          <Text style={styles.charCount}>{bio.length}/255</Text>
         </>
       )}
 
@@ -342,7 +370,7 @@ const DescribeRole = () => {
       </TouchableOpacity>
 
       <Toast />
-    </View>
+    </ScrollView>
   );
 };
 
@@ -358,6 +386,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#f0f0f0",
     marginBottom: 20,
+    // marginTop: 20,
   },
   label: {
     color: "#f0f0f0",
@@ -390,6 +419,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 10,
   },
+  charCount:{
+    color: "#fff",
+    marginTop: 2,
+    left: "auto"
+  },
   addMoreRole: {
     color: "#fff",
     marginBottom: 20,
@@ -409,7 +443,7 @@ const styles = StyleSheet.create({
   nextButton: {
     width: "32%",
     height: 40,
-    backgroundColor: "#fff", // Dark purple for button
+    backgroundColor: "#fff",
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",

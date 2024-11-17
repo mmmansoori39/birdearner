@@ -22,8 +22,8 @@ const Login = () => {
     try {
       if (!email || !password) {
         Toast.show({
-          type: "error",
-          text1: "Empty fields",
+          type: "info",
+          text1: "Warning",
           text2: "All fields are required",
           position: "top",
         });
@@ -33,8 +33,8 @@ const Login = () => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         Toast.show({
-          type: "error",
-          text1: "Invalid Email",
+          type: "info",
+          text1: "warning",
           text2: "Please enter a valid email address",
           position: "top",
         });

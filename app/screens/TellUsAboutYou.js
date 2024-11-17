@@ -351,8 +351,13 @@ const TellUsAboutYouScreen = ({navigation}) => {
             placeholder="Describe yourself"
             value={bio}
             multiline
-            onChangeText={setBio}
+            onChangeText={(text) => {
+              if (text.length <= 255) {
+                setBio(text);
+              }
+            }}
           />
+          <Text style={styles.charCount}>{bio.length}/255</Text>
         </>
       )}
 
@@ -429,6 +434,11 @@ const styles = StyleSheet.create({
     right: 20,
     padding: 10,
     borderRadius: 8,
+  },
+  charCount:{
+    color: "#fff",
+    marginTop: 2,
+    left: "auto"
   },
   skipButtonText: {
     color: "#ffffff",
