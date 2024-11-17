@@ -10,17 +10,38 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, useNavigation, useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
-import { Toast } from "react-native-toast-message/lib/src/Toast"; 
+import { Toast } from "react-native-toast-message/lib/src/Toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login} = useAuth(); 
-  const navigation = useNavigation()
+  const { login } = useAuth();
+  const navigation = useNavigation();
 
   const handleLogin = async () => {
     try {
-      await login(email, password); 
+      if (!email || !password) {
+        Toast.show({
+          type: "error",
+          text1: "Empty fields",
+          text2: "All fields are required",
+          position: "top",
+        });
+        return;
+      }
+      // Validate email syntax
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        Toast.show({
+          type: "error",
+          text1: "Invalid Email",
+          text2: "Please enter a valid email address",
+          position: "top",
+        });
+        return;
+      }
+
+      await login(email, password);
       Toast.show({
         type: "success",
         text1: "Login Successful!",
@@ -29,8 +50,8 @@ const Login = () => {
       });
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
-      }); 
+        routes: [{ name: "Home" }],
+      });
     } catch (error) {
       Toast.show({
         type: "error",
