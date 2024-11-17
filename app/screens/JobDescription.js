@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,34 @@ import { appwriteConfig, databases } from '../lib/appwrite';
 
 const JobDescriptionScreen = ({ route, navigation }) => {
   const { job, clientProfileImage } = route.params;
-  const {userData} = useAuth()
+  const {userData} = useAuth();
+  const [appliedStatus, setAppliedStatus] = useState(false)
+
+  useEffect(() => {
+    const checkAppliedStatus = async () => {
+      try {
+        const jobId = job.$id;
+        const freelancerId = userData.$id
+    
+        const jobDoc = await databases.getDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.jobCollectionID,
+          jobId
+        );
+    
+        const updatedFreelancers = jobDoc.applied_freelancer;
+    
+        if (updatedFreelancers.includes(freelancerId)) {
+          setAppliedStatus(true)
+        }
+  
+      } catch (error) {
+        console.error("Error job status:", error);
+      }
+    }
+
+    checkAppliedStatus()
+  }, [])
 
   const handleSubmit = async () => {
     try {
@@ -34,7 +61,7 @@ const JobDescriptionScreen = ({ route, navigation }) => {
           updated_at: new Date().toISOString(),
         }
       );
-  
+      setAppliedStatus(true)
       navigation.goBack();
   
     } catch (error) {
@@ -110,9 +137,14 @@ const JobDescriptionScreen = ({ route, navigation }) => {
         </View>
 
         {/* Apply Button */}
-        <TouchableOpacity style={styles.applyButton} onPress={handleSubmit} >
-          <Text style={styles.applyButtonText}>Apply</Text>
-        </TouchableOpacity>
+          {
+            appliedStatus === true ? (
+              <Text style={styles.alreadyapplyButtonText}>Already applied</Text>
+            ) : (
+              <TouchableOpacity style={styles.applyButton} onPress={handleSubmit} >
+              <Text style={styles.applyButtonText}>Apply</Text></TouchableOpacity>
+            )
+          }
 
         {/* Report Job Link */}
         <Text style={styles.reportText}>Report this job</Text>
@@ -221,6 +253,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 24,
+  },
+  alreadyapplyButtonText: {
+    color: '#36454F',
+    fontWeight: 'bold',
+    fontSize: 24,
+    backgroundColor: '#c2c2c2',
+    borderRadius: 25,
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 10,
+    textAlign: "center"
   },
   reportText: {
     color: '#555',

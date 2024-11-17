@@ -102,7 +102,7 @@ const ClientHomeScreen = ({navigation}) => {
         <Text style={styles.sectionTitle}>What's New</Text>
         <View style={styles.whatsNewContainer}>
           {/* You can add new content here */}
-          <Text style={styles.whatsNewText}>Enjoy Earning</Text>
+          <Text style={styles.whatsNewText}>Click on chat icon to logout ( temprory)</Text>
           <TouchableOpacity style={styles.chatIcon} onPress={() => {
             logout()
           }} >
