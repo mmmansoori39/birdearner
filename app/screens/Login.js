@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -48,18 +48,38 @@ const Login = () => {
         text2: "Redirecting to Home...",
         position: "top",
       });
-      navigation.reset({
+      navigation.getParent()?.reset({
         index: 0,
         routes: [{ name: "Home" }],
       });
+      
     } catch (error) {
+      // Handle specific errors
+    if (error.message.includes('Invalid credentials') || error.message.includes('401')) {
+      // Incorrect credentials error
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: "Incorrect email or password. Please try again.",
+        position: "top",
+      });
+    } else if (error.message.includes('Invalid `password` param')) {
+      // Password length validation error
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: "Password must be between 8 and 256 characters long.",
+        position: "top",
+      });
+    } else {
+      // Generic error handling
       Toast.show({
         type: "error",
         text1: "Login Failed",
         text2: error.message || "An unexpected error occurred",
         position: "top",
       });
-      console.error("Login failed", error);
+    }
     }
   };
 

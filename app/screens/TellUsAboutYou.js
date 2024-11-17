@@ -10,7 +10,7 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import {
   account,
   databases,
@@ -22,7 +22,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
 
-const TellUsAboutYouScreen = ({navigation}) => {
+const TellUsAboutYouScreen = () => {
   const [gender, setGender] = useState("");
   const [dob, setDob] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -33,6 +33,7 @@ const TellUsAboutYouScreen = ({navigation}) => {
   const [coverImage, setCoverImage] = useState(null);
   const router = useRouter();
   const { role } = useLocalSearchParams();
+  const navigation = useNavigation()
 
   // Add a new certification input field
   const addCertification = () => {
@@ -248,9 +249,9 @@ const TellUsAboutYouScreen = ({navigation}) => {
 
   // Skip the current screen
   const skipScreen = () => {
-    navigation.reset({
+    navigation.getParent()?.reset({
       index: 0,
-      routes: [{ name: 'Home' }],
+      routes: [{ name: "Home" }],
     });
   };
 

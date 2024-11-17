@@ -112,10 +112,10 @@ const PortfolioScreen = () => {
       );
 
       Alert.alert("Success", "Portfolio submitted successfully!");
-      navigation.reset({
+      navigation.getParent()?.reset({
         index: 0,
         routes: [{ name: "Home" }],
-      }); 
+      });
     } catch (error) {
       console.log(error);
       Alert.alert("Error", `Failed to submit portfolio: ${error.message}`);
@@ -123,9 +123,9 @@ const PortfolioScreen = () => {
   };
 
   const skipScreen = () => {
-    navigation.reset({
+    navigation.getParent()?.reset({
       index: 0,
-      routes: [{ name: 'Home' }],
+      routes: [{ name: "Home" }],
     });
   };
 

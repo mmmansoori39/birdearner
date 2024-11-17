@@ -69,8 +69,13 @@ export const AuthProvider = ({ children }) => {
 
 
     } catch (error) {
-      console.error("Login failed:", error);
-      throw new Error("Login failed");
+      if (error.message.includes('Invalid credentials') || error.message.includes('401')) {
+        // Show alert for incorrect credentials
+        alert("Incorrect email or password. Please try again.");
+      } else {
+        console.error("Login failed:", error);
+        alert("An error occurred during login. Please try again.");
+      }
     }
   };
 
@@ -80,7 +85,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
     } catch (error) {
       console.error("Logout failed:", error);
-      throw new Error("Logout failed");
     }
   };
 

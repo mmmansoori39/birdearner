@@ -1,4 +1,3 @@
-import { useNavigation } from 'expo-router';
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 
@@ -85,8 +84,8 @@ const settingsData = [
   },
 ];
 
-const SettingsScreen = () => {
-  const navigation = useNavigation()
+const SettingsScreen = ({navigation}) => {
+ 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}

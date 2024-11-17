@@ -1,4 +1,4 @@
-export const jobsData = {
+const jobsData = {
   Immediate: {
     jobs: [
       {
@@ -186,7 +186,7 @@ export const jobsData = {
   },
 };
 
-export const reviews = [
+const reviews = [
   {
     reviewerName: "Josaph Niloy",
     reviewerLocation: "United States of America",
@@ -236,3 +236,5 @@ export const reviews = [
     reviewText: "Lorem Ipsum has been the industry's standard dummy text...",
   },
 ];
+
+export {jobsData, reviews}

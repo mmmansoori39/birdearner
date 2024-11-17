@@ -1,4 +1,5 @@
 import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,161 +20,164 @@ const Tab = createBottomTabNavigator();
 
 export default function App() {
   const { user, loading, userData } = useAuth();
-
-  const role = userData?.role
+  const role = userData?.role;
 
   if (loading) {
     return <IntroScreen />;
   }
-  
 
-  return user ? (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: {
-          backgroundColor: "#370F54",
-          borderTopWidth: 0,
-          height: 56,
-        },
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          let iconColor = focused ? "#FFF" : "#aaa";
+  return (
+    <NavigationContainer>
+      {user ? (
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarShowLabel: false,
+            tabBarStyle: {
+              backgroundColor: "#370F54",
+              borderTopWidth: 0,
+              height: 56,
+            },
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+              let iconColor = focused ? "#FFF" : "#aaa";
 
-          if (route.name === "Job Posted") {
-            return (
-              <View style={focused ? styles.activeTab : styles.inactiveTab}>
-                {focused ? (
-                  <LinearGradient
-                    colors={["#300E49", "#762BAD"]}
-                    style={styles.gradientBackground}
-                  >
-                    <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
-                  </LinearGradient>
-                ) : (
-                  <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
-                )}
-              </View>
-            );
-          } else if(route.name === "AI Bird"){
-            return (
-              <View style={focused ? styles.activeTab : styles.inactiveTab}>
-                {focused ? (
-                  <LinearGradient
-                    colors={["#300E49", "#762BAD"]}
-                    style={styles.gradientBackground}
-                  >
-                    <Image source={require("./assets/bird.png")} style={styles.bird} />
-                  </LinearGradient>
-                ) : (
-                  <Image source={require("./assets/bird.png")} style={styles.bird} />
-                )}
-              </View>
-            );
-          }
-           else {
-            switch (route.name) {
-              case "Home":
-                iconName = "home";
-                break;
-              case "Leaderboard":
-                iconName = "leaderboard";
-                break;
-              case "Marketplace":
-                iconName = "storefront";
-                break;
-              case "Job Requirements":
-                iconName = "add";
-                break;
-              case "Profile":
-                iconName = "person";
-                break;
-              case "Settings":
-                iconName = "settings";
-                break;
-              default:
-                iconName = "circle";
-            }
-          }
+              // Custom Tab Icons
+              if (route.name === "Job Posted") {
+                return (
+                  <View style={focused ? styles.activeTab : styles.inactiveTab}>
+                    {focused ? (
+                      <LinearGradient
+                        colors={["#300E49", "#762BAD"]}
+                        style={styles.gradientBackground}
+                      >
+                        <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
+                      </LinearGradient>
+                    ) : (
+                      <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
+                    )}
+                  </View>
+                );
+              } else if (route.name === "AI Bird") {
+                return (
+                  <View style={focused ? styles.activeTab : styles.inactiveTab}>
+                    {focused ? (
+                      <LinearGradient
+                        colors={["#300E49", "#762BAD"]}
+                        style={styles.gradientBackground}
+                      >
+                        <Image source={require("./assets/bird.png")} style={styles.bird} />
+                      </LinearGradient>
+                    ) : (
+                      <Image source={require("./assets/bird.png")} style={styles.bird} />
+                    )}
+                  </View>
+                );
+              }
 
-          return (
-            <View style={focused ? styles.activeTab : styles.inactiveTab}>
-              {focused ? (
-                <LinearGradient
-                  colors={["#300E49", "#762BAD"]}
-                  style={styles.gradientBackground}
-                >
-                  <MaterialIcons name={iconName} color={iconColor} size={30} />
-                </LinearGradient>
-              ) : (
-                <MaterialIcons name={iconName} color={iconColor} size={30} />
-              )}
-            </View>
-          );
-        },
-      })}
-    >
-      {role === "client" ? (
-        <>
-          <Tab.Screen
-            name="Home"
-            component={ClientHomeScreen}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="Job Posted"
-            component={JobStack}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="Job Requirements"
-            component={JobRequirementStack}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="AI Bird"
-            component={Bird}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="Profile"
-            component={ProfileStack}
-            options={{ unmountOnBlur: false }}
-          />
-        </>
+              // Default Icons for Other Tabs
+              switch (route.name) {
+                case "Home":
+                  iconName = "home";
+                  break;
+                case "Leaderboard":
+                  iconName = "leaderboard";
+                  break;
+                case "Marketplace":
+                  iconName = "storefront";
+                  break;
+                case "Job Requirements":
+                  iconName = "add";
+                  break;
+                case "Profile":
+                  iconName = "person";
+                  break;
+                case "Settings":
+                  iconName = "settings";
+                  break;
+                default:
+                  iconName = "circle";
+              }
+
+              return (
+                <View style={focused ? styles.activeTab : styles.inactiveTab}>
+                  {focused ? (
+                    <LinearGradient
+                      colors={["#300E49", "#762BAD"]}
+                      style={styles.gradientBackground}
+                    >
+                      <MaterialIcons name={iconName} color={iconColor} size={30} />
+                    </LinearGradient>
+                  ) : (
+                    <MaterialIcons name={iconName} color={iconColor} size={30} />
+                  )}
+                </View>
+              );
+            },
+          })}
+        >
+          {role === "client" ? (
+            <>
+              <Tab.Screen
+                name="Home"
+                component={ClientHomeScreen}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="Job Posted"
+                component={JobStack}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="Job Requirements"
+                component={JobRequirementStack}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="AI Bird"
+                component={Bird}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="Profile"
+                component={ProfileStack}
+                options={{ unmountOnBlur: false }}
+              />
+            </>
+          ) : (
+            <>
+              <Tab.Screen
+                name="Home"
+                component={HomeStack}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="Leaderboard"
+                component={LeaderboardScreen}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="Marketplace"
+                component={MarketPlaceStack}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="AI Bird"
+                component={Bird}
+                options={{ unmountOnBlur: false }}
+              />
+              <Tab.Screen
+                name="Profile"
+                component={ProfileStack}
+                options={{ unmountOnBlur: false }}
+              />
+            </>
+          )}
+        </Tab.Navigator>
       ) : (
-        <>
-          <Tab.Screen
-            name="Home"
-            component={HomeStack}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="Leaderboard"
-            component={LeaderboardScreen}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="Marketplace"
-            component={MarketPlaceStack}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="AI Bird"
-            component={Bird}
-            options={{ unmountOnBlur: false }}
-          />
-          <Tab.Screen
-            name="Profile"
-            component={ProfileStack}
-            options={{ unmountOnBlur: false }}
-          />
-        </>
+        <LoginScreen />
       )}
-    </Tab.Navigator>
-  ) : (
-    <LoginScreen />
+    </NavigationContainer>
   );
 }
 

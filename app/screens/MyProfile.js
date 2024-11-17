@@ -12,11 +12,9 @@ import {
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 
-export default function ProfileScreen() {
-  const navigation = useNavigation();
+export default function ProfileScreen({navigation}) {
   const { user, loading, userData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -95,7 +93,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             style={styles.settings}
             onPress={() => {
-              navigation.navigate("Settings");
+              navigation.navigate('Settings');
             }}
           >
             <MaterialIcons name="settings" size={30} />

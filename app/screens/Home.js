@@ -8,11 +8,9 @@ import {
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
-import { useNavigation } from "expo-router";
 
-const HomeScreen = () => {
+const HomeScreen = ({navigation}) => {
   const { user, logout, userData} = useAuth();
-  const navigation = useNavigation()
 
 
   return (

@@ -12,13 +12,11 @@ import {
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
-import { useNavigation } from "expo-router";
 import ReviewCard from "../components/ReviewCard";
 import { reviews } from "../assets/data";
 import { useAuth } from "../context/AuthContext";
 
-export default function ReviewsScreen() {
-  const navigation = useNavigation();
+export default function ReviewsScreen({navigation}) {
   const { user, loading, userData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
