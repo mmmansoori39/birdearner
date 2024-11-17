@@ -20,18 +20,17 @@ export default function ProfileScreen() {
   const { user, loading, userData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const role = userData?.role
+  const role = userData?.role;
 
   useEffect(() => {
     try {
-      setData(userData)
+      setData(userData);
     } catch (error) {
       console.error("Failed to fetch freelancer data:", error);
     } finally {
       setLoadingProfile(false);
     }
   }, [user]);
-
 
   const onShare = async () => {
     try {
@@ -108,11 +107,18 @@ export default function ProfileScreen() {
 
         <View style={styles.userDetails}>
           <Text style={styles.nameText}>{data?.full_name}</Text>
-          <Text style={styles.roleText}>
-            {role === "client"
-              ? data?.organization_type
-              : data?.role_designation}
-          </Text>
+          {role === "client" ? (
+            <Text style={styles.roleText}>{data?.organization_type}</Text>
+          ) : (
+            <View style={styles.roleWrap}>
+              {data?.role_designation?.map((item, idx) => (
+                <Text key={idx} style={styles.roleText}>
+                  {item}
+                  {", "}
+                </Text>
+              ))}
+            </View>
+          )}
           <Text style={styles.statusText}>
             Status:
             {data?.currently_available ? "Active" : "Inactive"}
@@ -277,6 +283,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "600",
   },
+  roleWrap: {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
   roleText: {
     fontSize: 14,
     fontWeight: "400",
@@ -317,7 +328,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 25,
     marginBottom: 15,
-    marginTop: 40
+    marginTop: 40,
   },
   buttonText: {
     color: "#fff",

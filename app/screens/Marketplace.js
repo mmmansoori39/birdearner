@@ -129,7 +129,7 @@ const MarketplaceScreen = ({ navigation }) => {
     }
     return lines;
   };
-
+ 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
