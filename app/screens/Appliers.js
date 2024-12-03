@@ -60,7 +60,12 @@ const AppliersScreen = ({ navigation, route }) => {
 
   const renderAppliedFreelancer = ({ item }) => (
     <View>
-      <TouchableOpacity style={styles.jobContainer}>
+      <TouchableOpacity
+        style={styles.jobContainer}
+        onPress={() => {
+          navigation.navigate("Chat", { receiverId: item.$id });
+        }}
+      >
         <Image
           source={{
             uri: item.profile_photo || "https://via.placeholder.com/150",
@@ -71,7 +76,9 @@ const AppliersScreen = ({ navigation, route }) => {
           <Text style={styles.jobTitle} numberOfLines={1}>
             {title}
           </Text>
-          <Text style={styles.freelancerName}>Name: {item.full_name || "N/A"}</Text>
+          <Text style={styles.freelancerName}>
+            Name: {item.full_name || "N/A"}
+          </Text>
         </View>
         <View style={[styles.statusIndicator, { backgroundColor: color }]} />
       </TouchableOpacity>

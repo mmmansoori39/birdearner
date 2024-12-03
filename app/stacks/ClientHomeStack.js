@@ -3,16 +3,17 @@ import { createStackNavigator } from "@react-navigation/stack";
 import NotificationScreen from "../screens/Notification";
 import HomeScreen from "../screens/Home";
 import ChatList from "../screens/ChatList";
+import ClientHomeScreen from "../screens/ClientHome";
 import Chat from "../screens/Chat";
 
 const Stack = createStackNavigator();
 
-export default function HomeStack() {
+export default function ClientHomeStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="HomeScreen"
-        component={HomeScreen}
+        component={ClientHomeScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

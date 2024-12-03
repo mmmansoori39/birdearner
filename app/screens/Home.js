@@ -110,6 +110,18 @@ const HomeScreen = ({navigation}) => {
           </TouchableOpacity>
         </View>
       </View>
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>What's New</Text>
+        <View style={styles.whatsNewContainer}>
+          {/* You can add new content here */}
+          <Text style={styles.whatsNewText}>Click on chat icon</Text>
+          <TouchableOpacity style={styles.chatIcon} onPress={() => {
+            navigation.navigate("ChatList")
+          }} >
+            <FontAwesome name="comments" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };

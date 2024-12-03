@@ -15,6 +15,7 @@ import JobRequirementStack from "./stacks/JobRequirementStack";
 import ClientHomeScreen from "./screens/ClientHome";
 import MarketPlaceStack from "./stacks/MarketPlaceStack";
 import JobStack from "./stacks/JobStack";
+import ClientHomeStack from "./stacks/ClientHomeStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -120,7 +121,7 @@ export default function App() {
             <>
               <Tab.Screen
                 name="Home"
-                component={ClientHomeScreen}
+                component={ClientHomeStack}
                 options={{ unmountOnBlur: false }}
               />
               <Tab.Screen
