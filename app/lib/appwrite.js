@@ -12,7 +12,6 @@ export const appwriteConfig = {
   jobCollectionID: "673327260000fb1f8aed",
   messageCollectionID: "674f23ba0019a93a384f",
 };
-
 export const client = new Client();
 
 client
