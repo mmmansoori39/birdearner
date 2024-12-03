@@ -48,7 +48,9 @@ const WithdrawalEarningScreen = ({ navigation }) => {
         <Text style={styles.withdrwalText}>${amount}</Text>
       </View>
 
-      <TouchableOpacity style={styles.signupButton}>
+      <TouchableOpacity style={styles.signupButton} onPress={() => {
+              navigation.navigate("Payment");
+            }}  >
         <Text style={styles.signupButtonText}>Process</Text>
       </TouchableOpacity>
     </View>

@@ -11,7 +11,6 @@ export const appwriteConfig = {
   roleCollectionID: "6733184d001684b89a24",
   jobCollectionID: "673327260000fb1f8aed",
 };
-
 export const client = new Client();
 
 client

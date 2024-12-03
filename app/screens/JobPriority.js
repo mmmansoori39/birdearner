@@ -82,6 +82,8 @@ const JobPriority = ({ route, navigation }) => {
     return priorityJob.map((job, index) => {
       const clientProfileImage = clientProfiles[job.job_created_by];
   
+      console.log(job.job_created_by)
+
       return (
         <View key={index}>
           <TouchableOpacity

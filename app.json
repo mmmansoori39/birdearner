@@ -2,6 +2,7 @@
   "expo": {
     "name": "BirdEarner",
     "slug": "birdearner",
+    "newArchEnabled": true,
     "scheme": "birdearner",
     "version": "1.0.0",
     "orientation": "portrait",
