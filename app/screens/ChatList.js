@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  Image,
 } from "react-native";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
@@ -13,7 +14,6 @@ const ChatList = ({ navigation }) => {
   const [chatThreads, setChatThreads] = useState([]); // List of chat threads
   const [loading, setLoading] = useState(false);
   const { userData } = useAuth();
-  console.log({ role: userData.role });
 
   // Load chat threads
   useEffect(() => {
@@ -22,103 +22,121 @@ const ChatList = ({ navigation }) => {
       try {
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
-          appwriteConfig.messageCollectionID, // Assume chat threads are stored here
-
+          appwriteConfig.messageCollectionID,
           [
             `{"method":"or","values":[{"method":"equal","attribute":"sender","values":["${userData.$id}"]},{"method":"equal","attribute":"receiver","values":["${userData.$id}"]}]}`,
           ]
         );
-        console.log("response.documents");
-        console.log(response.documents);
 
-        // getting receiver data
-        const uniqueReceivers = [
-          ...new Set(response.documents.map((doc) => doc.receiver)),
-        ];
-        const uniqueSenders = [
-          ...new Set(response.documents.map((doc) => doc.sender)),
-        ];
-
+        // Extract unique participants (excluding the current user)
         const uniqueUsers = [
-          ...new Set([...uniqueReceivers, ...uniqueSenders]),
+          ...new Set(
+            response.documents.flatMap((doc) => [doc.sender, doc.receiver])
+          ),
         ].filter((userId) => userId !== userData.$id);
-        console.log("Unique users:", uniqueUsers);
-        
 
+        // Fetch data for unique users
         const oppositeParticipants = await Promise.all(
-          uniqueUsers.map(async (oppositeParticipant) => {
+          uniqueUsers.map(async (userId) => {
             try {
               const response = await databases.getDocument(
-            appwriteConfig.databaseId,
-            userData.role === "freelancer"
-              ? appwriteConfig.clientCollectionId
-              : appwriteConfig.freelancerCollectionId,
-            oppositeParticipant
+                appwriteConfig.databaseId,
+                userData.role === "freelancer"
+                  ? appwriteConfig.clientCollectionId
+                  : appwriteConfig.freelancerCollectionId,
+                userId
               );
               return response;
             } catch (error) {
               console.error(
-            `Failed to fetch receiver with ID ${oppositeParticipant}:`,
-            error
+                `Failed to fetch receiver with ID ${userId}:`,
+                error
               );
               return null;
             }
           })
         ).then((results) => results.filter((result) => result !== null));
 
-        console.log("Receiver data:", oppositeParticipants);
-
-        const chatThreads = response.documents.map((doc) => {
-          const oppositeParticipant = oppositeParticipants.find(
-            (oppositeParticipant) => oppositeParticipant.$id === doc.receiver ||oppositeParticipant.$id === doc.sender 
+        // Map unique users to the latest message and participant info
+        const chatThreads = uniqueUsers.map((userId) => {
+          const userMessages = response.documents.filter(
+            (doc) => doc.sender === userId || doc.receiver === userId
           );
+
+          // Get the latest message for the user
+          const latestMessage = userMessages.reduce(
+            (latest, current) =>
+              new Date(current.timestamp) > new Date(latest.timestamp)
+                ? current
+                : latest,
+            userMessages[0]
+          );
+
+          const oppositeParticipant = oppositeParticipants.find(
+            (participant) => participant.$id === userId
+          );
+
+          console.log("last massage", latestMessage)
+
           return {
-            ...doc,
-            oppositeParticipantId:  oppositeParticipant.$id, 
-            oppositeParticipantName: oppositeParticipant ? oppositeParticipant.full_name : "Unknown",
-            senderName: oppositeParticipant ? oppositeParticipant.full_name : "Unknown",
-            receiverName: oppositeParticipant ? oppositeParticipant.full_name : "Unknown",
-            profileImage: oppositeParticipant ? oppositeParticipant.profile_photo : null,
+            ...latestMessage,
+            lastMessage: latestMessage
+              ? latestMessage.text
+              : "No messages yet",
+            oppositeParticipantId: userId,
+            oppositeParticipantName: oppositeParticipant
+              ? oppositeParticipant.full_name
+              : "Unknown",
+            profileImage: oppositeParticipant
+              ? oppositeParticipant.profile_photo
+              : null,
           };
         });
 
         setChatThreads(chatThreads);
+
       } catch (err) {
         console.error("Error fetching chat threads:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchChatThreads();
   }, [userData.$id]);
 
   // Navigate to individual chat
-  const openChat = (receiverId) => {
-    navigation.navigate("Chat", { receiverId });
+  const openChat = (receiverId, full_name, profileImage) => {
+    navigation.navigate("Chat", { receiverId, full_name, profileImage });
   };
 
-  console.log("Chat threads:", chatThreads);
-  
-
-  // Render individual chat thread
   const renderChatThread = ({ item }) => {
-    const issender = item.sender === userData.$id;
-    const receiverId = issender ? item.receiver : item.sender;
-    const oppositeParticipantName = item.oppositeParticipantName;
-    const oppositeParticipantId = item.oppositeParticipantId;
-
     return (
       <TouchableOpacity
         style={styles.chatThread}
-        onPress={() => openChat(oppositeParticipantId)}
+        onPress={() => openChat(item.oppositeParticipantId, item.oppositeParticipantName, item.profileImage)}
       >
-        <Text style={styles.receiverName}>{oppositeParticipantName}</Text>
-        <Text style={styles.lastMessage} numberOfLines={1}>
-          {item.lastMessage}
-        </Text>
-        <Text style={styles.timestamp}>
-          {new Date(item.timestamp).toLocaleString()}
-        </Text>
+        <View style={styles.profileSection}>
+          <Image
+            source={
+              item.profileImage
+                ? { uri: item.profileImage }
+                : require("../assets/profile.png") // Fallback to a default profile image
+            }
+            style={styles.profileImage}
+          />
+          <View style={styles.textSection}>
+            <Text style={styles.receiverName}>
+              {item.oppositeParticipantName}
+            </Text>
+            <Text style={styles.lastMessage} numberOfLines={1}>
+              {item.lastMessage}
+            </Text>
+            <Text style={styles.timestamp}>
+              {new Date(item.timestamp).toLocaleString()}
+            </Text>
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -153,13 +171,36 @@ const styles = StyleSheet.create({
   loadingText: { textAlign: "center", marginTop: 20, color: "#888" },
   chatListContainer: { padding: 10 },
   chatThread: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
     borderColor: "#ddd",
+    justifyContent: "space-between",
+  },
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+    backgroundColor: "#e0e0e0", // Fallback background for images
+  },
+  textSection: {
+    flex: 1,
+    justifyContent: "center",
   },
   receiverName: { fontSize: 16, fontWeight: "bold", color: "#000" },
-  lastMessage: { fontSize: 14, color: "#666", marginTop: 5 },
-  timestamp: { fontSize: 12, color: "#aaa", marginTop: 5 },
+  lastMessage: { fontSize: 14, color: "#666", marginTop: 1, marginBottom: 5 },
+  timestamp: {
+    fontSize: 12,
+    color: "#aaa",
+    alignSelf: "flex-start",
+  },
 });
 
 export default ChatList;
