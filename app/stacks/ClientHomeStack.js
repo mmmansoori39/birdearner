@@ -5,6 +5,7 @@ import HomeScreen from "../screens/Home";
 import ChatList from "../screens/ChatList";
 import ClientHomeScreen from "../screens/ClientHome";
 import Chat from "../screens/Chat";
+import Inbox from "../screens/Inbox";
 
 const Stack = createStackNavigator();
 
@@ -29,6 +30,11 @@ export default function ClientHomeStack() {
       <Stack.Screen
         name="Chat"
         component={Chat}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Inbox"
+        component={Inbox}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

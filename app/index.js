@@ -37,7 +37,7 @@ export default function App() {
             tabBarStyle: {
               backgroundColor: "#370F54",
               borderTopWidth: 0,
-              height: 56,
+              // height: 56,
             },
             tabBarIcon: ({ focused, color, size }) => {
               let iconName;

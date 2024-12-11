@@ -13,7 +13,7 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
 import ReviewCard from "../components/ReviewCard";
-import { reviews } from "../assets/data";
+import reviews from "../assets/data";
 import { useAuth } from "../context/AuthContext";
 
 export default function ReviewsScreen({navigation}) {
@@ -22,6 +22,7 @@ export default function ReviewsScreen({navigation}) {
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   const role = userData?.role
+  
 
   useEffect(() => {
     try {
@@ -129,7 +130,7 @@ export default function ReviewsScreen({navigation}) {
         </View>
 
         <View style={styles.reviewSection}>
-          {reviews.map((review, index) => (
+          {reviews?.map((review, index) => (
             <ReviewCard
               key={index}
               reviewerName={review.reviewerName}

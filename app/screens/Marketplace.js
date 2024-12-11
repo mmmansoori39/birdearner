@@ -7,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import MapView, { Marker } from "react-native-maps";
@@ -31,103 +32,113 @@ const MarketplaceScreen = ({ navigation }) => {
     High: [],
     Standard: [],
   });
-
   const [loading, setLoading] = useState(true);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
     const toRad = (value) => (value * Math.PI) / 180;
     const R = 6371; // Earth's radius in km
-
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
-
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRad(lat1)) *
         Math.cos(toRad(lat2)) *
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
-
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+    return R * c; // Distance in kilometers
   };
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      if (!location) return;
+  const categorizeJobs = (jobs) => {
+    const currentDate = new Date();
+    const categorizedJobs = {
+      Immediate: [],
+      High: [],
+      Standard: [],
+    };
 
-      try {
-        const response = await databases.listDocuments(
-          appwriteConfig.databaseId,
-          appwriteConfig.jobCollectionID
-        );
+    jobs.forEach((job) => {
+      const deadline = new Date(job.deadline);
+      const timeDiff = (deadline - currentDate) / (1000 * 60 * 60 * 24);
+      if (timeDiff < 2) {
+        categorizedJobs.Immediate.push(job);
+      } else if (timeDiff <= 10) {
+        categorizedJobs.High.push(job);
+      } else {
+        categorizedJobs.Standard.push(job);
+      }
+    });
 
-        const currentJobs = response.documents;
-        const filteredJobs = currentJobs.filter((job) => {
+    return categorizedJobs;
+  };
+
+  const fetchJobs = async (filterByLocation = true) => {
+    try {
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID
+      );
+      const allJobs = response.documents;
+
+      if (filterByLocation && location) {
+        const filteredJobs = allJobs.filter((job) => {
           const jobDistance = calculateDistance(
             location.latitude,
             location.longitude,
             job.latitude,
-            job.longitude
+            job.longitude 
           );
           return jobDistance <= distance;
         });
-
-        const currentDate = new Date();
-
-        const categorizedJobs = {
-          Immediate: [],
-          High: [],
-          Standard: [],
-        };
-
-        filteredJobs.forEach((job) => {
-          const deadline = new Date(job.deadline);
-          const timeDiff = (deadline - currentDate) / (1000 * 60 * 60 * 24);
-
-          if (timeDiff < 2) {
-            categorizedJobs.Immediate.push(job);
-          } else if (timeDiff <= 10) {
-            categorizedJobs.High.push(job);
-          } else {
-            categorizedJobs.Standard.push(job);
-          }
-        });
-
-        setJobs(categorizedJobs);
-      } catch (error) {
-        console.error("Failed to fetch jobs:", error);
-      } finally {
-        setLoading(false);
+        setJobs(categorizeJobs(filteredJobs));
+      } else {
+        setJobs(categorizeJobs(allJobs));
       }
-    };
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      Alert.alert(
+        "Error",
+        "Failed to fetch jobs. Please try again later.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchJobs();
-  }, [distance, location]);
+  const getLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied.");
+        Alert.alert(
+          "Permission Denied",
+          "Location permissions are required to use this feature. Please enable them in your device settings."
+        );
+        return;
+      }
+
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      setLocation(currentLocation.coords);
+      fetchJobs(true); // Fetch jobs filtered by location
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      setErrorMsg("Failed to fetch location. Please try again.");
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          setErrorMsg("Permission to access location was denied.");
-          Alert.alert(
-            "Permission Denied",
-            "Location permissions are required to use this feature. Please enable them in your device settings."
-          );
-          return;
-        }
-
-        let currentLocation = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        setLocation(currentLocation.coords);
-      } catch (error) {
-        console.error("Error fetching location:", error);
-        setErrorMsg("Failed to fetch location. Please try again.");
-      }
-    })();
+    fetchJobs();
   }, []);
+
+  useEffect(() => {
+    if (location) {
+      fetchJobs(true);
+    }
+  }, [distance, location]);
 
   const handlePriorityPress = (priority) => {
     navigation.navigate("JobPriority", { priority, jobs });
@@ -140,6 +151,14 @@ const MarketplaceScreen = ({ navigation }) => {
     }
     return lines;
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#762BAD" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -197,7 +216,7 @@ const MarketplaceScreen = ({ navigation }) => {
           </Text>
         </View>
 
-        <MapView
+        {/* <MapView
           style={styles.map}
           region={
             location
@@ -227,7 +246,6 @@ const MarketplaceScreen = ({ navigation }) => {
             />
           )}
 
-          {/* Show markers for Immediate Jobs */}
           {jobs.Immediate.map((job, index) => (
             <Marker
               key={`immediate-${index}`}
@@ -241,7 +259,6 @@ const MarketplaceScreen = ({ navigation }) => {
             />
           ))}
 
-          {/* Show markers for High Priority Jobs */}
           {jobs.High.map((job, index) => (
             <Marker
               key={`high-${index}`}
@@ -255,7 +272,7 @@ const MarketplaceScreen = ({ navigation }) => {
             />
           ))}
 
-          {/* Show markers for Standard Priority Jobs */}
+
           {jobs.Standard.map((job, index) => (
             <Marker
               key={`standard-${index}`}
@@ -268,7 +285,7 @@ const MarketplaceScreen = ({ navigation }) => {
               pinColor="green"
             />
           ))}
-        </MapView>
+        </MapView> */}
 
         <Text style={styles.jobsAround}>Jobs around...</Text>
 
@@ -460,6 +477,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "semibold",
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center"
+  }
 });
 
 export default MarketplaceScreen;

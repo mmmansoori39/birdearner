@@ -5,28 +5,31 @@ import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
 
 const JobDescriptionScreen = ({ route, navigation }) => {
-  const { job, clientProfileImage } = route.params;
-  const {userData} = useAuth();
-  const [appliedStatus, setAppliedStatus] = useState(false)
+  const { job, clientProfileImage, full_name } = route.params;
+  const { userData } = useAuth();
+  const [appliedStatus, setAppliedStatus] = useState(false);
+
+  const projectId = job.$id;
+  const receiverId = job.job_created_by
 
   useEffect(() => {
     const checkAppliedStatus = async () => {
       try {
         const jobId = job.$id;
         const freelancerId = userData.$id
-    
+
         const jobDoc = await databases.getDocument(
           appwriteConfig.databaseId,
           appwriteConfig.jobCollectionID,
           jobId
         );
-    
+
         const updatedFreelancers = jobDoc.applied_freelancer;
-    
+
         if (updatedFreelancers.includes(freelancerId)) {
           setAppliedStatus(true)
         }
-  
+
       } catch (error) {
         console.error("Error job status:", error);
       }
@@ -39,19 +42,19 @@ const JobDescriptionScreen = ({ route, navigation }) => {
     try {
       const jobId = job.$id;
       const freelancerId = userData.$id
-  
+
       const jobDoc = await databases.getDocument(
         appwriteConfig.databaseId,
         appwriteConfig.jobCollectionID,
         jobId
       );
-  
+
       const updatedFreelancers = jobDoc.applied_freelancer || [];
-  
+
       if (!updatedFreelancers.includes(freelancerId)) {
         updatedFreelancers.push(freelancerId);
       }
-  
+
       await databases.updateDocument(
         appwriteConfig.databaseId,
         appwriteConfig.jobCollectionID,
@@ -62,14 +65,12 @@ const JobDescriptionScreen = ({ route, navigation }) => {
         }
       );
       setAppliedStatus(true)
-      navigation.goBack();
-  
+
     } catch (error) {
       console.error("Error updating job document:", error);
     }
   };
-  
-  
+
 
   const formatDeadline = (deadline) => {
     const currentDate = new Date();
@@ -137,14 +138,19 @@ const JobDescriptionScreen = ({ route, navigation }) => {
         </View>
 
         {/* Apply Button */}
-          {
-            appliedStatus === true ? (
-              <Text style={styles.alreadyapplyButtonText}>Already applied</Text>
-            ) : (
-              <TouchableOpacity style={styles.applyButton} onPress={handleSubmit} >
-              <Text style={styles.applyButtonText}>Apply</Text></TouchableOpacity>
-            )
-          }
+        {
+          appliedStatus === true ? (
+            <TouchableOpacity onPress={() => {
+              navigation.navigate("Chat", {projectId, full_name, receiverId});
+            }}>
+              <Text style={styles.alreadyapplyButtonText}>Send Message</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.applyButton} onPress={handleSubmit} >
+              <Text style={styles.applyButtonText}>Apply</Text>
+              </TouchableOpacity>
+          )
+        }
 
         {/* Report Job Link */}
         <Text style={styles.reportText}>Report this job</Text>
@@ -247,7 +253,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     marginBottom: 20,
-    paddingVertical: 10
+    paddingVertical: 8
   },
   applyButtonText: {
     color: '#fff',

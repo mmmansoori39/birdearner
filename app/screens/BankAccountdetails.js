@@ -9,9 +9,22 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 const BankAccountdetailsScreen = ({ navigation }) => {
-  const [oldEmail, setOldEmail] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [confirmEmail, setConfirmEmail] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [confirmAccountNumber, setConfirmAccountNumber] = useState("");
+  const [ifscCode, setIfscCode] = useState("");
+
+  const handleSave = () => {
+    // Implement functionality for saving bank details
+    if (accountNumber === confirmAccountNumber) {
+      // Save data or call API to save the bank details
+      console.log("Bank Details Saved", { bankName, accountHolderName, accountNumber, ifscCode });
+      navigation.goBack(); // Navigate back after saving
+    } else {
+      alert("Account numbers do not match!");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -28,49 +41,46 @@ const BankAccountdetailsScreen = ({ navigation }) => {
       <Text style={styles.label}>Select your bank</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
-        value={oldEmail}
-        onChangeText={setOldEmail}
-        keyboardType="default"
+        placeholder="Enter bank name"
+        value={bankName}
+        onChangeText={setBankName}
       />
 
       <Text style={styles.label}>Account holder name</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
-        value={newEmail}
-        onChangeText={setNewEmail}
-        keyboardType="default"
+        placeholder="Enter account holder's name"
+        value={accountHolderName}
+        onChangeText={setAccountHolderName}
       />
 
       <Text style={styles.label}>Enter your account number</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
-        value={newEmail}
-        onChangeText={setNewEmail}
-        keyboardType="default"
+        placeholder="Enter account number"
+        value={accountNumber}
+        onChangeText={setAccountNumber}
+        keyboardType="numeric"
       />
 
       <Text style={styles.label}>Confirm your account number</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
-        value={newEmail}
-        onChangeText={setNewEmail}
-        keyboardType="default"
+        placeholder="Re-enter account number"
+        value={confirmAccountNumber}
+        onChangeText={setConfirmAccountNumber}
+        keyboardType="numeric"
       />
 
       <Text style={styles.label}>Enter your bank IFSC code</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
-        value={newEmail}
-        onChangeText={setNewEmail}
-        keyboardType="default"
+        placeholder="Enter IFSC code"
+        value={ifscCode}
+        onChangeText={setIfscCode}
       />
 
-      <TouchableOpacity style={styles.signupButton}>
+      <TouchableOpacity style={styles.signupButton} onPress={handleSave}>
         <Text style={styles.signupButtonText}>Save</Text>
       </TouchableOpacity>
     </View>
@@ -95,14 +105,12 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: "bold",
-    // marginBottom: 20,
     textAlign: "center",
   },
   label: {
     fontSize: 18,
     color: "#000000",
     marginBottom: 8,
-    // marginLeft: 8,
     fontWeight: "400",
     textAlign: "center",
   },

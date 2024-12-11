@@ -16,7 +16,10 @@ const AppliersScreen = ({ navigation, route }) => {
   const { userData } = useAuth();
   const [freelancers, setFreelancers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { title, freelancersId, color } = route.params;
+  const { title, freelancersId, color, item } = route.params;
+
+  console.log(item);
+  
 
   useEffect(() => {
     if (freelancersId.length === 0) {
@@ -59,11 +62,12 @@ const AppliersScreen = ({ navigation, route }) => {
   }, []);
 
   const renderAppliedFreelancer = ({ item }) => (
+
     <View>
       <TouchableOpacity
         style={styles.jobContainer}
         onPress={() => {
-          navigation.navigate("Chat", { receiverId: item.$id });
+          navigation.navigate("ProjectChat", { item });
         }}
       >
         <Image
@@ -147,8 +151,8 @@ const styles = StyleSheet.create({
   noAppliersText: { fontSize: 18, color: "#6e6e6e", marginBottom: 20 },
   goBackText: { fontSize: 16, marginLeft: 8, color: "black" },
   main: {
-    marginTop: 65,
-    marginBottom: 30,
+    marginTop: 25,
+    marginBottom: 20,
     display: "flex",
     flexDirection: "row",
     gap: 100,

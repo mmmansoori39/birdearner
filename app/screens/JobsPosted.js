@@ -77,7 +77,7 @@ const JobsPostedScreen = ({ navigation }) => {
     return (
       <View>
         <TouchableOpacity style={styles.jobContainer} onPress={() => {
-          navigation.navigate("AppliersScreen", {title, freelancersId, color})
+          navigation.navigate("AppliersScreen", {title, freelancersId, color, item})
         }} >
           <Image
             source={{ uri: "https://randomuser.me/api/portraits/women/3.jpg" }}
@@ -135,8 +135,8 @@ const styles = StyleSheet.create({
     // marginBottom: 10,
   },
   main: {
-    marginTop: 65,
-    marginBottom: 30,
+    marginTop: 25,
+    marginBottom: 20,
     display: "flex",
     flexDirection: "row",
     gap: 100,

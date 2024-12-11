@@ -28,7 +28,12 @@
         "ACCESS_COARSE_LOCATION"
       ],
       "package": "com.mmmansoori39.birdearner",
-      "buildToolsVersion": "33.0.2"
+      "buildToolsVersion": "33.0.2",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
