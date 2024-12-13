@@ -20,10 +20,10 @@ const LeaderboardScreen = () => {
       {/* Leaderboard Table */}
       <ScrollView style={styles.tableContainer}>
         <View style={styles.tableHeader}>
-          <Text style={styles.headerText}>Name</Text>
-          <Text style={styles.headerText}>Xp</Text>
-          <Text style={styles.headerText}>Orders</Text>
-          <Text style={styles.headerText}>Rank</Text>
+          <Text style={[styles.headerText, styles.nameColumn]}>Name</Text>
+          <Text style={[styles.headerText, styles.xpColumn]}>Xp</Text>
+          <Text style={[styles.headerText, styles.ordersColumn]}>Orders</Text>
+          <Text style={[styles.headerText, styles.rankColumn]}>Rank</Text>
         </View>
 
         {leaderboardData.map((user, index) => (
@@ -31,15 +31,26 @@ const LeaderboardScreen = () => {
             key={index}
             style={[
               styles.tableRow,
-              user.name === 'You' ? styles.currentUserRow : styles.otherUserRow,
+              user.name === 'You'
+                ? styles.currentUserRow
+                : user.rank === 1 || user.rank === 2
+                  ? styles.topRankRow
+                  : styles.otherUserRow,
             ]}
           >
-            <Text style={styles.tableText}>{user.name}</Text>
-            <Text style={styles.tableText}>{user.xp}</Text>
-            <Text style={styles.tableText}>{user.orders}</Text>
-            <Text style={styles.tableText}>{user.rank}</Text>
+            <Text style={[styles.tableText, styles.nameColumn]} numberOfLines={1} ellipsizeMode="tail">
+              {user.name}
+            </Text>
+            <View style={[styles.xpColumn, user.name === 'You' ? styles.currentredBackground : styles.blueBackground]}>
+              <Text style={styles.blueText}>{user.xp}</Text>
+            </View>
+            <Text style={[styles.tableText, styles.ordersColumn]}>{user.orders}</Text>
+            <View style={[styles.rankColumn, user.name === 'You' ? styles.currentredBackgroundd : styles.blueBackgroundd]}>
+              <Text style={styles.blueText}>{user.rank}</Text>
+            </View>
           </View>
         ))}
+
       </ScrollView>
 
       {/* Footer Text */}
@@ -68,7 +79,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#ffffff',
-    marginTop: 20,
+    // marginTop: 20,
   },
   title: {
     fontSize: 24,
@@ -87,51 +98,109 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#f0f0f0',
+    // backgroundColor: '#f0f0f0',
     padding: 12,
     borderRadius: 10,
   },
   headerText: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#333',
+    color: '#726B6B',
+    flex: 1,
+    textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    padding: 12,
+    // padding: 12,
     marginVertical: 4,
-    borderRadius: 10,
+    borderRadius: 20,
+  },
+  topRankRow: {
+    backgroundColor: '#71C232',
   },
   otherUserRow: {
-    backgroundColor: '#D6F382',  // light green for other users
+    backgroundColor: '#C9D63E',
   },
   currentUserRow: {
-    backgroundColor: '#F44336',  // red for the current user
-    color: '#fff',
+    backgroundColor: '#E8E8E8',
   },
   tableText: {
+    fontSize: 16,
+    flex: 1,
+    textAlign: 'center',
+    padding: 12,
+  },
+  nameColumn: {
+    flex: 2, // Increased width for Name column
+    textAlign: 'center', // Align text to the left
+  },
+  xpColumn: {
+    flex: 1, // Default width
+    textAlign: 'center',
+  },
+  ordersColumn: {
+    flex: 1, // Default width
+    textAlign: 'center',
+  },
+  rankColumn: {
+    flex: 1, // Default width
+    textAlign: 'center',
+  },
+  blueBackground: {
+    backgroundColor: '#762BAD',
+    // borderRadius: 5,
+    paddingVertical: 12,
+    flex: 1,
+    alignItems: 'center',
+  },
+  blueBackgroundd: {
+    backgroundColor: '#762BAD',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingVertical: 12,
+    flex: 1,
+    alignItems: 'center',
+  },
+  currentredBackground: {
+    backgroundColor: '#DC3737',
+    // borderRadius: 5,
+    paddingVertical: 12,
+    flex: 1,
+    alignItems: 'center',
+  },
+  currentredBackgroundd: {
+    backgroundColor: '#DC3737',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingVertical: 12,
+    flex: 1,
+    alignItems: 'center',
+  },
+  blueText: {
+    color: 'white',
     fontSize: 16,
   },
   footerText: {
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 16,
     color: '#555',
-    marginVertical: 16,
+    marginVertical: 20,
+    paddingHorizontal: 50,
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   tab: {
-    paddingHorizontal: 35,
-    paddingVertical: 13,
+    paddingHorizontal: 30,
+    paddingVertical: 8,
     borderRadius: 30,
     backgroundColor: '#ccc',
   },
   activeTab: {
-    backgroundColor: '#6A1B9A', // Purple
+    backgroundColor: '#6A1B9A',
   },
   tabText: {
     fontSize: 15,
@@ -146,17 +215,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 5, // Android shadow
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
-  },
-  icon: {
-    fontSize: 24,
+    elevation: 5,
   },
 });
 

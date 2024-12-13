@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProfileScreen({navigation}) {
-  const { user, loading, userData } = useAuth();
+  const { user, loading, userData, logout } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const role = userData?.role;
@@ -179,8 +179,10 @@ export default function ProfileScreen({navigation}) {
         </TouchableOpacity>
 
         {/* Deactivate Account Link */}
-        <TouchableOpacity>
-          <Text style={styles.deactivateLink}>Deactivate your account!</Text>
+        <TouchableOpacity onPress={() => {
+            logout()
+          }} >
+          <Text style={styles.deactivateLink}>Log out</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
