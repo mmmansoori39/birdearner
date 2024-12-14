@@ -10,11 +10,13 @@ import {
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const Inbox = ({ navigation }) => {
   const [chatThreads, setChatThreads] = useState([]); // List of chat threads
   const [loading, setLoading] = useState(false);
   const { userData } = useAuth();
+  const router = useRouter()
 
   // Load chat threads
   useEffect(() => {
@@ -151,7 +153,8 @@ const Inbox = ({ navigation }) => {
 
   // Navigate to individual chat
   const openChat = (receiverId, full_name, profileImage, projectId) => {
-    navigation.navigate("Chat", { receiverId, full_name, profileImage, projectId });
+    // navigation.navigate("Chat", { receiverId, full_name, profileImage, projectId });
+    router.push({pathname: "/screens/Chat", params: {receiverId, full_name, profileImage, projectId}})
   };
 
   const renderChatThread = ({ item }) => {
@@ -197,7 +200,7 @@ const Inbox = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.main}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.header}>Inbox</Text>

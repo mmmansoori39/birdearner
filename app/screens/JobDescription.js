@@ -3,11 +3,13 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'rea
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
+import { useRouter } from 'expo-router';
 
 const JobDescriptionScreen = ({ route, navigation }) => {
   const { job, clientProfileImage, full_name } = route.params;
   const { userData } = useAuth();
   const [appliedStatus, setAppliedStatus] = useState(false);
+  const router = useRouter()
 
   const projectId = job.$id;
   const receiverId = job.job_created_by
@@ -141,7 +143,8 @@ const JobDescriptionScreen = ({ route, navigation }) => {
         {
           appliedStatus === true ? (
             <TouchableOpacity onPress={() => {
-              navigation.navigate("Chat", {projectId, full_name, receiverId});
+              // navigation.navigate("Chat", {projectId, full_name, receiverId});
+              router.push({pathname: "/screens/Chat", params: {receiverId, full_name, projectId}})
             }}>
               <Text style={styles.alreadyapplyButtonText}>Send Message</Text>
             </TouchableOpacity>

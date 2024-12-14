@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const freelanceServices = [
   { id: "1", title: "Web DeveloperWeb Developer", image: require("../assets/webdev.jpg") },
@@ -38,6 +39,8 @@ const ClientHomeScreen = ({ navigation }) => {
   const [filteredHouseholdServices, setFilteredHouseholdServices] = useState(
     householdServices
   );
+
+  const router = useRouter()
 
   const handleSearch = (text) => {
     setSearch(text);
@@ -81,7 +84,7 @@ const ClientHomeScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.chats}
           onPress={() => {
-            navigation.navigate("Inbox");
+            router.push({ pathname: "/screens/Inbox" });
           }}
         >
           <FontAwesome name="comments" size={28} color="#fff" />
@@ -112,7 +115,7 @@ const ClientHomeScreen = ({ navigation }) => {
           renderItem={renderService}
           keyExtractor={(item) => item.id}
           horizontal
-          showsHorizontalScrollIndicator={true}
+          showsHorizontalScrollIndicator={false}
           style={styles.carousel}
           ListEmptyComponent={() => renderEmptyComponent("No Freelance Services Found")}
         />
@@ -123,7 +126,7 @@ const ClientHomeScreen = ({ navigation }) => {
           renderItem={renderService}
           keyExtractor={(item) => item.id}
           horizontal
-          showsHorizontalScrollIndicator={true}
+          showsHorizontalScrollIndicator={false}
           style={styles.carousel}
           ListEmptyComponent={() => renderEmptyComponent("No Household Services Found")}
         />
@@ -245,19 +248,19 @@ const styles = StyleSheet.create({
     // backgroundColor: "#fff", // Necessary for Android shadows
   },
 
-  sectionContainer: {
-    marginBottom: 5,
-    // marginTop: 40
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-    backgroundColor: "#3b006b",
-    padding: 10,
-    borderRadius: 10,
-    textAlign: "center",
-  },
+  // sectionContainer: {
+  //   marginBottom: 5,
+  //   // marginTop: 40
+  // },
+  // sectionTitle: {
+  //   fontSize: 18,
+  //   fontWeight: "bold",
+  //   color: "#fff",
+  //   backgroundColor: "#3b006b",
+  //   padding: 10,
+  //   borderRadius: 10,
+  //   textAlign: "center",
+  // },
   notificationsContainer: {
     backgroundColor: "#fff",
     padding: 10,
@@ -268,16 +271,42 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
   },
+  sectionContainer: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ffffff",
+    backgroundColor: "#3b006b",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
+    textAlign: "center",
+  },
   whatsNewContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     padding: 10,
     borderRadius: 10,
-    marginTop: 10,
+    justifyContent: "space-between",
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomRightRadius: 20,
   },
   whatsNewText: {
-    fontSize: 14,
-    color: "#555",
-    textAlign: "center",
+    fontSize: 16,
+    color: "#000",
+  },
+  stickyButton: {
+    // flex: 1,
+    // justifyContent: "center",
+    // alignContent: "center",
+    width: 60,
+    height: 60,
+    borderRadius: 40,
+    backgroundColor: "#3b006b",
+
   },
 });
 

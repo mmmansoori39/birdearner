@@ -73,11 +73,12 @@ const JobsPostedScreen = ({ navigation }) => {
     const title = item.title
     const freelancersId = item.applied_freelancer
     const color = item.color
+    const projectId = item.$id
 
     return (
       <View>
         <TouchableOpacity style={styles.jobContainer} onPress={() => {
-          navigation.navigate("AppliersScreen", {title, freelancersId, color, item})
+          navigation.navigate("AppliersScreen", {title, freelancersId, color, item, projectId})
         }} >
           <Image
             source={{ uri: "https://randomuser.me/api/portraits/women/3.jpg" }}

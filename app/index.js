@@ -21,7 +21,7 @@ const Tab = createBottomTabNavigator();
 
 export default function App() {
   const { user, loading, userData } = useAuth();
-  const role = userData?.role;
+  const role = "client";
 
   if (loading) {
     return <IntroScreen />;

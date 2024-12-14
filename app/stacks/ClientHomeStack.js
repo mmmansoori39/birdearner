@@ -22,7 +22,7 @@ export default function ClientHomeStack() {
         component={NotificationScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="ChatList"
         component={ChatList}
         options={{ headerShown: false }}
@@ -36,7 +36,7 @@ export default function ClientHomeStack() {
         name="Inbox"
         component={Inbox}
         options={{ headerShown: false }}
-      />
+      /> */}
     </Stack.Navigator>
   );
 }

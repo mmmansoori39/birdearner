@@ -14,11 +14,12 @@ import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 import { Query } from "react-native-appwrite";
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 const Chat = ({ route, navigation }) => {
-  const { full_name, profileImage, projectId, receiverId } = route.params;
+  const { full_name, profileImage, projectId, receiverId } = useLocalSearchParams();
   const [messages, setMessages] = useState([]); // Chat messages
-  const [input, setInput] = useState(""); // Input text
+  const [input, setInput] = useState("");
   const [selectedMessage, setSelectedMessage] = useState(null); // Store selected message for delete
   const { userData } = useAuth();
   const flatListRef = useRef();
@@ -27,6 +28,7 @@ const Chat = ({ route, navigation }) => {
   const [characterLimit, setCharacterLimit] = useState(0);
   const [projectStatus, setProjectStatus] = useState("pending");
   const [job, setJob] = useState(null);
+  const router = useRouter()
 
   // console.log(job.assigned_freelancer);
 
@@ -291,7 +293,7 @@ const Chat = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <View style={styles.headerData}>

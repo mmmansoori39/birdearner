@@ -11,12 +11,14 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { useRouter } from "expo-router";
 
 const AppliersScreen = ({ navigation, route }) => {
   const { userData } = useAuth();
   const [freelancers, setFreelancers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { title, freelancersId, color, item } = route.params;
+  const { title, freelancersId, color, item, projectId } = route.params;
+  const router = useRouter()
 
   console.log(item);
   
@@ -61,13 +63,18 @@ const AppliersScreen = ({ navigation, route }) => {
     fetchFreelancers();
   }, []);
 
-  const renderAppliedFreelancer = ({ item }) => (
+  const renderAppliedFreelancer = ({ item }) => {
 
-    <View>
+    const full_name = item.full_name
+    const receiverId = item.$id
+    
+
+    return (
+      <View>
       <TouchableOpacity
         style={styles.jobContainer}
         onPress={() => {
-          navigation.navigate("ProjectChat", { item });
+          router.push({pathname: "/screens/Chat", params: {receiverId, full_name, projectId}})
         }}
       >
         <Image
@@ -87,7 +94,8 @@ const AppliersScreen = ({ navigation, route }) => {
         <View style={[styles.statusIndicator, { backgroundColor: color }]} />
       </TouchableOpacity>
     </View>
-  );
+    )
+  };
 
   if (loading) {
     return (

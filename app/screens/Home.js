@@ -97,30 +97,20 @@ const HomeScreen = ({navigation}) => {
         </View>
       </View>
 
-      {/* What's New Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>What's New</Text>
         <View style={styles.whatsNewContainer}>
           {/* You can add new content here */}
-          <Text style={styles.whatsNewText}>Click on chat icon to logout ( temprory)</Text>
-          <TouchableOpacity style={styles.chatIcon} onPress={() => {
-            logout()
-          }} >
-            <FontAwesome name="comments" size={24} color="#fff" />
-          </TouchableOpacity>
+          <Text style={styles.whatsNewText}>No updates</Text>
         </View>
       </View>
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>What's New</Text>
-        <View style={styles.whatsNewContainer}>
-          {/* You can add new content here */}
-          <Text style={styles.whatsNewText}>Click on chat icon</Text>
-          <TouchableOpacity style={styles.chatIcon} onPress={() => {
+
+      <View style={styles.stickyButton}>
+      <TouchableOpacity style={styles.chatIcon} onPress={() => {
             navigation.navigate("ChatList")
           }} >
-            <FontAwesome name="comments" size={24} color="#fff" />
+            <FontAwesome name="comments" size={28} color="#fff" />
           </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -249,10 +239,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
   },
-  chatIcon: {
+  stickyButton: {
+    // flex: 1,
+    // justifyContent: "center",
+    // alignContent: "center",
+    width: 60,
+    height: 60,
+    borderRadius: 40,
     backgroundColor: "#3b006b",
-    padding: 10,
-    borderRadius: 50,
+
+  },
+  chatIcon: {
+    // backgroundColor: "#3b006b",
+    // padding: 10,
+    flex: 1,
+    justifyContent: "center",
+    alignContent: "center",
+    alignItems: "center"
   },
 });
 
