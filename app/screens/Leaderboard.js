@@ -1,21 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 
-const leaderboardData = [
-  { name: 'Suraj Kumar', xp: 1356, orders: 48, rank: 1 },
-  { name: 'Alex Matthew', xp: 1301, orders: 35, rank: 2 },
-  { name: 'Irshad Khan', xp: 1258, orders: 35, rank: 3 },
-  { name: 'Akash Singh', xp: 1208, orders: 33, rank: 4 },
-  { name: 'Rohit Kumar', xp: 1105, orders: 28, rank: 5 },
-  { name: 'You', xp: 8, orders: 19, rank: '1.5K+' },
-];
+const dummyData = {
+  local: [
+    { name: 'John Doe', xp: 850, orders: 23, rank: 1 },
+    { name: 'Jane Smith', xp: 800, orders: 21, rank: 2 },
+    { name: 'Alice Johnson', xp: 750, orders: 20, rank: 3 },
+    { name: 'Bob Brown', xp: 700, orders: 18, rank: 4 },
+    { name: 'Charlie Davis', xp: 650, orders: 17, rank: 5 },
+    { name: 'You', xp: 100, orders: 5, rank: '100+' },
+  ],
+  state: [
+    { name: 'Emily Green', xp: 1200, orders: 35, rank: 1 },
+    { name: 'David Blue', xp: 1150, orders: 34, rank: 2 },
+    { name: 'Sophia White', xp: 1100, orders: 33, rank: 3 },
+    { name: 'James Black', xp: 1050, orders: 32, rank: 4 },
+    { name: 'Michael Gray', xp: 1000, orders: 30, rank: 5 },
+    { name: 'You', xp: 8, orders: 19, rank: '500+' },
+  ],
+  global: [
+    { name: 'Suraj Kumar', xp: 1356, orders: 48, rank: 1 },
+    { name: 'Alex Matthew', xp: 1301, orders: 35, rank: 2 },
+    { name: 'Irshad Khan', xp: 1258, orders: 35, rank: 3 },
+    { name: 'Akash Singh', xp: 1208, orders: 33, rank: 4 },
+    { name: 'Rohit Kumar', xp: 1105, orders: 28, rank: 5 },
+    { name: 'You', xp: 8, orders: 19, rank: '1.5K+' },
+  ],
+};
 
 const LeaderboardScreen = () => {
+  const [selectedTab, setSelectedTab] = useState('global');
+  const [leaderboardData, setLeaderboardData] = useState(dummyData.global);
+
+  const handleTabPress = (tab) => {
+    setSelectedTab(tab);
+    setLeaderboardData(dummyData[tab]);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <Text style={styles.title}>Lead Board</Text>
-      <Text style={styles.subtitle}>(Global)</Text>
+      <Text style={styles.subtitle}>({selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)})</Text>
 
       {/* Leaderboard Table */}
       <ScrollView style={styles.tableContainer}>
@@ -34,8 +60,8 @@ const LeaderboardScreen = () => {
               user.name === 'You'
                 ? styles.currentUserRow
                 : user.rank === 1 || user.rank === 2
-                  ? styles.topRankRow
-                  : styles.otherUserRow,
+                ? styles.topRankRow
+                : styles.otherUserRow,
             ]}
           >
             <Text style={[styles.tableText, styles.nameColumn]} numberOfLines={1} ellipsizeMode="tail">
@@ -50,7 +76,6 @@ const LeaderboardScreen = () => {
             </View>
           </View>
         ))}
-
       </ScrollView>
 
       {/* Footer Text */}
@@ -60,14 +85,23 @@ const LeaderboardScreen = () => {
 
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity style={[styles.tab, styles.tabShadow]}>
-          <Text style={styles.tabText}>Local</Text>
+        <TouchableOpacity
+          style={[styles.tab, styles.tabShadow, selectedTab === 'local' && styles.activeTab]}
+          onPress={() => handleTabPress('local')}
+        >
+          <Text style={[styles.tabText, selectedTab === 'local' && styles.activeTabText]}>Local</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.tab, styles.tabShadow]}>
-          <Text style={styles.tabText}>State</Text>
+        <TouchableOpacity
+          style={[styles.tab, styles.tabShadow, selectedTab === 'state' && styles.activeTab]}
+          onPress={() => handleTabPress('state')}
+        >
+          <Text style={[styles.tabText, selectedTab === 'state' && styles.activeTabText]}>State</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.tab, styles.activeTab, styles.tabShadow]}>
-          <Text style={[styles.tabText, styles.activeTabText]}>Global</Text>
+        <TouchableOpacity
+          style={[styles.tab, styles.tabShadow, selectedTab === 'global' && styles.activeTab]}
+          onPress={() => handleTabPress('global')}
+        >
+          <Text style={[styles.tabText, selectedTab === 'global' && styles.activeTabText]}>Global</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
