@@ -247,7 +247,9 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 40,
     backgroundColor: "#3b006b",
-
+    position: "absolute",
+    bottom: 20,
+    right: 20
   },
   chatIcon: {
     // backgroundColor: "#3b006b",

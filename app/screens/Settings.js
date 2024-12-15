@@ -48,10 +48,6 @@ const settingsData = [
         stack_name: "Notifications Setting"
       },
       {
-        name: "In-app Currency",
-        stack_name: "Availability"
-      },
-      {
         name: "Appearance",
         stack_name: "Appearance"
       },

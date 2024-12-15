@@ -3,19 +3,19 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } fr
 
 const dummyData = {
   local: [
-    { name: 'John Doe', xp: 850, orders: 23, rank: 1 },
-    { name: 'Jane Smith', xp: 800, orders: 21, rank: 2 },
-    { name: 'Alice Johnson', xp: 750, orders: 20, rank: 3 },
-    { name: 'Bob Brown', xp: 700, orders: 18, rank: 4 },
-    { name: 'Charlie Davis', xp: 650, orders: 17, rank: 5 },
+    { name: 'Rahul Sharma', xp: 850, orders: 23, rank: 1 },
+    { name: 'Priya Singh', xp: 800, orders: 21, rank: 2 },
+    { name: 'Anjali Verma', xp: 750, orders: 20, rank: 3 },
+    { name: 'Vikram Mehta', xp: 700, orders: 18, rank: 4 },
+    { name: 'Rohit Desai', xp: 650, orders: 17, rank: 5 },
     { name: 'You', xp: 100, orders: 5, rank: '100+' },
   ],
   state: [
-    { name: 'Emily Green', xp: 1200, orders: 35, rank: 1 },
-    { name: 'David Blue', xp: 1150, orders: 34, rank: 2 },
-    { name: 'Sophia White', xp: 1100, orders: 33, rank: 3 },
-    { name: 'James Black', xp: 1050, orders: 32, rank: 4 },
-    { name: 'Michael Gray', xp: 1000, orders: 30, rank: 5 },
+    { name: 'Pooja Gupta', xp: 1200, orders: 35, rank: 1 },
+    { name: 'Amit Jain', xp: 1150, orders: 34, rank: 2 },
+    { name: 'Kavita Yadav', xp: 1100, orders: 33, rank: 3 },
+    { name: 'Sanjay Mishra', xp: 1050, orders: 32, rank: 4 },
+    { name: 'Manish Roy', xp: 1000, orders: 30, rank: 5 },
     { name: 'You', xp: 8, orders: 19, rank: '500+' },
   ],
   global: [
@@ -27,7 +27,6 @@ const dummyData = {
     { name: 'You', xp: 8, orders: 19, rank: '1.5K+' },
   ],
 };
-
 const LeaderboardScreen = () => {
   const [selectedTab, setSelectedTab] = useState('global');
   const [leaderboardData, setLeaderboardData] = useState(dummyData.global);

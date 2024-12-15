@@ -10,16 +10,17 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 const WalletScreen = ({ navigation, route }) => {
-  const { remainingAmount, paymentHistory } = route.params;
+  // const { remainingAmount, paymentHistory } = route.params;
 
-  const renderItem = ({ item }) => (
-    <View style={styles.paymentItem}>
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.amount}>₹{item.amount}</Text>
-      <Text style={styles.date}>{item.date} | {item.time}</Text>
-      <Text style={[styles.status, getStatusStyle(item.status)]}>{item.status}</Text>
-    </View>
-  );
+
+  // const renderItem = ({ item }) => (
+  //   <View style={styles.paymentItem}>
+  //     <Text style={styles.name}>{item.name}</Text>
+  //     <Text style={styles.amount}>₹{item.amount}</Text>
+  //     <Text style={styles.date}>{item.date} | {item.time}</Text>
+  //     <Text style={[styles.status, getStatusStyle(item.status)]}>{item.status}</Text>
+  //   </View>
+  // );
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -61,14 +62,14 @@ const WalletScreen = ({ navigation, route }) => {
       <Text style={styles.header}>Payment History</Text>
 
       {/* Remaining Amount */}
-      <Text style={styles.remainingAmount}>Remaining Balance: ₹{remainingAmount}</Text>
+      {/* <Text style={styles.remainingAmount}>Remaining Balance: ₹{256}</Text> */}
 
       {/* Payment History List */}
-      <FlatList
+      {/* <FlatList
         data={paymentHistory}
         renderItem={renderItem}
         keyExtractor={(item, index) => index.toString()}
-      />
+      /> */}
     </View>
     </View>
   );
