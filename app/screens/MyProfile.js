@@ -9,15 +9,22 @@ import {
   ImageBackground,
   ActivityIndicator,
   Share,
+  Modal,
+  RefreshControl
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
+import ImageViewer from "react-native-image-zoom-viewer";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
-export default function ProfileScreen({navigation}) {
-  const { user, loading, userData, logout } = useAuth();
+export default function ProfileScreen({ navigation }) {
+  const { user, loading, userData, logout, setUserData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [images, setImages] = useState([]);
   const role = userData?.role;
 
   useEffect(() => {
@@ -29,6 +36,39 @@ export default function ProfileScreen({navigation}) {
       setLoadingProfile(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    const flagsData = async () => {
+      try {
+        const freelancerId = userData.$id;
+        const freelancerDoc = await databases.getDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          freelancerId
+        );
+
+        setUserData(freelancerDoc)
+
+      } catch (error) {
+        console.error("Error updating flags:", error);
+      }
+    }
+
+    flagsData()
+  }, [refreshing])
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
+  const openImageModal = (imageUri) => {
+
+    setImages([{ url: imageUri }]);
+    setModalVisible(true);
+  };
 
   const onShare = async () => {
     try {
@@ -59,9 +99,50 @@ export default function ProfileScreen({navigation}) {
     );
   }
 
+
   return (
     <SafeAreaView>
-      <ScrollView style={styles.container}>
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)} // Close on back button
+      >
+        <ImageViewer
+          imageUrls={images} // Array of images
+          enableSwipeDown={true} // Swipe down to close
+          onSwipeDown={() => setModalVisible(false)}
+          renderIndicator={() => null}
+          renderHeader={() => (
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={{
+                position: "absolute",
+                top: 30,
+                left: 20,
+                zIndex: 10,
+                backgroundColor: "rgba(0,0,0,0.5)",
+                borderRadius: 20,
+                padding: 10,
+              }}
+            >
+              <FontAwesome name="arrow-left" size={24} color="#fff" />
+            </TouchableOpacity>
+          )}
+        />
+      </Modal>
+
+
+      <ScrollView style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor="#fff"
+          />
+        }
+      >
         <View style={styles.tab}>
           <TouchableOpacity style={styles.tabButtonL}>
             <Text style={styles.tabTextL}>My Profile</Text>
@@ -83,13 +164,15 @@ export default function ProfileScreen({navigation}) {
           }
           style={styles.backgroundImg}
         >
-          <Image
-            source={
-              { uri: data?.profile_photo } ||
-              require("../assets/userProfile.png")
-            }
-            style={styles.profileImage}
-          />
+          <TouchableOpacity onPress={() => openImageModal(data?.profile_photo)}>
+            <Image
+              source={
+                { uri: data?.profile_photo } || require("../assets/profile.png")
+              }
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.settings}
             onPress={() => {
@@ -119,9 +202,22 @@ export default function ProfileScreen({navigation}) {
           )}
           <Text style={styles.statusText}>
             Status:
-            {data?.currently_available ? "Active" : "Inactive"}
-            <FontAwesome name="circle" size={12} color="#6BCD2F" />
+            {userData.currently_available === true ? " Active " : " Inactive "}
+            {userData.currently_available === true ? (<FontAwesome name="circle" size={12} color="#6BCD2F" />)
+              : (<FontAwesome name="circle" size={12} color="#FF3131" />)}
           </Text>
+        </View>
+
+        <View style={styles.levelContainer}>
+          <View style={styles.xpRan}>
+            <View style={styles.xp}>
+              <Text style={styles.xpText}>{userData.XP} xp</Text>
+            </View>
+            <Text style={styles.randomText}>Earn xp and promote to next level</Text>
+          </View>
+          <View style={styles.level}>
+            <Text style={styles.levelText}>Lev. {userData.level}</Text>
+          </View>
         </View>
 
         <Text style={styles.Profile_heading}>
@@ -139,13 +235,15 @@ export default function ProfileScreen({navigation}) {
             <Text style={styles.sectionTitle}>Portfolio</Text>
             <View style={styles.portfolioImages}>
               {data?.portfolio_images.map((image, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: image }}
-                  style={styles.portfolioImage}
-                />
+                <TouchableOpacity key={index} onPress={() => openImageModal(image)}>
+                  <Image
+                    source={{ uri: image }}
+                    style={styles.portfolioImage}
+                  />
+                </TouchableOpacity>
               ))}
             </View>
+
           </View>
         )}
 
@@ -180,8 +278,8 @@ export default function ProfileScreen({navigation}) {
 
         {/* Deactivate Account Link */}
         <TouchableOpacity onPress={() => {
-            logout()
-          }} >
+          logout()
+        }} >
           <Text style={styles.deactivateLink}>Log out</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -246,7 +344,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     position: "absolute",
-    bottom: -20,
+    top: 82,
     left: "38%",
   },
   share: {
@@ -360,4 +458,51 @@ const styles = StyleSheet.create({
     fontSize: 13,
     paddingHorizontal: 25,
   },
+  levelContainer: {
+    flex: 1,
+    flexDirection: "row",
+    marginHorizontal: 40,
+    marginVertical: 12,
+    position: "relative"
+  },
+  xpRan: {
+    backgroundColor: "#D9D9D9",
+    flex: 1,
+    flexDirection: "row",
+    borderRadius: 20,
+    // gap: 8
+  },
+  xp: {
+    backgroundColor: "#56118F",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20
+  },
+  xpText: {
+    fontSize: 14,
+    fontWeight: "400",
+    color: "#fff"
+  },
+  randomText: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "#A1A1A1",
+    paddingHorizontal: 5,
+    paddingVertical: 8,
+  },
+  level: {
+    backgroundColor: "#56118F",
+    paddingHorizontal: 6,
+    paddingVertical: 15,
+    borderRadius: 50,
+    position: "absolute",
+    right: 0,
+    top: "-10"
+  },
+  levelText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#fff"
+  }
+
 });

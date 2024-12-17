@@ -1,116 +1,220 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
+  RefreshControl
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
+import { useRouter } from "expo-router";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
-const HomeScreen = ({navigation}) => {
-  const { user, logout, userData} = useAuth();
+const HomeScreen = ({ navigation }) => {
+  const { user, userData, setUserData } = useAuth();
+  const [profilePercentage, setProfilePercentage] = useState(20);
+  const [flagsCount, setFlagsCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter()
 
+  useEffect(() => {
+    let percentage = 0;
+
+    if (userData.full_name) percentage = 20;
+    if (userData.country) percentage = 40;
+    if (userData.gender) percentage = 70;
+    if (userData.terms_accepted) percentage = 100;
+
+    setProfilePercentage(percentage);
+
+    if (userData.flags && Array.isArray(userData.flags)) {
+      setFlagsCount(userData.flags.length);
+    }
+
+  }, [userData]);
+
+  const handleCompleteProfile = () => {
+    const fullName = userData.full_name
+    const email = userData.email
+    const password = userData.password
+    const role = userData.role
+
+    if (profilePercentage < 20) {
+      router.push({ pathname: "/screens/DescribeRole", params: { fullName, email, password, role } });
+    } else if (profilePercentage >= 20 && profilePercentage < 40) {
+      router.push({ pathname: "/screens/DescribeRole", params: { fullName, email, password, role } });
+    } else if (profilePercentage >= 40 && profilePercentage < 70) {
+      router.push({ pathname: "/screens/TellUsAboutYou", params: { role } });
+    } else if (profilePercentage >= 70 && profilePercentage < 100) {
+      router.push({ pathname: "/screens/Portfolio", params: { role } });
+    }
+  };
+
+  useEffect(() => {
+    const flagsData = async () => {
+      try {
+        const freelancerId = userData.$id;
+        const freelancerDoc = await databases.getDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          freelancerId
+        );
+
+        setUserData(freelancerDoc)
+
+      } catch (error) {
+        console.error("Error updating flags:", error);
+      }
+    }
+
+    flagsData()
+  }, [refreshing])
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.notificationIcon} onPress={() => {
-          navigation.navigate("Notification")
-        }} >
-          <MaterialIcons name="notifications" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.welcomeText}>Welcome Back</Text>
-        {/* Make sure to wrap dynamic content with Text component */}
-        <Text style={styles.usernameText}>
-          {user ? `${userData?.full_name}` : "User"}
-        </Text>
-      </View>
-
-      {/* Your Statistics Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Your Statistics</Text>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>70%</Text>
-            <Text style={styles.statLabel}>Success Score</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>NA</Text>
-            <Text style={styles.statLabel}>Flags</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.5</Text>
-            <Text style={styles.statLabel}>Rating</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>1 hr</Text>
-            <Text style={styles.statLabel}>Avg. Response time</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>12</Text>
-            <Text style={styles.statLabel}>Your Level</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Your Earnings Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Your Earnings</Text>
-        <View style={styles.earningsContainer}>
-          <View style={styles.earningItem}>
-            <Text style={styles.earningValue}>Rs. 5,052</Text>
-            <Text style={styles.earningLabel}>Total Earnings</Text>
-          </View>
-          <View style={styles.earningItem}>
-            <Text style={styles.earningValue}>Rs. 1,531</Text>
-            <Text style={styles.earningLabel}>Monthly</Text>
-          </View>
-          <View style={styles.earningItem}>
-            <Text style={styles.earningValue}>0</Text>
-            <Text style={styles.earningLabel}>Outstanding Amount</Text>
-          </View>
-          <View style={styles.earningItem}>
-            <Text style={styles.earningValue}>Rs. 5,000</Text>
-            <Text style={styles.earningLabel}>For Withdrawal</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Your Orders Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Your Orders</Text>
-        <View style={styles.ordersContainer}>
-          <View style={styles.orderItem}>
-            <Text style={styles.orderValue}>3</Text>
-            <Text style={styles.orderLabel}>Orders Completed</Text>
-          </View>
-          <View style={styles.orderItem}>
-            <Text style={styles.orderValue}>1</Text>
-            <Text style={styles.orderLabel}>Active Orders</Text>
-          </View>
-          <View style={styles.orderItem}>
-            <Text style={styles.orderValue}>0</Text>
-            <Text style={styles.orderLabel}>Cancelled Orders</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>What's New</Text>
-        <View style={styles.whatsNewContainer}>
-          {/* You can add new content here */}
-          <Text style={styles.whatsNewText}>No updates</Text>
-        </View>
-      </View>
-
-      <View style={styles.stickyButton}>
-      <TouchableOpacity style={styles.chatIcon} onPress={() => {
-            navigation.navigate("ChatList")
+    <SafeAreaView >
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.safeContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor="#fff"
+          />
+        }
+      >
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.notificationIcon} onPress={() => {
+            navigation.navigate("Notification")
           }} >
-            <FontAwesome name="comments" size={28} color="#fff" />
+            <MaterialIcons name="notifications" size={24} color="#fff" />
           </TouchableOpacity>
+          <Text style={styles.welcomeText}>Welcome Back</Text>
+          {/* Make sure to wrap dynamic content with Text component */}
+          <Text style={styles.usernameText}>
+            {user ? `${userData?.full_name}` : "User"}
+          </Text>
+        </View>
+
+        {/* Your Statistics Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Your Statistics</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statsBox}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>70%</Text>
+                <Text style={styles.statLabel}>Success Score</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>1 hr</Text>
+                <Text style={styles.statLabel}>Avg. Response time</Text>
+              </View>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{flagsCount || "NA"}</Text>
+              <Text style={styles.statLabel}>Flags</Text>
+            </View>
+            <View style={styles.statsBox}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{userData.rating}</Text>
+                <Text style={styles.statLabel}>Rating</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{userData.level}</Text>
+                <Text style={styles.statLabel}>Your Level</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Your Earnings Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Your Earnings</Text>
+          <View style={styles.earningsContainer}>
+            <View style={styles.earningItem}>
+              <Text style={styles.earningValue}>Rs. 5,052</Text>
+              <Text style={styles.earningLabel}>Total Earnings</Text>
+            </View>
+            <View style={styles.earningItem}>
+              <Text style={styles.earningValue}>Rs. 1,531</Text>
+              <Text style={styles.earningLabel}>Monthly</Text>
+            </View>
+            <View style={styles.earningItem}>
+              <Text style={styles.earningValue}>0</Text>
+              <Text style={styles.earningLabel}>Outstanding Amount</Text>
+            </View>
+            <View style={styles.earningItem}>
+              <Text style={styles.earningValue}>Rs. 5,000</Text>
+              <Text style={styles.earningLabel}>For Withdrawal</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Your Orders Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Your Orders</Text>
+          <View style={styles.ordersContainer}>
+            <View style={styles.orderItem}>
+              <Text style={styles.orderValue}>3</Text>
+              <Text style={styles.orderLabel}>Orders Completed</Text>
+            </View>
+            <View style={styles.orderItem}>
+              <Text style={styles.orderValue}>1</Text>
+              <Text style={styles.orderLabel}>Active Orders</Text>
+            </View>
+            <View style={styles.orderItem}>
+              <Text style={styles.orderValue}>0</Text>
+              <Text style={styles.orderLabel}>Cancelled Orders</Text>
+            </View>
+          </View>
+        </View>
+
+
+        {
+          !userData.terms_accepted && profilePercentage !== 100 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.profileContainers}>
+                <Text style={styles.profileText}>Complete Your Profile</Text>
+                <Text style={styles.whatsNewText}>Your profile is {profilePercentage}% complete</Text>
+                <View style={styles.boxColor}>
+                  <View style={profilePercentage >= 20 ? styles.redBox : styles.pBoxColor}></View>
+                  <View style={profilePercentage >= 40 ? styles.redBox : styles.pBoxColor}></View>
+                  <View style={profilePercentage >= 70 ? styles.yellowBox : styles.pBoxColor}></View>
+                  <View style={profilePercentage >= 70 ? styles.yellowBox : styles.pBoxColor}></View>
+                  <View style={profilePercentage === 100 ? styles.greenBox : styles.pBoxColor}></View>
+                  <View style={profilePercentage === 100 ? styles.greenBox : styles.pBoxColor}></View>
+                </View>
+                <TouchableOpacity style={styles.loginButton} onPress={handleCompleteProfile} F>
+                  <Text style={styles.loginButtonText}>Complete Now</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )
+        }
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>What's New</Text>
+          <View style={styles.whatsNewContainer}>
+            {/* You can add new content here */}
+            <Text style={styles.whatsNewText}>No updates</Text>
+          </View>
+        </View>
+      </ScrollView>
+      <View style={styles.stickyButton}>
+        <TouchableOpacity style={styles.chatIcon} onPress={() => {
+          router.push({pathname: "/screens/ReviewScreen",})
+        }} >
+          <FontAwesome name="comments" size={28} color="#fff" />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -118,16 +222,17 @@ const HomeScreen = ({navigation}) => {
 
 const styles = StyleSheet.create({
   safeContainer: {
-    flex: 1,
-    backgroundColor: "#f0f0f0",
+    // flex: 1,
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    // paddingVertical: 20,
   },
   header: {
     flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
+    marginTop: 15
   },
   welcomeText: {
     fontSize: 24,
@@ -144,9 +249,81 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     position: "absolute",
     right: 10,
+
   },
   sectionContainer: {
     marginBottom: 20,
+  },
+  profileContainers: {
+    backgroundColor: "#ffffff",
+    padding: 10,
+    marginTop: 12,
+    // justifyContent: "space-between",
+    flexDirection: "column",
+    alignItems: "center",
+    borderBottomRightRadius: 20,
+    // marginHorizontal: 20,
+    gap: 5,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4,
+    borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
+  },
+  profileText: {
+    fontSize: 24,
+    fontWeight: "500",
+    textAlign: "center"
+  },
+  boxColor: {
+    flex: 1,
+    flexDirection: "row",
+    gap: 5,
+    marginHorizontal: 20
+  },
+  pBoxColor: {
+    backgroundColor: "#CCD2CE",
+    height: 12,
+    width: 48,
+    borderRadius: 12
+  },
+  redBox: {
+    backgroundColor: "#FF3131",
+    height: 12,
+    width: 48,
+    borderRadius: 12
+  },
+  yellowBox: {
+    backgroundColor: "#CEBF1D",
+    height: 12,
+    width: 48,
+    borderRadius: 12
+  },
+  greenBox: {
+    backgroundColor: "#00871E",
+    height: 12,
+    width: 48,
+    borderRadius: 12
+  },
+  loginButton: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "#4B0082",
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 5,
+    marginTop: 12,
+  },
+  loginButtonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
   },
   sectionTitle: {
     fontSize: 18,
@@ -158,22 +335,50 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
     borderTopLeftRadius: 20,
     textAlign: "center",
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
   },
   statsContainer: {
     backgroundColor: "#ffffff",
     padding: 10,
-    borderRadius: 10,
+    paddingVertical: 20,
+    gap: 12,
+    marginTop: 12,
     flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
+    justifyContent: "space-around",
+    alignContent: "center",
+    alignItems: "center",
     borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4,
+  },
+  statsBox: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignContent: "center",
+    alignItems: "center",
+    gap: 15
   },
   statItem: {
     alignItems: "center",
-    width: "18%",
+    // width: "1%",
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#3b006b",
   },
@@ -185,18 +390,28 @@ const styles = StyleSheet.create({
   earningsContainer: {
     backgroundColor: "#ffffff",
     padding: 10,
+    marginTop: 12,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 5,
     justifyContent: "space-between",
     borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4,
   },
   earningItem: {
     alignItems: "center",
     width: "45%",
   },
   earningValue: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#3b006b",
   },
@@ -207,17 +422,28 @@ const styles = StyleSheet.create({
   ordersContainer: {
     backgroundColor: "#ffffff",
     padding: 10,
-    borderRadius: 10,
+    marginTop: 12,
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+    gap: 20,
     borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
   },
   orderItem: {
     alignItems: "center",
     width: "30%",
   },
   orderValue: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#3b006b",
   },
@@ -229,31 +455,43 @@ const styles = StyleSheet.create({
   whatsNewContainer: {
     backgroundColor: "#ffffff",
     padding: 10,
-    borderRadius: 10,
+    marginTop: 12,
     justifyContent: "space-between",
     flexDirection: "row",
     alignItems: "center",
     borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
   },
   whatsNewText: {
     fontSize: 16,
     color: "#000",
   },
   stickyButton: {
-    // flex: 1,
-    // justifyContent: "center",
-    // alignContent: "center",
     width: 60,
     height: 60,
     borderRadius: 40,
     backgroundColor: "#3b006b",
     position: "absolute",
     bottom: 20,
-    right: 20
+    right: 20,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
   },
   chatIcon: {
-    // backgroundColor: "#3b006b",
-    // padding: 10,
     flex: 1,
     justifyContent: "center",
     alignContent: "center",

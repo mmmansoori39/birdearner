@@ -216,6 +216,10 @@ const MarketplaceScreen = ({ navigation }) => {
           </Text>
         </View>
 
+        {/* <MapView style={styles.map}>
+
+        </MapView> */}
+
         {/* <MapView
           style={styles.map}
           region={
@@ -352,7 +356,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    marginTop: 20,
+    // marginTop: 20,
   },
   scrollContent: {
     padding: 20,

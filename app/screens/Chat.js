@@ -18,9 +18,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 const Chat = ({ route, navigation }) => {
   const { full_name, profileImage, projectId, receiverId } = useLocalSearchParams();
-  const [messages, setMessages] = useState([]); // Chat messages
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [selectedMessage, setSelectedMessage] = useState(null); // Store selected message for delete
+  const [selectedMessage, setSelectedMessage] = useState(null); 
   const { userData } = useAuth();
   const flatListRef = useRef();
   const [showMenu, setShowMenu] = useState(false);
@@ -213,13 +213,13 @@ const Chat = ({ route, navigation }) => {
   const handleMenuAction = (action) => {
     switch (action) {
       case "Job Details":
-        Alert.alert("Job Details", "Details of the job can be viewed here.");
+        router.push({pathname: "/screens/JobDetailsChat", params: {projectId}})
         break;
       case "Mark Unread":
         Alert.alert("Marked Unread", "The chat has been marked as unread.");
         break;
       case "Star":
-        Alert.alert("Starred", "The chat has been starred.");
+        router.push({pathname: "/screens/ReviewScreen",})
         break;
       case "Delete":
         Alert.alert("Deleted", "The chat has been deleted.");

@@ -9,11 +9,13 @@ import {
 } from "react-native";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
+import { useRouter } from "expo-router";
 
 const ChatList = ({ navigation }) => {
   const [chatThreads, setChatThreads] = useState([]); // List of chat threads
   const [loading, setLoading] = useState(false);
   const { userData } = useAuth();
+  const router = useRouter()
 
   // Load chat threads
   useEffect(() => {
@@ -107,7 +109,8 @@ const ChatList = ({ navigation }) => {
 
   // Navigate to individual chat
   const openChat = (receiverId, full_name, profileImage) => {
-    navigation.navigate("Chat", { receiverId, full_name, profileImage });
+    // navigation.navigate("Chat", { receiverId, full_name, profileImage });
+    router.push({pathname: "/screens/Chat", params: {receiverId, full_name, profileImage}})
   };
 
   const renderChatThread = ({ item }) => {

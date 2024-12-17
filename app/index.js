@@ -12,7 +12,6 @@ import IntroScreen from "./screens/Intro";
 import HomeStack from "./stacks/HomeStack";
 import Bird from "./screens/Bird";
 import JobRequirementStack from "./stacks/JobRequirementStack";
-import ClientHomeScreen from "./screens/ClientHome";
 import MarketPlaceStack from "./stacks/MarketPlaceStack";
 import JobStack from "./stacks/JobStack";
 import ClientHomeStack from "./stacks/ClientHomeStack";
@@ -189,14 +188,16 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    alignContent: "center"
+
   },
   inactiveTab: {
     justifyContent: "center",
     alignItems: "center",
   },
   gradientBackground: {
-    width: "100%",
-    height: "100%",
+    width: "180%",
+    height: "135%",
     justifyContent: "center",
     alignItems: "center",
   },

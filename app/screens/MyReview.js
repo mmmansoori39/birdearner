@@ -8,6 +8,7 @@ import {
   ImageBackground,
   ActivityIndicator,
   Share,
+  RefreshControl
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,14 +16,17 @@ import { TouchableOpacity } from "react-native";
 import ReviewCard from "../components/ReviewCard";
 import reviews from "../assets/data";
 import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
-export default function ReviewsScreen({navigation}) {
-  const { user, loading, userData } = useAuth();
+export default function ReviewsScreen({ navigation }) {
+  const { user, loading, userData, setUserData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   const role = userData?.role
-  
+
 
   useEffect(() => {
     try {
@@ -33,6 +37,33 @@ export default function ReviewsScreen({navigation}) {
       setLoadingProfile(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    const flagsData = async () => {
+      try {
+        const freelancerId = userData.$id;
+        const freelancerDoc = await databases.getDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          freelancerId
+        );
+
+        setUserData(freelancerDoc)
+
+      } catch (error) {
+        console.error("Error updating flags:", error);
+      }
+    }
+
+    flagsData()
+  }, [refreshing])
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
 
   const onShare = async () => {
     try {
@@ -66,7 +97,16 @@ export default function ReviewsScreen({navigation}) {
 
   return (
     <SafeAreaView>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor="#fff"
+          />
+        }
+      >
         <View style={styles.tab}>
           <TouchableOpacity
             style={styles.tabButtonL}
@@ -91,7 +131,7 @@ export default function ReviewsScreen({navigation}) {
           <Image
             source={
               { uri: data?.profile_photo } ||
-              require("../assets/userProfile.png")
+              require("../assets/profile.png")
             }
             style={styles.profileImage}
           />

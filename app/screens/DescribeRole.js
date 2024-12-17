@@ -189,9 +189,11 @@ const DescribeRole = () => {
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
           appwriteConfig.roleCollectionID,
-          [Query.equal("category", "freelance_service")]
+          [Query.equal("category", ["freelance_service","household_service"])]
         );
-        setServices(response.documents[0].role);
+        const roles = response.documents.map((doc) => doc.role).flat();
+
+        setServices(roles);
       } catch (error) {
         console.error("Error fetching services:", error);
       }
@@ -216,9 +218,12 @@ const DescribeRole = () => {
             onValueChange={(itemValue) => setDesignation(itemValue)}
           >
             <Picker.Item label="Select Organization Type" value="" />
-            <Picker.Item label="Personal" value="personal" />
-            <Picker.Item label="Company" value="Company" />
-            <Picker.Item label="Manager" value="Manager" />
+            <Picker.Item label="Individual" value="Individual" />
+            <Picker.Item label="Business" value="Business" />
+            <Picker.Item label="Non-Profit Organization" value="Non-Profit Organization" />
+            <Picker.Item label="Educational Institution" value="Educational Institution" />
+            <Picker.Item label="Government Agency" value="Government Agency" />
+            <Picker.Item label="Other" value="Other" />
           </Picker>
         </View>
       ) : (

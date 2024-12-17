@@ -1,18 +1,56 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import ImageViewer from "react-native-image-zoom-viewer";
+
 
 const JobDetailsScreen = ({ route, navigation }) => {
   const { formData } = route.params;
+  const [modalVisible, setModalVisible] = useState(false);
+  const [images, setImages] = useState([]);
 
-  console.log(formData)
+  const openImageModal = (imageUri) => {
 
+    setImages([{ url: imageUri }]); 
+    setModalVisible(true);
+  };  
+ 
   const handleSubmit = () => {
     navigation.navigate("JobSubmissionTimmer", { formData });
   };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)} // Close on back button
+      >
+        <ImageViewer
+          imageUrls={images} // Array of images
+          enableSwipeDown={true} // Swipe down to close
+          onSwipeDown={() => setModalVisible(false)}
+          renderIndicator={() => null}
+          renderHeader={() => (
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={{
+                position: "absolute",
+                top: 30,
+                left: 20,
+                zIndex: 10,
+                backgroundColor: "rgba(0,0,0,0.5)",
+                borderRadius: 20,
+                padding: 10,
+              }}
+            >
+              <FontAwesome name="arrow-left" size={24} color="#fff" />
+            </TouchableOpacity>
+          )}
+        />
+      </Modal>
+
       <ScrollView style={styles.scrollContent}>
         {/* Job Header */}
         <View style={styles.jobHeader}>
@@ -21,57 +59,69 @@ const JobDetailsScreen = ({ route, navigation }) => {
             style={styles.avatar}
           />
           <View style={styles.jobInfo}>
-            <Text style={styles.jobTitle}>
-              {formData.jobTitle || "Job Heading missing"}
-            </Text>
+            <View style={styles.jobTitlebar}>
+              <Text style={styles.jobTitle}>
+                {formData.jobTitle || "Job Heading missing"}
+              </Text>
+              <Text style={styles.detailText}>
+                <Text style={styles.boldText}>Budget </Text> Rs. {formData.budget}/-
+              </Text>
+            </View>
             <FontAwesome name="flag" size={20} color="black" style={styles.flagIcon} />
           </View>
         </View>
 
-        {/* Job Details */}
-        <View style={styles.jobDetails}>
-          <Text style={styles.detailText}>
-            <Text style={styles.boldText}>Budget: ₹</Text>{formData.budget}
-          </Text>
-          <Text style={styles.detailText}>
-            <Text style={styles.boldText}>Location:</Text> {formData.jobLocation || "N/A"}
-          </Text>
-          <Text style={styles.detailText}>
-            <Text style={styles.boldText}>Deadline:</Text> {new Date(formData.deadline).toLocaleDateString()}
-          </Text>
-          <Text style={styles.detailText}>
-            <Text style={styles.boldText}>Skills:</Text> {formData.skills.join(", ")}
-          </Text>
-        </View>
-
         {/* Job Description */}
+        <Text style={styles.desText}>Description</Text>
         <View style={styles.jobDescription}>
           <Text style={styles.descriptionText}>
             {formData.jobDes}
           </Text>
         </View>
 
+        <Text style={styles.desText}>Skills Required</Text>
+        <Text style={styles.skillText}>
+          {formData.skills.join(", ")}
+        </Text>
+
+        <Text style={styles.desText}>Deadline</Text>
+        <Text style={styles.detailText}>
+          {new Date(formData.deadline).toLocaleDateString()}
+        </Text>
+
+        <Text style={styles.desText}>Location</Text>
+        <Text style={styles.detailText}>
+          {formData.jobLocation || "N/A"}
+        </Text>
+
         {/* Attached Files */}
         <View style={styles.attachedFilesContainer}>
           <Text style={styles.attachedFilesTitle}>Attached Files</Text>
           <View style={styles.filePreviewContainer}>
-            {formData.portfolioImages.map((imageUri, index) => (
-              <Image
-                key={index}
-                source={{ uri: imageUri }}
-                style={styles.filePreview}
-              />
+            {formData.portfolioImages.map((image, index) => (
+              <TouchableOpacity key={index} onPress={() => openImageModal(image)}>
+                <Image
+                  source={{ uri: image }}
+                  style={styles.filePreview}
+                />
+              </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Apply Button */}
-        <TouchableOpacity style={styles.applyButton} onPress={handleSubmit} >
-          <Text style={styles.applyButtonText}>Confirm</Text>
-        </TouchableOpacity>
+
+
+        <View style={styles.applyButtoncon}>
+          <TouchableOpacity style={styles.conColor} onPress={handleSubmit} >
+            <Text style={styles.applyButtonText}>Confirm Job</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.repColor} onPress={handleSubmit} >
+            <Text style={styles.applyButtonText}>Report Job</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Report Job Link */}
-        <Text style={styles.reportText}>Report this job</Text>
+        <Text style={styles.reportText}>Share this job</Text>
       </ScrollView>
     </ScrollView>
   );
@@ -82,8 +132,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 20,
-    marginTop: 30,
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
   scrollContent: {
     padding: 20,
@@ -91,7 +141,7 @@ const styles = StyleSheet.create({
   },
   jobHeader: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   avatar: {
     width: 80,
@@ -109,7 +159,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#4e2587',
+    // flex: 1,
+  },
+  jobTitlebar: {
     flex: 1,
+    gap: 10,
   },
   flagIcon: {
     marginLeft: 10,
@@ -127,11 +181,21 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: '#4e2587',
+    color: '#595858',
+    marginBottom: 10,
+  },
+  skillText: {
+    fontSize: 14,
+    color: '#595858',
     marginBottom: 10,
   },
   boldText: {
     fontWeight: 'bold',
+  },
+  desText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 3
   },
   jobDescription: {
     marginBottom: 20,
@@ -165,18 +229,48 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginBottom: 10,
   },
-  applyButton: {
-    backgroundColor: '#4e2587',
-    // paddingHorizontal: 15,
-    borderRadius: 25,
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingVertical: 10
+  applyButtoncon: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 15
   },
   applyButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: 20,
+  },
+  conColor: {
+    backgroundColor: '#00871E',
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 10,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
+  },
+  repColor: {
+    backgroundColor: '#B64928',
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 10,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
   },
   reportText: {
     color: '#555',

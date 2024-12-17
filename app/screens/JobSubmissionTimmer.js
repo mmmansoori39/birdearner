@@ -45,7 +45,8 @@ const JobSubmissionTimmerScreen = ({ route, navigation }) => {
           updated_at: new Date().toISOString(),
           job_created_by: userDocumentId,
           latitude: formData.latitude,
-          longitude: formData.longitude
+          longitude: formData.longitude,
+          jobType: formData.jobType,
         }
       );
 
@@ -54,7 +55,7 @@ const JobSubmissionTimmerScreen = ({ route, navigation }) => {
         index: 0,
         routes: [{ name: "Job Posted" }],
       });
-      setSubmitted(true); 
+      setSubmitted(true);
     } catch (error) {
       console.error("Error updating details:", error);
       Alert.alert("Error", `Failed to update details: ${error.message}`);
@@ -164,6 +165,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 20,
     marginBottom: 15,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
   },
   submitButtonText: {
     color: "#FFFFFF",

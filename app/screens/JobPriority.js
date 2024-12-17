@@ -122,7 +122,7 @@ const JobPriority = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>JOBS</Text>
 
         <View style={styles.priorityContainer}>
@@ -168,7 +168,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    marginTop: 20,
   },
   scrollContent: {
     padding: 20,
