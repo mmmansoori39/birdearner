@@ -12,23 +12,34 @@ import { appwriteConfig, databases } from "../lib/appwrite";
 
 const AvailabilityScreen = ({ navigation }) => {
   const [offlineDuration, setOfflineDuration] = useState("1 hour");
-  const {userData} = useAuth();
-  const availability = userData.currently_available
+  const { userData } = useAuth();
+  const availability = userData?.currently_available
   const [selectedStatus, setSelectedStatus] = useState(availability);
   const freelancerId = userData.$id
 
   const handleStatusChange = async (status) => {
     setSelectedStatus(status);
-  
+
     try {
-      await databases.updateDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        freelancerId,
-        {
-          currently_available: status,
-        }
-      );
+      if (userData.role === "client") {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          freelancerId,
+          {
+            currently_available: status,
+          }
+        );
+      } else {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          freelancerId,
+          {
+            currently_available: status,
+          }
+        );
+      }
 
     } catch (error) {
       console.error("Error updating availability:", error);

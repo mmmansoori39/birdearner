@@ -1,7 +1,7 @@
 import React from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { Slot } from 'expo-router';
-// import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import { NavigationIndependentTree } from '@react-navigation/native';
 
 export default function App() {
@@ -9,6 +9,7 @@ export default function App() {
     <NavigationIndependentTree>
       <AuthProvider>
       <Slot />
+      <StatusBar style="auto" />
     </AuthProvider>
     </NavigationIndependentTree>
   );

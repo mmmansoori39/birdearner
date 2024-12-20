@@ -96,7 +96,7 @@ const MarketplaceScreen = ({ navigation }) => {
         setJobs(categorizeJobs(allJobs));
       }
     } catch (error) {
-      console.error("Error fetching jobs:", error);
+      throw error
       Alert.alert(
         "Error",
         "Failed to fetch jobs. Please try again later.",
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    // marginTop: 20,
+    paddingTop: 30,
   },
   scrollContent: {
     padding: 20,

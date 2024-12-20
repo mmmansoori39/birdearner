@@ -7,21 +7,22 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
-import { useRouter } from "expo-router";
 
 const AppliersScreen = ({ navigation, route }) => {
   const { userData } = useAuth();
   const [freelancers, setFreelancers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { title, freelancersId, color, item, projectId } = route.params;
-  const router = useRouter()
+  const [refreshing, setRefreshing] = useState(false);
 
-  console.log(item);
-  
+
+  console.log(freelancersId);
+
 
   useEffect(() => {
     if (freelancersId.length === 0) {
@@ -37,7 +38,7 @@ const AppliersScreen = ({ navigation, route }) => {
             try {
               const response = await databases.getDocument(
                 appwriteConfig.databaseId,
-                appwriteConfig.freelancerCollectionId, // Replace with your actual collection ID for freelancers
+                appwriteConfig.freelancerCollectionId,
                 id
               );
               return response;
@@ -63,37 +64,45 @@ const AppliersScreen = ({ navigation, route }) => {
     fetchFreelancers();
   }, []);
 
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
   const renderAppliedFreelancer = ({ item }) => {
 
     const full_name = item.full_name
     const receiverId = item.$id
-    
+
 
     return (
       <View>
-      <TouchableOpacity
-        style={styles.jobContainer}
-        onPress={() => {
-          router.push({pathname: "/screens/Chat", params: {receiverId, full_name, projectId}})
-        }}
-      >
-        <Image
-          source={{
-            uri: item.profile_photo || "https://via.placeholder.com/150",
+        <TouchableOpacity
+          style={styles.jobContainer}
+          onPress={() => {
+            navigation.navigate("Chat", { receiverId, full_name, projectId });
           }}
-          style={styles.avatar}
-        />
-        <View style={styles.jobContent}>
-          <Text style={styles.jobTitle} numberOfLines={1}>
-            {title}
-          </Text>
-          <Text style={styles.freelancerName}>
-            Name: {item.full_name || "N/A"}
-          </Text>
-        </View>
-        <View style={[styles.statusIndicator, { backgroundColor: color }]} />
-      </TouchableOpacity>
-    </View>
+        >
+          <Image
+            source={{
+              uri: item.profile_photo || "https://via.placeholder.com/150",
+            }}
+            style={styles.avatar}
+          />
+          <View style={styles.jobContent}>
+            <Text style={styles.jobTitle} numberOfLines={1}>
+              {title}
+            </Text>
+            <Text style={styles.freelancerName}>
+              Name: {item.full_name || "N/A"}
+            </Text>
+          </View>
+          <View style={[styles.statusIndicator, { backgroundColor: color }]} />
+        </TouchableOpacity>
+      </View>
     )
   };
 
@@ -139,6 +148,14 @@ const AppliersScreen = ({ navigation, route }) => {
         renderItem={renderAppliedFreelancer}
         keyExtractor={(item) => item.$id}
         contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor="#fff"
+          />
+        }
       />
     </View>
   );

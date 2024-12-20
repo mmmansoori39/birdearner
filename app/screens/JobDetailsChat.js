@@ -8,7 +8,7 @@ import ImageViewer from "react-native-image-zoom-viewer";
 
 
 const JobDetailsChatScreen = ({ route, navigation }) => {
-  const { projectId } = useLocalSearchParams();
+  const { projectId } = route.params;
   const [flagged, setFlagged] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [images, setImages] = useState([]);
@@ -35,17 +35,17 @@ const JobDetailsChatScreen = ({ route, navigation }) => {
 
     const checkFlaggedStatus = async () => {
       try {
-        const freelancerId = userData.$id;
-
-        const freelancerDoc = await databases.getDocument(
+        const Id = userData.$id;
+        const clientDoc = await databases.getDocument(
           appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId, 
-          freelancerId
+          userData.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId,
+          Id
         );
 
-        if (freelancerDoc.flags && freelancerDoc.flags.includes(projectId)) {
+        if (clientDoc.flags && clientDoc.flags.includes(projectId)) {
           setFlagged(true);
         }
+
       } catch (error) {
         console.error("Error checking flagged status:", error);
       }
@@ -68,9 +68,10 @@ const JobDetailsChatScreen = ({ route, navigation }) => {
 
       const freelancerDoc = await databases.getDocument(
         appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
+        userData.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId,
         freelancerId
       );
+
 
       let updatedFlags = freelancerDoc.flags || [];
 
@@ -84,12 +85,13 @@ const JobDetailsChatScreen = ({ route, navigation }) => {
 
       await databases.updateDocument(
         appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
+        userData.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId,
         freelancerId,
         {
           flags: updatedFlags,
         }
       );
+
     } catch (error) {
       console.error("Error updating flags:", error);
     }
@@ -142,7 +144,7 @@ const JobDetailsChatScreen = ({ route, navigation }) => {
       <ScrollView style={styles.scrollContent}>
         {/* Job Header */}
         <View style={styles.jobHeader}>
-          
+
           <View style={styles.jobInfo}>
             <View style={styles.jobTitlebar}>
               <Text style={styles.jobTitle}>
@@ -211,7 +213,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 20,
-    // marginTop: 30,
+    paddingTop: 40,
   },
   scrollContent: {
     padding: 20,

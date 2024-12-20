@@ -9,13 +9,45 @@ import {
   FlatList,
   Image,
   ScrollView,
+  RefreshControl,
+  Alert
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { household_service, freelance_service } from "../lib/roleData";
 import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
+import { Query } from "react-native-appwrite";
+import { differenceInDays } from 'date-fns';
 
 const placeholderImageURL = "https://picsum.photos/seed/";
+
+const categorizeJobs = (jobs) => {
+  const today = new Date();
+
+  return jobs.map((job) => {
+    const deadline = new Date(job.deadline);
+    const daysRemaining = differenceInDays(deadline, today);
+
+    let color;
+
+    if (daysRemaining < 0) {
+      color = '#000';
+    } else if (daysRemaining <= 2) {
+      color = '#FF3B30';
+    } else if (daysRemaining <= 10) {
+      color = '#FFCC00';
+    } else {
+      color = '#34C759';
+    }
+
+    return {
+      ...job,
+      color,
+    };
+  });
+};
+
 
 const RenderServiceItem = React.memo(({ item }) => (
   <View style={styles.serviceCard}>
@@ -30,43 +62,105 @@ const RenderServiceItem = React.memo(({ item }) => (
   </View>
 ));
 
-const ClientHomeScreen = ({ navigation }) => {
+const ClientHomeScreen = () => {
   const [search, setSearch] = useState("");
   const router = useRouter()
   const [filteredFreelanceServices, setFilteredFreelanceServices] = useState([]);
   const [filteredHouseholdServices, setFilteredHouseholdServices] = useState([]);
-  const { userData } = useAuth();
+  const [ongoingJobs, setOngoingJobs] = useState([]);
+  const [freelanceProfile, setFreelanceProfile] = useState([])
   const [profilePercentage, setProfilePercentage] = useState(20);
+  const [refreshing, setRefreshing] = useState(false);
+  const [combinedData, setCombinedData] = useState([]);
+  const { userData, setUserData } = useAuth();
+  const navigation = useNavigation()
 
   useEffect(() => {
     let percentage = 0;
 
-    if (userData.full_name) percentage = 20;
-    if (userData.country) percentage = 40;
-    if (userData.website_link) percentage = 70;
-    if (userData.terms_accepted) percentage = 100;
+    if (userData?.full_name) percentage = 20;
+    if (userData?.country) percentage = 40;
+    if (userData?.profile_photo) percentage = 70;
+    if (userData?.terms_accepted) percentage = 100;
+
 
     setProfilePercentage(percentage);
-  }, [userData]);
-  
+  }, [userData, refreshing]);
 
+  useEffect(() => {
+    const fetchOngoingJobs = async () => {
+      try {
+        const clientId = userData?.$id;
+        if (!clientId) throw new Error("Client ID is undefined!");
+
+        const projectDocs = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.jobCollectionID,
+          [Query.equal("job_created_by", clientId)]
+        );
+
+        const onGoingJobs = projectDocs.documents.filter(
+          (job) => job.completed_status === false || job.assigned_freelancer
+        );
+
+        const freelancePromises = onGoingJobs.map((freelance) =>
+          databases.getDocument(appwriteConfig.databaseId, appwriteConfig.freelancerCollectionId, freelance.assigned_freelancer)
+        );
+
+        const freelanceProfiles = await Promise.allSettled(freelancePromises);
+
+        const validProfiles = freelanceProfiles
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value);
+
+        const jobsWithColor = categorizeJobs(onGoingJobs);
+
+        const combinedData = validProfiles.map((profile) => {
+          const correspondingJob = jobsWithColor.find(
+            (job) => job.assigned_freelancer === profile.$id
+          );
+
+          return {
+            ...profile,
+            jobDetails: correspondingJob || null,
+            color: correspondingJob?.color || "#D3D3D3",
+          };
+        });
+
+        setOngoingJobs(jobsWithColor);
+        setCombinedData(combinedData);
+      } catch (error) {
+        console.error("Error fetching ongoing jobs:", error.message);
+      }
+    };
+
+    fetchOngoingJobs();
+  }, [refreshing]);
 
   const handleCompleteProfile = () => {
-    const fullName = userData.full_name
-    const email = userData.email
-    const password = userData.password
-    const role = userData.role
+    if (userData) {  // Check if userData is not null
+      const fullName = userData.full_name
+      const email = userData.email
+      const password = userData.password
+      const role = userData.role
 
-    if (profilePercentage < 20) {
-      router.push({ pathname: "/screens/DescribeRole", params: { fullName, email, password, role } });
-    } else if (profilePercentage >= 20 && profilePercentage < 40) {
-      router.push({ pathname: "/screens/DescribeRole", params: { fullName, email, password, role } });
-    } else if (profilePercentage >= 40 && profilePercentage < 70) {
-      router.push({ pathname: "/screens/TellUsAboutYou", params: { role } });
-    } else if (profilePercentage >= 70 && profilePercentage < 100) {
-      router.push({ pathname: "/screens/Portfolio", params: { role } });
+      if (profilePercentage < 20) {
+        navigation.navigate("DescribeRoleCom", { fullName, email, password, role })
+      } else if (profilePercentage >= 20 && profilePercentage < 40) {
+        navigation.navigate("DescribeRoleCom", { fullName, email, password, role })
+      } else if (profilePercentage >= 40 && profilePercentage < 70) {
+        navigation.navigate("TellUsAboutYouCom", { role })
+      } else if (profilePercentage >= 70 && profilePercentage < 100) {
+        navigation.navigate("PortfolioCom", { role })
+      }
     }
   };
+
+
+  const openChat = (receiverId, full_name, profileImage, projectId) => {
+    navigation.navigate("Chat", { receiverId, full_name, profileImage, projectId });
+  };
+
 
   useEffect(() => {
     const freelanceData = freelance_service.map((service) => ({
@@ -82,7 +176,31 @@ const ClientHomeScreen = ({ navigation }) => {
       id: service,
     }));
     setFilteredHouseholdServices(householdData);
-  }, []);
+  }, [refreshing]);
+
+useEffect(() => {
+    const flagsData = async () => {
+      if(userData){
+        try {
+          const freelancerId = userData?.$id;
+  
+          const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
+  
+  
+          const freelancerDoc = await databases.getDocument(
+            appwriteConfig.databaseId,
+            collectionId,
+            freelancerId
+          );
+          setUserData(freelancerDoc)
+        } catch (error) {
+          Alert.alert("Error updating flags:", error)
+        }
+      }
+      }
+
+    flagsData()
+  }, [refreshing])
 
   const handleSearch = (text) => {
     setSearch(text);
@@ -129,11 +247,28 @@ const ClientHomeScreen = ({ navigation }) => {
     }
   };
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
+
   const renderService = useCallback(({ item }) => <RenderServiceItem item={item} />, []);
 
   return (
     <SafeAreaView style={styles.safeContainer} showsVerticalScrollIndicator={true}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor="#fff"
+          />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.wraptext}>
@@ -147,8 +282,7 @@ const ClientHomeScreen = ({ navigation }) => {
             }}
           >
             <Image source={
-              { uri: userData?.profile_photo } ||
-              require("../assets/profile.png")
+              userData?.profile_photo ? { uri: userData.profile_photo } : require("../assets/profile.png")
             }
               style={styles.serviceImage} />
           </TouchableOpacity>
@@ -160,23 +294,35 @@ const ClientHomeScreen = ({ navigation }) => {
         <View style={styles.ongoingJobsContainer}>
           <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.StoryContainer}>
-            <View style={styles.addStory}>
-              <Text style={styles.addText}>+</Text>
-            </View>
-            {["Job 1", "Job 2", "Job 3", "Job 4", "Job 5", "Job 6"].map((job, index) => (
+            <TouchableOpacity onPress={() => {
+              navigation.navigate("Job Requirements")
+            }}><View style={styles.addStory}>
+                <Text style={styles.addText}>+</Text>
+              </View></TouchableOpacity>
+            {combinedData.map((item, index) => (
               <View
                 key={index}
                 style={[
                   styles.storyItem,
-                  { borderWidth: 4, borderColor: index % 2 === 0 ? "#F81919" : "#1DCE44", borderRadius: 50 }
+                  { borderWidth: 4, borderColor: item.color, borderRadius: 50 },
                 ]}
               >
-                <Image
-                  source={{ uri: `${placeholderImageURL}${index}/100/100` }}
-                  style={styles.storyImage}
-                />
+                <TouchableOpacity onPress={() =>
+                  openChat(
+                    item.$id,
+                    item.full_name,
+                    item.profile_photo,
+                    item.jobDetails.$id,
+                  )
+                }>
+                  <Image
+                    source={{ uri: item.profile_photo }}
+                    style={styles.storyImage}
+                  />
+                </TouchableOpacity>
               </View>
             ))}
+
 
           </ScrollView>
         </View>
@@ -265,7 +411,7 @@ const ClientHomeScreen = ({ navigation }) => {
         </View>
 
         {
-          !userData.terms_accepted && profilePercentage !== 100 && (
+          !userData?.terms_accepted && profilePercentage !== 100 && (
             <View style={styles.sectionContainer}>
               <View style={styles.profileContainers}>
                 <Text style={styles.profileText}>Complete Your Profile</Text>
@@ -298,7 +444,7 @@ const ClientHomeScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.chats}
             onPress={() => {
-              router.push({ pathname: "/screens/Inbox" });
+              navigation.navigate("Inbox")
             }}
           >
             <FontAwesome name="comments" size={28} color="#fff" />
@@ -316,7 +462,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ffffff",
     // paddingHorizontal: 20,
-    // paddingVertical: 30,
+    paddingTop: 10,
   },
   header: {
     flexDirection: "row",

@@ -10,28 +10,64 @@ import {
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
-import { useRouter } from "expo-router";
 import { appwriteConfig, databases } from "../lib/appwrite";
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({navigation}) => {
   const { user, userData, setUserData } = useAuth();
   const [profilePercentage, setProfilePercentage] = useState(20);
   const [flagsCount, setFlagsCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const router = useRouter()
+  const [CompletedOrders, setCompletedOrders] = useState(0)
+  const [activeOrders, setActiveOrders] = useState(0)
+  const [cancelledOrders, setCancelledOrdersOrders] = useState(0)
+
+
+  useEffect(() => {
+    const fetchOrderRecords = async () => {
+      try {
+        const cancelledOrders = userData?.cancelled_jobs.length
+        const assignedJobs = userData?.assigned_jobs        
+
+        setCancelledOrdersOrders(cancelledOrders)
+
+        if (userData?.assigned_jobs.length === 0) {
+          setActiveOrders(0)
+          setCompletedOrders(0)
+        } else {
+          const jobPromises = assignedJobs.map((jobId) =>
+            databases.getDocument(appwriteConfig.databaseId, appwriteConfig.jobCollectionID, jobId)
+          );
+
+          const jobs = await Promise.all(jobPromises);
+
+          const completedCount = jobs.filter((job) => job.completed_status === true).length;
+          const activeCount = jobs.filter((job) => job.completed_status === false || job.completed_status === null).length;
+
+          setCompletedOrders(completedCount);
+          setActiveOrders(activeCount);
+        }
+
+      } catch (error) {
+        throw error
+      }
+    }
+
+    fetchOrderRecords()
+  }, [refreshing])
+
 
   useEffect(() => {
     let percentage = 0;
 
-    if (userData.full_name) percentage = 20;
-    if (userData.country) percentage = 40;
-    if (userData.gender) percentage = 70;
-    if (userData.terms_accepted) percentage = 100;
+    if (userData?.full_name) percentage = 20;
+    if (userData?.country) percentage = 40;
+    if (userData?.gender) percentage = 70;
+    if (userData?.terms_accepted) percentage = 100;
 
     setProfilePercentage(percentage);
 
-    if (userData.flags && Array.isArray(userData.flags)) {
-      setFlagsCount(userData.flags.length);
+    if (userData?.flags && Array.isArray(userData?.flags)) {
+      setFlagsCount(userData?.flags.length);
     }
 
   }, [userData]);
@@ -43,33 +79,36 @@ const HomeScreen = ({ navigation }) => {
     const role = userData.role
 
     if (profilePercentage < 20) {
-      router.push({ pathname: "/screens/DescribeRole", params: { fullName, email, password, role } });
+      navigation.navigate("DescribeRoleCom", {fullName, email, password, role})
     } else if (profilePercentage >= 20 && profilePercentage < 40) {
-      router.push({ pathname: "/screens/DescribeRole", params: { fullName, email, password, role } });
+      navigation.navigate("DescribeRoleCom", {fullName, email, password, role})
     } else if (profilePercentage >= 40 && profilePercentage < 70) {
-      router.push({ pathname: "/screens/TellUsAboutYou", params: { role } });
+      navigation.navigate("TellUsAboutYouCom", {role})
     } else if (profilePercentage >= 70 && profilePercentage < 100) {
-      router.push({ pathname: "/screens/Portfolio", params: { role } });
+      navigation.navigate("PortfolioCom", {role})
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     const flagsData = async () => {
-      try {
-        const freelancerId = userData.$id;
-        const freelancerDoc = await databases.getDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
-          freelancerId
-        );
-
-        setUserData(freelancerDoc)
-
-      } catch (error) {
-        console.error("Error updating flags:", error);
+      if(userData){
+        try {
+          const freelancerId = userData?.$id;
+  
+          const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
+  
+  
+          const freelancerDoc = await databases.getDocument(
+            appwriteConfig.databaseId,
+            collectionId,
+            freelancerId
+          );
+          setUserData(freelancerDoc)
+        } catch (error) {
+          Alert.alert("Error updating flags:", error)
+        }
       }
-    }
-
+      }
     flagsData()
   }, [refreshing])
 
@@ -104,7 +143,7 @@ const HomeScreen = ({ navigation }) => {
             {user ? `${userData?.full_name}` : "User"}
           </Text>
         </View>
-
+        
         {/* Your Statistics Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Your Statistics</Text>
@@ -125,11 +164,11 @@ const HomeScreen = ({ navigation }) => {
             </View>
             <View style={styles.statsBox}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{userData.rating}</Text>
+                <Text style={styles.statValue}>{userData?.rating || "NA"}</Text>
                 <Text style={styles.statLabel}>Rating</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{userData.level}</Text>
+                <Text style={styles.statValue}>{userData?.level || 1}</Text>
                 <Text style={styles.statLabel}>Your Level</Text>
               </View>
             </View>
@@ -164,15 +203,15 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Your Orders</Text>
           <View style={styles.ordersContainer}>
             <View style={styles.orderItem}>
-              <Text style={styles.orderValue}>3</Text>
+              <Text style={styles.orderValue}>{CompletedOrders || 0}</Text>
               <Text style={styles.orderLabel}>Orders Completed</Text>
             </View>
             <View style={styles.orderItem}>
-              <Text style={styles.orderValue}>1</Text>
+              <Text style={styles.orderValue}>{activeOrders || 0}</Text>
               <Text style={styles.orderLabel}>Active Orders</Text>
             </View>
             <View style={styles.orderItem}>
-              <Text style={styles.orderValue}>0</Text>
+              <Text style={styles.orderValue}>{cancelledOrders || 0}</Text>
               <Text style={styles.orderLabel}>Cancelled Orders</Text>
             </View>
           </View>
@@ -180,7 +219,7 @@ const HomeScreen = ({ navigation }) => {
 
 
         {
-          !userData.terms_accepted && profilePercentage !== 100 && (
+          !userData?.terms_accepted && profilePercentage !== 100 && (
             <View style={styles.sectionContainer}>
               <View style={styles.profileContainers}>
                 <Text style={styles.profileText}>Complete Your Profile</Text>
@@ -210,9 +249,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </ScrollView>
       <View style={styles.stickyButton}>
-        <TouchableOpacity style={styles.chatIcon} onPress={() => {
-          router.push({pathname: "/screens/ReviewScreen",})
-        }} >
+        <TouchableOpacity style={styles.chatIcon} onPress={() => navigation.navigate("Inbox")}>
           <FontAwesome name="comments" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -225,7 +262,7 @@ const styles = StyleSheet.create({
     // flex: 1,
     backgroundColor: "#fff",
     paddingHorizontal: 20,
-    // paddingVertical: 20,
+    paddingTop: 30,
   },
   header: {
     flexDirection: "column",

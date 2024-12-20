@@ -146,7 +146,7 @@ const TellUsAboutYouScreen = ({ route }) => {
       await databases.updateDocument(appwriteConfig.databaseId, userCollection, userDocumentId, updatedDetails);
   
       handleSuccess("Your details have been updated successfully.");
-      navigation.navigate("Portfolio", { role });
+      navigation.navigate("PortfolioCom", { role });
     } catch (error) {
       handleError(`Failed to update details: ${error.message}`);
     }
@@ -156,7 +156,7 @@ const TellUsAboutYouScreen = ({ route }) => {
 
   // Skip the current screen
   const skipScreen = () => {
-    navigation.navigate("Tabs", { screen: 'Home' })
+    navigation.goBack()
   };
 
   return (

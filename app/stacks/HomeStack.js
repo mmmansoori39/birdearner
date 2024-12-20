@@ -4,6 +4,7 @@ import NotificationScreen from "../screens/Notification";
 import HomeScreen from "../screens/Home";
 import ChatList from "../screens/ChatList";
 import Chat from "../screens/Chat";
+import Inbox from "../screens/Inbox";
 
 const Stack = createStackNavigator();
 
@@ -21,9 +22,12 @@ export default function HomeStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="ChatList"
-        component={ChatList}
-        options={{ headerShown: false }}
+        name="Inbox"
+        component={(props) => <Inbox {...props} parentNavigation={navigation} />}
+        options={{
+          headerShown: false,
+          tabBarStyle: { display: "block" }, 
+        }}
       />
       <Stack.Screen
         name="Chat"

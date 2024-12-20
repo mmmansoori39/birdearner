@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { View, StyleSheet, Image } from "react-native";
@@ -15,203 +16,184 @@ import JobRequirementStack from "./stacks/JobRequirementStack";
 import MarketPlaceStack from "./stacks/MarketPlaceStack";
 import JobStack from "./stacks/JobStack";
 import ClientHomeStack from "./stacks/ClientHomeStack";
+import Signup from "./screens/Signup";
+import PortfolioScreen from "./screens/Portfolio";
+import Chat from "./screens/Chat";
+import DescribeRole from "./screens/DescribeRole";
+import TellUsAboutYouScreen from "./screens/TellUsAboutYou";
+import Inbox from "./screens/Inbox";
+import JobDetailsChatScreen from "./screens/JobDetailsChat";
+import ReviewGive from "./screens/ReviewGive";
+import ForgotPasswordScreen from "./screens/ForgotPassword";
+import Role from "./screens/Role";
+import PortfolioComScreen from "./screens/PortfolioCom";
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-export default function App() {
-  const { user, loading, userData } = useAuth();
-  
-  const role = userData?.role;
+// MainTabs Component
+function MainTabs() {
+    const { userData } = useAuth();
+    const isClient = userData?.role === "client";
 
-  if (loading) {
-    return <IntroScreen />;
-  }
+    const tabScreens = isClient
+        ? [
+            { name: "Home", component: ClientHomeStack },
+            { name: "Job Posted", component: JobStack },
+            { name: "Job Requirements", component: JobRequirementStack },
+            { name: "AI Bird", component: Bird },
+            { name: "Profile", component: ProfileStack },
+        ]
+        : [
+            { name: "Home", component: HomeStack },
+            { name: "Leaderboard", component: LeaderboardScreen },
+            { name: "Marketplace", component: MarketPlaceStack },
+            { name: "AI Bird", component: Bird },
+            { name: "Profile", component: ProfileStack },
+        ];
 
-  return (
-    <NavigationContainer>
-      {user ? (
+    return (
         <Tab.Navigator
-          screenOptions={({ route }) => ({
-            headerShown: false,
-            tabBarShowLabel: false,
-            tabBarStyle: {
-              backgroundColor: "#370F54",
-              borderTopWidth: 0,
-              // height: 56,
-            },
-            tabBarIcon: ({ focused, color, size }) => {
-              let iconName;
-              let iconColor = focused ? "#FFF" : "#aaa";
-
-              // Custom Tab Icons
-              if (route.name === "Job Posted") {
-                return (
-                  <View style={focused ? styles.activeTab : styles.inactiveTab}>
-                    {focused ? (
-                      <LinearGradient
-                        colors={["#300E49", "#762BAD"]}
-                        style={styles.gradientBackground}
-                      >
-                        <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
-                      </LinearGradient>
-                    ) : (
-                      <Image source={require("./assets/jobIcon.png")} style={styles.uploadedImage} />
-                    )}
-                  </View>
-                );
-              } else if (route.name === "AI Bird") {
-                return (
-                  <View style={focused ? styles.activeTab : styles.inactiveTab}>
-                    {focused ? (
-                      <LinearGradient
-                        colors={["#300E49", "#762BAD"]}
-                        style={styles.gradientBackground}
-                      >
-                        <Image source={require("./assets/bird.png")} style={styles.bird} />
-                      </LinearGradient>
-                    ) : (
-                      <Image source={require("./assets/bird.png")} style={styles.bird} />
-                    )}
-                  </View>
-                );
-              }
-
-              // Default Icons for Other Tabs
-              switch (route.name) {
-                case "Home":
-                  iconName = "home";
-                  break;
-                case "Leaderboard":
-                  iconName = "leaderboard";
-                  break;
-                case "Marketplace":
-                  iconName = "storefront";
-                  break;
-                case "Job Requirements":
-                  iconName = "add";
-                  break;
-                case "Profile":
-                  iconName = "person";
-                  break;
-                case "Settings":
-                  iconName = "settings";
-                  break;
-                default:
-                  iconName = "circle";
-              }
-
-              return (
-                <View style={focused ? styles.activeTab : styles.inactiveTab}>
-                  {focused ? (
-                    <LinearGradient
-                      colors={["#300E49", "#762BAD"]}
-                      style={styles.gradientBackground}
-                    >
-                      <MaterialIcons name={iconName} color={iconColor} size={30} />
-                    </LinearGradient>
-                  ) : (
-                    <MaterialIcons name={iconName} color={iconColor} size={30} />
-                  )}
-                </View>
-              );
-            },
-          })}
+            screenOptions={({ route }) => ({
+                headerShown: false,
+                tabBarShowLabel: false,
+                tabBarStyle: styles.tabBarStyle,
+                tabBarIcon: ({ focused }) => renderTabIcon(route, focused),
+            })}
         >
-          {role === "client" ? (
-            <>
-              <Tab.Screen
-                name="Home"
-                component={ClientHomeStack}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="Job Posted"
-                component={JobStack}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="Job Requirements"
-                component={JobRequirementStack}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="AI Bird"
-                component={Bird}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="Profile"
-                component={ProfileStack}
-                options={{ unmountOnBlur: false }}
-              />
-            </>
-          ) : (
-            <>
-              <Tab.Screen
-                name="Home"
-                component={HomeStack}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="Leaderboard"
-                component={LeaderboardScreen}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="Marketplace"
-                component={MarketPlaceStack}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="AI Bird"
-                component={Bird}
-                options={{ unmountOnBlur: false }}
-              />
-              <Tab.Screen
-                name="Profile"
-                component={ProfileStack}
-                options={{ unmountOnBlur: false }}
-              />
-            </>
-          )}
+            {tabScreens.map((screen, index) => (
+                <Tab.Screen key={index} name={screen.name} component={screen.component} />
+            ))}
         </Tab.Navigator>
-      ) : (
-        <LoginScreen />
-      )}
-    </NavigationContainer>
-  );
+    );
 }
 
+// Function to render tab icons
+function renderTabIcon(route, focused) {
+    const iconColor = focused ? "#FFF" : "#fff";
+    const icons = {
+        Home: "home",
+        Leaderboard: "leaderboard",
+        Marketplace: "storefront",
+        "Job Requirements": "add",
+        Profile: "person",
+    };
+    const customIcons = {
+        "Job Posted": require("./assets/jobIcon.png"),
+        "AI Bird": require("./assets/bird.png"),
+    };
+
+    const iconName = icons[route.name];
+    const customIcon = customIcons[route.name];
+
+    return customIcon
+        ? renderCustomIcon(focused, customIcon)
+        : renderDefaultIcon(focused, iconName, iconColor);
+}
+
+// Render default icon
+function renderDefaultIcon(focused, iconName, iconColor) {
+    return (
+        <View style={focused ? styles.activeTab : styles.inactiveTab}>
+            {focused ? (
+                <LinearGradient
+                    colors={["#300E49", "#762BAD"]}
+                    style={styles.gradientBackground}
+                >
+                    <MaterialIcons name={iconName} color={iconColor} size={30} />
+                </LinearGradient>
+            ) : (
+                <MaterialIcons name={iconName} color={iconColor} size={30} />
+            )}
+        </View>
+    );
+}
+
+// Render custom icons
+function renderCustomIcon(focused, source) {
+    return (
+        <View style={focused ? styles.activeTab : styles.inactiveTab}>
+            {focused ? (
+                <LinearGradient
+                    colors={["#300E49", "#762BAD"]}
+                    style={styles.gradientBackground}
+                >
+                    <Image source={source} style={styles.customIcon} />
+                </LinearGradient>
+            ) : (
+                <Image source={source} style={styles.customIcon} />
+            )}
+        </View>
+    );
+}
+
+// Main App Component
+export default function App() {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const { user, loading } = useAuth();
+
+    useEffect(() => {
+        setIsAuthenticated(!!user);
+    }, [user]);
+
+    if (loading) {
+        return <IntroScreen />;
+    }
+
+    return (
+        <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                {isAuthenticated ? (
+                    <>
+                        <Stack.Screen name="Tabs" component={MainTabs} />
+                        <Stack.Screen name="Inbox" component={Inbox} />
+                        <Stack.Screen name="Chat" component={Chat} />
+                        <Stack.Screen name="ReviewGive" component={ReviewGive} />
+                        <Stack.Screen name="JobDetailsChat" component={JobDetailsChatScreen} />
+                        <Stack.Screen name="PortfolioCom" component={PortfolioComScreen} />
+                        <Stack.Screen name="TellUsAboutYouCom" component={TellUsAboutYouScreen} />
+                    </>
+                ) : (
+                    <>
+                        <Stack.Screen name="Login" component={LoginScreen} />
+                        <Stack.Screen name="Signup" component={Signup} />
+                        <Stack.Screen name="DescribeRole" component={DescribeRole} />
+                        <Stack.Screen name="TellUsAboutYou" component={TellUsAboutYouScreen} />
+                        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                        <Stack.Screen name="Role" component={Role} />
+                        <Stack.Screen name="Portfolio" component={PortfolioScreen} />
+                    </>
+                )}
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+}
+
+// Shared Styles
 const styles = StyleSheet.create({
-  activeTab: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    alignContent: "center"
-
-  },
-  inactiveTab: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  gradientBackground: {
-    width: "180%",
-    height: "135%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  uploadedImage: {
-    width: 25,
-    height: 25,
-  },
-  bird: {
-    width: 40,
-    height: 45,
-  },
+    tabBarStyle: {
+        backgroundColor: "#370F54",
+        borderTopWidth: 0,
+    },
+    activeTab: {
+        width: "100%",
+        height: "100%",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    inactiveTab: {
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    gradientBackground: {
+        width: "180%",
+        height: "135%",
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 50,
+    },
+    customIcon: {
+        width: 25,
+        height: 25,
+    },
 });
-
-
-
-// eas build --platform android --profile debug
-// builing an Apk for debuging purpose

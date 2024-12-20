@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import Toast from "react-native-toast-message";
 
 export default function ProfileScreen({ navigation }) {
   const { user, loading, userData, logout, setUserData } = useAuth();
@@ -39,20 +40,24 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     const flagsData = async () => {
-      try {
-        const freelancerId = userData.$id;
-        const freelancerDoc = await databases.getDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
-          freelancerId
-        );
-
-        setUserData(freelancerDoc)
-
-      } catch (error) {
-        console.error("Error updating flags:", error);
+      if(userData){
+        try {
+          const freelancerId = userData?.$id;
+  
+          const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
+  
+  
+          const freelancerDoc = await databases.getDocument(
+            appwriteConfig.databaseId,
+            collectionId,
+            freelancerId
+          );
+          setUserData(freelancerDoc)
+        } catch (error) {
+          Alert.alert("Error updating flags:", error)
+        }
       }
-    }
+      }
 
     flagsData()
   }, [refreshing])
@@ -72,8 +77,10 @@ export default function ProfileScreen({ navigation }) {
 
   const onShare = async () => {
     try {
+      const profileLink = `https://birdearner.com/profile/${userData.$id}`;
+
       const result = await Share.share({
-        message: `Check out my profile on our app! Name: ${data?.full_name}`,
+        message: `Check out my profile on our app! Name: ${data?.full_name}\n\nProfile Link: ${profileLink}`,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
@@ -159,15 +166,14 @@ export default function ProfileScreen({ navigation }) {
 
         <ImageBackground
           source={
-            { uri: data?.cover_photo } ||
-            require("../assets/backGroungBanner.png")
+            data?.cover_photo ? { uri: data.cover_photo } : require("../assets/backGroungBanner.png")
           }
           style={styles.backgroundImg}
         >
           <TouchableOpacity onPress={() => openImageModal(data?.profile_photo)}>
             <Image
               source={
-                { uri: data?.profile_photo } || require("../assets/profile.png")
+                data?.profile_photo ? { uri: data.profile_photo } : require("../assets/profile.png")
               }
               style={styles.profileImage}
             />
@@ -187,23 +193,26 @@ export default function ProfileScreen({ navigation }) {
         </ImageBackground>
 
         <View style={styles.userDetails}>
-          <Text style={styles.nameText}>{data?.full_name}</Text>
+          <Text style={styles.nameText}>{data?.full_name || "User"}</Text>
           {role === "client" ? (
-            <Text style={styles.roleText}>{data?.organization_type}</Text>
+            <Text style={styles.roleText}>{data?.organization_type || "Not found"}</Text>
           ) : (
             <View style={styles.roleWrap}>
-              {data?.role_designation?.map((item, idx) => (
-                <Text key={idx} style={styles.roleText}>
-                  {item}
-                  {", "}
-                </Text>
-              ))}
+              <Text>
+                {data?.role_designation?.map((item, idx) => (
+                  <Text key={idx} style={styles.roleText}>
+                    {item}
+                    {", "}
+                  </Text>
+                )) || "No role designation available"}
+              </Text>
             </View>
+
           )}
           <Text style={styles.statusText}>
             Status:
-            {userData.currently_available === true ? " Active " : " Inactive "}
-            {userData.currently_available === true ? (<FontAwesome name="circle" size={12} color="#6BCD2F" />)
+            {userData?.currently_available === true ? " Active " : " Inactive "}
+            {userData?.currently_available === true ? (<FontAwesome name="circle" size={12} color="#6BCD2F" />)
               : (<FontAwesome name="circle" size={12} color="#FF3131" />)}
           </Text>
         </View>
@@ -211,12 +220,12 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.levelContainer}>
           <View style={styles.xpRan}>
             <View style={styles.xp}>
-              <Text style={styles.xpText}>{userData.XP} xp</Text>
+              <Text style={styles.xpText}>{userData?.XP || 0} xp</Text>
             </View>
             <Text style={styles.randomText}>Earn xp and promote to next level</Text>
           </View>
           <View style={styles.level}>
-            <Text style={styles.levelText}>Lev. {userData.level}</Text>
+            <Text style={styles.levelText}>Lev. {userData?.level || 1}</Text>
           </View>
         </View>
 
@@ -227,42 +236,46 @@ export default function ProfileScreen({ navigation }) {
         </Text>
 
         <Text style={styles.about}>About myself</Text>
-        <Text style={styles.about_des}>{data.profile_description}</Text>
+        <Text style={styles.about_des}>
+          {data?.profile_description || "No description available"}
+        </Text>
 
         {/* Portfolio Section */}
-        {role === "freelancer" && (
+        {role === "freelancer" && data?.portfolio_images?.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Portfolio</Text>
             <View style={styles.portfolioImages}>
               {data?.portfolio_images.map((image, index) => (
                 <TouchableOpacity key={index} onPress={() => openImageModal(image)}>
-                  <Image
-                    source={{ uri: image }}
-                    style={styles.portfolioImage}
-                  />
+                  <Image source={{ uri: image }} style={styles.portfolioImage} />
                 </TouchableOpacity>
               ))}
             </View>
-
           </View>
         )}
 
         {/* Experience & Certifications */}
-        {role === "freelancer" && (
+        {role === "freelancer" && (data?.experience || data?.certifications?.length > 0) && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Experience</Text>
-            <Text style={styles.sectionContent}>
-              {data?.experience} months of experience
-            </Text>
+            {data?.experience && (
+              <>
+                <Text style={styles.sectionTitle}>Experience</Text>
+                <Text style={styles.sectionContent}>
+                  {data?.experience} months of experience
+                </Text>
+              </>
+            )}
 
-            <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-              Certifications
-            </Text>
-            {data?.certifications.map((cert, index) => (
-              <Text key={index} style={styles.sectionContent}>
-                {cert}
-              </Text>
-            ))}
+            {data?.certifications?.length > 0 && (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Certifications</Text>
+                {data?.certifications.map((cert, index) => (
+                  <Text key={index} style={styles.sectionContent}>
+                    {cert}
+                  </Text>
+                ))}
+              </>
+            )}
           </View>
         )}
 
@@ -277,12 +290,26 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
 
         {/* Deactivate Account Link */}
-        <TouchableOpacity onPress={() => {
-          logout()
-        }} >
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              await logout();
+              showToast("success", "Logged out successfully!");
+              // navigation.reset({
+              //   index: 0,
+              //   routes: [{ name: "Login" }],
+              // });
+            } catch (error) {
+              showToast("error", "Logout Failed", error.message);
+            }
+          }}
+        >
           <Text style={styles.deactivateLink}>Log out</Text>
         </TouchableOpacity>
+
+        <Toast />
       </ScrollView>
+
     </SafeAreaView>
   );
 }

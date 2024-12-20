@@ -14,13 +14,12 @@ import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 import { Query } from "react-native-appwrite";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
 
 const Chat = ({ route, navigation }) => {
-  const { full_name, profileImage, projectId, receiverId } = useLocalSearchParams();
+  const { full_name, profileImage, projectId, receiverId } = route.params;
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [selectedMessage, setSelectedMessage] = useState(null); 
+  const [selectedMessage, setSelectedMessage] = useState(null);
   const { userData } = useAuth();
   const flatListRef = useRef();
   const [showMenu, setShowMenu] = useState(false);
@@ -28,9 +27,6 @@ const Chat = ({ route, navigation }) => {
   const [characterLimit, setCharacterLimit] = useState(0);
   const [projectStatus, setProjectStatus] = useState("pending");
   const [job, setJob] = useState(null);
-  const router = useRouter()
-
-  // console.log(job.assigned_freelancer);
 
 
   const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
@@ -192,6 +188,25 @@ const Chat = ({ route, navigation }) => {
         appwriteConfig.jobCollectionID, projectId, {
         assigned_freelancer: receiverId,
       });
+
+      const freelancer = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        receiverId
+      );
+
+      const updatedAssignedJobs = freelancer.assigned_jobs
+        ? [...freelancer.assigned_jobs, projectId]
+        : [projectId];
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        receiverId,
+        {
+          assigned_jobs: updatedAssignedJobs,
+        }
+      );
       setCharacterLimit(null);
     } catch (err) {
       console.error("Error accepting project:", err);
@@ -213,13 +228,13 @@ const Chat = ({ route, navigation }) => {
   const handleMenuAction = (action) => {
     switch (action) {
       case "Job Details":
-        router.push({pathname: "/screens/JobDetailsChat", params: {projectId}})
+        navigation.navigate("JobDetailsChat", {projectId})
         break;
       case "Mark Unread":
         Alert.alert("Marked Unread", "The chat has been marked as unread.");
         break;
       case "Star":
-        router.push({pathname: "/screens/ReviewScreen",})
+        navigation.navigate("ReviewGive")
         break;
       case "Delete":
         Alert.alert("Deleted", "The chat has been deleted.");
@@ -293,7 +308,7 @@ const Chat = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <View style={styles.headerData}>
@@ -433,7 +448,7 @@ const Chat = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: "#fff" , paddingTop: 30},
   header: {
     padding: 15,
     // backgroundColor: "#f4f4f4",

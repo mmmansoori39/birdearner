@@ -7,24 +7,25 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
 import { account, databases, appwriteConfig } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
 
-const DescribeRole = () => {
-  const { fullName, email, password, role } = useLocalSearchParams();
-  const [qualification, setQualification] = useState("");
-  const [experience, setExperience] = useState("");
-  const [heading, setHeading] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
-  const [country, setCountry] = useState("");
-  const [designations, setDesignations] = useState([]);
-  const [designation, setDesignation] = useState("");
-  const [bio, setBio] = useState("");
+const DescribeRole = ({ navigation, route }) => {
+  const { fullName, email, password, role } = route.params;
+  const [formData, setFormData] = useState({
+    qualification: "",
+    experience: "",
+    heading: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
+    designation: "",
+    bio: "",
+    designations: [],
+  });
   const [services, setServices] = useState([]);
 
   // List of Indian states
@@ -65,13 +66,6 @@ const DescribeRole = () => {
     "Puducherry",
   ];
 
-  const addRole = () => {
-    if (designation) {
-      setDesignations([...designations, designation]);
-      setDesignation("");
-    }
-  };
-
   const showToast = (type, message) => {
     Toast.show({
       type,
@@ -80,31 +74,39 @@ const DescribeRole = () => {
     });
   };
 
-  const validateForm = () => {
-    if (role === "client") {
-      if (
-        !designation.length ||
-        !heading ||
-        !city ||
-        !state ||
-        !zipCode ||
-        !country ||
-        !bio
-      ) {
-        showToast("info", "All fields are required.");
-        return false;
-      }
+  const handleInputChange = (key, value) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const addRole = () => {
+    if (formData?.designation) {
+      setFormData((prev) => ({
+        ...prev,
+        designations: [...prev.designations, prev.designation],
+        designation: "",
+      }));
     } else {
-      if (
-        !designations.length ||
-        !qualification ||
-        !experience ||
-        !heading ||
-        !city ||
-        !state ||
-        !zipCode ||
-        !country
-      ) {
+      showToast("info", "Please select a designation to add.");
+    }
+  };
+
+  const validateForm = () => {
+    const requiredFields =
+      role === "client"
+        ? ["designation", "heading", "city", "state", "zipCode", "country", "bio"]
+        : [
+            "designations",
+            "qualification",
+            "experience",
+            "heading",
+            "city",
+            "state",
+            "zipCode",
+            "country",
+          ];
+
+    for (const field of requiredFields) {
+      if (!formData[field] || (Array.isArray(formData[field]) && !formData[field].length)) {
         showToast("info", "All fields are required.");
         return false;
       }
@@ -114,90 +116,79 @@ const DescribeRole = () => {
 
   const authenticateUser = async () => {
     try {
-      const session = await account.getSession("current");
-      return session;
-    } catch (error) {
+      return await account.getSession("current");
+    } catch {
       await account.createEmailPasswordSession(email, password);
     }
   };
 
-  const saveFreelancerDetails = async () => {
+  const saveDetails = async () => {
     if (!validateForm()) return;
 
     try {
-      // Authenticate and fetch user details
       await authenticateUser();
 
-      // Create the document with permissions set to the user's ID
-      if (role === "client") {
-        const document = await databases.createDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.clientCollectionId,
-          ID.unique(),
-          {
-            full_name: fullName,
-            email: email,
-            password: password,
-            role: role,
-            organization_type: designation,
-            company_name: heading,
-            city,
-            state,
-            zipcode: parseInt(zipCode),
-            country,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            profile_description: bio,
-          }
-        );
-      } else {
-        const document = await databases.createDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
-          ID.unique(),
-          {
-            full_name: fullName,
-            email: email,
-            password: password,
-            role: role,
-            role_designation: designations,
-            highest_qualification: qualification,
-            experience: parseInt(experience),
-            profile_heading: heading,
-            city,
-            state,
-            zipcode: parseInt(zipCode),
-            country,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
-        );
-      }
+      const collectionId =
+        role === "client"
+          ? appwriteConfig.clientCollectionId
+          : appwriteConfig.freelancerCollectionId;
 
-      router.push({ pathname: "/screens/TellUsAboutYou", params: { role } });
+      const payload =
+        role === "client"
+          ? {
+              full_name: fullName,
+              email,
+              role,
+              organization_type: formData.designation,
+              company_name: formData.heading,
+              city: formData.city,
+              state: formData.state,
+              zipcode: parseInt(formData.zipCode),
+              country: formData.country,
+              profile_description: formData.bio,
+            }
+          : {
+              full_name: fullName,
+              email,
+              role,
+              role_designations: formData.designations,
+              highest_qualification: formData.qualification,
+              experience: parseInt(formData.experience),
+              profile_heading: formData.heading,
+              city: formData.city,
+              state: formData.state,
+              zipcode: parseInt(formData.zipCode),
+              country: formData.country,
+            };
 
-      showToast("success", "Freelancer details saved successfully.");
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        collectionId,
+        ID.unique(),
+        { ...payload, created_at: new Date().toISOString() }
+      );
+
+      showToast("success", `${role} details saved successfully.`);
+      navigation.navigate("TellUsAboutYou", { role });
     } catch (error) {
-      console.error("Error saving details:", error);
-      showToast("error", `Failed to save ${role} details: ${error.message}`);
+      showToast("error", `Error saving details: ${error.message}`);
     }
   };
 
   useEffect(() => {
-    async function fetchServices() {
+    const fetchServices = async () => {
       try {
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
           appwriteConfig.roleCollectionID,
-          [Query.equal("category", ["freelance_service","household_service"])]
+          [Query.equal("category", ["freelance_service", "household_service"])]
         );
         const roles = response.documents.map((doc) => doc.role).flat();
-
         setServices(roles);
       } catch (error) {
-        console.error("Error fetching services:", error);
+        showToast("error", "Error fetching services.");
       }
-    }
+    };
     fetchServices();
   }, []);
 
@@ -209,13 +200,13 @@ const DescribeRole = () => {
 
       {/* Role/Designation */}
       <Text style={styles.label}>
-        {role === "client" ? "Type of you organisation" : "Role/Designation"}
+        {role === "client" ? "Type of your organisation" : "Role/Designation"}
       </Text>
       {role === "client" ? (
         <View style={styles.dropdown}>
           <Picker
-            selectedValue={designation}
-            onValueChange={(itemValue) => setDesignation(itemValue)}
+            selectedValue={formData.designation}
+            onValueChange={(itemValue) => handleInputChange("designation", itemValue)}
           >
             <Picker.Item label="Select Organization Type" value="" />
             <Picker.Item label="Individual" value="Individual" />
@@ -230,8 +221,8 @@ const DescribeRole = () => {
         <>
           <View style={styles.dropdown}>
             <Picker
-              selectedValue={designation}
-              onValueChange={(itemValue) => setDesignation(itemValue)}
+              selectedValue={formData.designation}
+              onValueChange={(itemValue) => handleInputChange("designation", itemValue)}
             >
               <Picker.Item label="Select Role" value="" />
               {services.map((service, id) => (
@@ -240,8 +231,8 @@ const DescribeRole = () => {
             </Picker>
           </View>
 
-          {designations.length > 0 &&
-            designations.map((r, index) => (
+          {formData.designations.length > 0 &&
+            formData.designations.map((r, index) => (
               <Text key={index} style={styles.addedRole}>
                 + {r}
               </Text>
@@ -258,14 +249,11 @@ const DescribeRole = () => {
           <Text style={styles.label}>Highest Qualification</Text>
           <View style={styles.dropdown}>
             <Picker
-              selectedValue={qualification}
-              onValueChange={(itemValue) => setQualification(itemValue)}
+              selectedValue={formData.qualification}
+              onValueChange={(itemValue) => handleInputChange("qualification", itemValue)}
             >
               <Picker.Item label="Select Qualification" value="" />
-              <Picker.Item
-                label="Bachelor's Degree"
-                value="Bachelor's Degree"
-              />
+              <Picker.Item label="Bachelor's Degree" value="Bachelor's Degree" />
               <Picker.Item label="Master's Degree" value="Master's Degree" />
               <Picker.Item label="PhD" value="PhD" />
             </Picker>
@@ -277,40 +265,41 @@ const DescribeRole = () => {
             style={styles.input}
             keyboardType="numeric"
             placeholder="E.g. 24"
-            value={experience}
-            onChangeText={setExperience}
+            value={formData.experience}
+            onChangeText={(text) => handleInputChange("experience", text)}
           />
         </>
       )}
 
       {/* Profile Heading */}
       <Text style={styles.label}>
-        {" "}
         {role === "client"
           ? "Company Name (Optional)"
           : "Heading on your profile"}
       </Text>
       <TextInput
         style={styles.input}
-        placeholder={
-          role === "client" ? "Company name" : "E.g. I am a designer"
-        }
-        value={heading}
-        onChangeText={setHeading}
+        placeholder={role === "client" ? "Company name" : "E.g. I am a designer"}
+        value={formData.heading}
+        onChangeText={(text) => handleInputChange("heading", text)}
       />
 
       {/* City and State */}
       <View style={styles.row}>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>City</Text>
-          <TextInput style={styles.input} value={city} onChangeText={setCity} />
+          <TextInput
+            style={styles.input}
+            value={formData.city}
+            onChangeText={(text) => handleInputChange("city", text)}
+          />
         </View>
         <View style={styles.dropdownContainer}>
           <Text style={styles.label}>State</Text>
           <View style={styles.dropdown}>
             <Picker
-              selectedValue={state}
-              onValueChange={(itemValue) => setState(itemValue)}
+              selectedValue={formData.state}
+              onValueChange={(itemValue) => handleInputChange("state", itemValue)}
             >
               <Picker.Item label="Select State" value="" />
               {indianStates.map((state, index) => (
@@ -328,19 +317,19 @@ const DescribeRole = () => {
           <TextInput
             style={styles.input}
             keyboardType="numeric"
-            value={zipCode}
-            onChangeText={setZipCode}
+            maxLength={6}
+            value={formData.zipCode}
+            onChangeText={(text) => handleInputChange("zipCode", text)}
           />
         </View>
         <View style={styles.dropdownContainer}>
           <Text style={styles.label}>Country</Text>
           <View style={styles.dropdown}>
             <Picker
-              selectedValue={country}
-              onValueChange={(itemValue) => setCountry(itemValue)}
+              selectedValue={formData.country}
+              onValueChange={(itemValue) => handleInputChange("country", itemValue)}
             >
               <Picker.Item label="Select Country" value="" />
-              {/* <Picker.Item label="USA" value="USA" /> */}
               <Picker.Item label="India" value="India" />
             </Picker>
           </View>
@@ -354,23 +343,20 @@ const DescribeRole = () => {
           <TextInput
             style={styles.textArea}
             placeholder="Describe yourself"
-            value={bio}
+            value={formData.bio}
             multiline
             onChangeText={(text) => {
               if (text.length <= 255) {
-                setBio(text);
+                handleInputChange("bio", text);
               }
             }}
           />
-          <Text style={styles.charCount}>{bio.length}/255</Text>
+          <Text style={styles.charCount}>{formData.bio.length}/255</Text>
         </>
       )}
 
       {/* Next Button */}
-      <TouchableOpacity
-        style={styles.nextButton}
-        onPress={saveFreelancerDetails}
-      >
+      <TouchableOpacity style={styles.nextButton} onPress={saveDetails}>
         <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
 
@@ -424,7 +410,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 10,
   },
-  charCount:{
+  charCount: {
     color: "#fff",
     marginTop: 2,
     left: "auto"

@@ -11,7 +11,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 
-const ReviewScreen = ({navigation}) => {
+const ReviewGive = ({navigation}) => {
     const [ratings, setRatings] = useState({
         experience: 0,
         knowledge: 0,
@@ -90,7 +90,7 @@ const ReviewScreen = ({navigation}) => {
         //     routes: [{ name: "Home" }],
         //   });
 
-        navigation.navigate("Home")
+        navigation.goBack();
     };
 
     return (
@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFF",
         padding: 20,
         alignItems: "center",
+        paddingTop: 30
     },
     heading: {
         fontSize: 26,
@@ -231,4 +232,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ReviewScreen;
+export default ReviewGive;

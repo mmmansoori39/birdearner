@@ -8,7 +8,8 @@ import {
   ImageBackground,
   ActivityIndicator,
   Share,
-  RefreshControl
+  RefreshControl,
+  Alert
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -38,22 +39,26 @@ export default function ReviewsScreen({ navigation }) {
     }
   }, [user]);
 
-  useEffect(() => {
+useEffect(() => {
     const flagsData = async () => {
-      try {
-        const freelancerId = userData.$id;
-        const freelancerDoc = await databases.getDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
-          freelancerId
-        );
-
-        setUserData(freelancerDoc)
-
-      } catch (error) {
-        console.error("Error updating flags:", error);
+      if(userData){
+        try {
+          const freelancerId = userData?.$id;
+  
+          const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
+  
+  
+          const freelancerDoc = await databases.getDocument(
+            appwriteConfig.databaseId,
+            collectionId,
+            freelancerId
+          );
+          setUserData(freelancerDoc)
+        } catch (error) {
+          Alert.alert("Error updating flags:", error)
+        }
       }
-    }
+      }
 
     flagsData()
   }, [refreshing])
@@ -67,8 +72,10 @@ export default function ReviewsScreen({ navigation }) {
 
   const onShare = async () => {
     try {
+      const profileLink = `https://birdearner.com/profile/${userData.$id}`;
+
       const result = await Share.share({
-        message: `Check out my profile on our app! Name: ${data?.full_name}`,
+        message: `Check out my profile on our app! Name: ${data?.full_name}\n\nProfile Link: ${profileLink}`,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
@@ -123,15 +130,13 @@ export default function ReviewsScreen({ navigation }) {
 
         <ImageBackground
           source={
-            { uri: data?.cover_photo } ||
-            require("../assets/backGroungBanner.png")
+            data?.cover_photo ? { uri: data.cover_photo } : require("../assets/backGroungBanner.png")
           }
           style={styles.backgroundImg}
         >
           <Image
             source={
-              { uri: data?.profile_photo } ||
-              require("../assets/profile.png")
+              data?.profile_photo ? { uri: data.profile_photo } : require("../assets/profile.png")
             }
             style={styles.profileImage}
           />

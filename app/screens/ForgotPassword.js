@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet } f
 import { account } from '../lib/appwrite'; // Import the AppWrite account
 import { useRouter } from 'expo-router'; // Import useRouter to get the router object
 
-const ResetPasswordScreen = () => {
+const ForgetPassowrdScreen = () => {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
@@ -147,4 +147,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ResetPasswordScreen;
+export default ForgetPassowrdScreen;

@@ -3,7 +3,6 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal } fr
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
-import { useRouter } from 'expo-router';
 import ImageViewer from "react-native-image-zoom-viewer";
 
 
@@ -12,7 +11,6 @@ const JobDescriptionScreen = ({ route, navigation }) => {
   const { userData } = useAuth();
   const [appliedStatus, setAppliedStatus] = useState(false);
   const [flagged, setFlagged] = useState(false);
-  const router = useRouter()
   const [modalVisible, setModalVisible] = useState(false);
   const [images, setImages] = useState([]);
 
@@ -48,7 +46,7 @@ const JobDescriptionScreen = ({ route, navigation }) => {
 
         const freelancerDoc = await databases.getDocument(
           appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId, 
+          appwriteConfig.freelancerCollectionId,
           freelancerId
         );
 
@@ -105,35 +103,40 @@ const JobDescriptionScreen = ({ route, navigation }) => {
 
   const toggleFlag = async () => {
     try {
-      const freelancerId = userData.$id;
-      const jobId = job.$id;
+      if (userData) {
+        const freelancerId = userData?.$id;
+        const jobId = job?.$id;
 
-      const freelancerDoc = await databases.getDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        freelancerId
-      );
+        const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
 
-      let updatedFlags = freelancerDoc.flags || [];
 
-      if (updatedFlags.includes(jobId)) {
-        // If already flagged, remove the projectId
-        updatedFlags = updatedFlags.filter(id => id !== jobId);
-        setFlagged(false);
-      } else {
-        // If not flagged, add the projectId
-        updatedFlags.push(jobId);
-        setFlagged(true);
-      }
+        const freelancerDoc = await databases.getDocument(
+          appwriteConfig.databaseId,
+          collectionId,
+          freelancerId
+        );
 
-      await databases.updateDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        freelancerId,
-        {
-          flags: updatedFlags,
+        let updatedFlags = freelancerDoc.flags || [];
+
+        if (updatedFlags.includes(jobId)) {
+          // If already flagged, remove the projectId
+          updatedFlags = updatedFlags.filter(id => id !== jobId);
+          setFlagged(false);
+        } else {
+          // If not flagged, add the projectId
+          updatedFlags.push(jobId);
+          setFlagged(true);
         }
-      );
+
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          collectionId,
+          freelancerId,
+          {
+            flags: updatedFlags,
+          }
+        );
+      }
     } catch (error) {
       console.error("Error updating flags:", error);
     }
@@ -252,8 +255,7 @@ const JobDescriptionScreen = ({ route, navigation }) => {
         {
           appliedStatus === true ? (
             <TouchableOpacity onPress={() => {
-              // navigation.navigate("Chat", {projectId, full_name, receiverId});
-              router.push({ pathname: "/screens/Chat", params: { receiverId, full_name, projectId } })
+              navigation.navigate("Chat", { projectId, full_name, receiverId });
             }}>
               <Text style={styles.alreadyapplyButtonText}>Send Message</Text>
             </TouchableOpacity>
@@ -277,7 +279,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 20,
-    // marginTop: 30,
+    paddingTop: 40,
   },
   scrollContent: {
     padding: 20,
