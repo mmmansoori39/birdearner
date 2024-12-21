@@ -18,7 +18,11 @@ const Bird = () => {
     if (!input.trim()) return;
 
     const userMessage = {
+<<<<<<< HEAD
       sender: "user", 
+=======
+      sender: "user", // Static role; can be replaced with actual user ID
+>>>>>>> f6e5bebb7fd34125b9e6a98c917cbcdc27c0d02e
       text: input,
     };
 
@@ -31,6 +35,14 @@ const Bird = () => {
       // Prepare chat history
       const history = messages.map((msg) => msg.text);
 
+<<<<<<< HEAD
+=======
+      console.log("Chat history:", history);
+      console.log("Input:", input);
+      
+      
+
+>>>>>>> f6e5bebb7fd34125b9e6a98c917cbcdc27c0d02e
       // API request to backend
       const response = await fetch("http://ai.birdearner.com/faq", {
         method: "POST",
@@ -112,7 +124,11 @@ const Bird = () => {
 };
 
 const styles = StyleSheet.create({
+<<<<<<< HEAD
   container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20, marginHorizontal: 10, paddingTop: 40 },
+=======
+  container: { flex: 1, backgroundColor: "#fff" },
+>>>>>>> f6e5bebb7fd34125b9e6a98c917cbcdc27c0d02e
   chatList: { flex: 1 },
   chatListContainer: { padding: 10 },
   messageContainer: {
