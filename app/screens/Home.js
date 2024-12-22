@@ -11,8 +11,9 @@ import {
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { useNavigation } from "expo-router";
 
-const HomeScreen = ({navigation}) => {
+const HomeScreen = () => {
   const { user, userData, setUserData } = useAuth();
   const [profilePercentage, setProfilePercentage] = useState(20);
   const [flagsCount, setFlagsCount] = useState(0);
@@ -20,6 +21,7 @@ const HomeScreen = ({navigation}) => {
   const [CompletedOrders, setCompletedOrders] = useState(0)
   const [activeOrders, setActiveOrders] = useState(0)
   const [cancelledOrders, setCancelledOrdersOrders] = useState(0)
+  const navigation = useNavigation()
 
 
   useEffect(() => {
