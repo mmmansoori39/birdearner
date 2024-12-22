@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-picker/picker";
 import * as Location from "expo-location";
+import { appwriteConfig, databases } from "../lib/appwrite";
+import { Query } from "react-native-appwrite";
 
 const JobRequirementsScreen = ({ navigation }) => {
   const [jobLocation, setJobLocation] = useState("");
@@ -26,8 +28,10 @@ const JobRequirementsScreen = ({ navigation }) => {
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [jobTitle, setJobTitle] = useState("");
   const [freelancerType, setFrelancerType] = useState("");
+  const [jobType, setJobType] = useState("");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
+  const [services, setServices] = useState([]);
 
   const formData = {
     jobLocation,
@@ -38,6 +42,7 @@ const JobRequirementsScreen = ({ navigation }) => {
     portfolioImages,
     jobTitle,
     freelancerType,
+    jobType,
     latitude,
     longitude,
   };
@@ -53,6 +58,24 @@ const JobRequirementsScreen = ({ navigation }) => {
     }
     return true;
   };
+
+  useEffect(() => {
+    async function fetchServices() {
+      try {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.roleCollectionID,
+          [Query.equal("category", ["freelance_service", "household_service"])]
+        );
+        const roles = response.documents.map((doc) => doc.role).flat();
+
+        setServices(roles);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      }
+    }
+    fetchServices();
+  }, []);
 
   const fetchCoordinates = async () => {
     const hasPermission = await requestPermission();
@@ -117,7 +140,7 @@ const JobRequirementsScreen = ({ navigation }) => {
 
   // Validation function
   const validateForm = () => {
-    if (!jobLocation) {
+    if (jobType === "On-site" && !jobLocation) {
       Alert.alert("Validation Error", "Please enter a job location.");
       return false;
     }
@@ -127,6 +150,10 @@ const JobRequirementsScreen = ({ navigation }) => {
     }
     if (!freelancerType) {
       Alert.alert("Validation Error", "Please select a freelancer type.");
+      return false;
+    }
+    if (!jobType) {
+      Alert.alert("Validation Error", "Please select a job type.");
       return false;
     }
     if (deadline < new Date()) {
@@ -157,14 +184,25 @@ const JobRequirementsScreen = ({ navigation }) => {
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      await fetchCoordinates();
-      if (latitude && longitude) {
-        navigation.navigate("JobDetails", { formData });
+      if (jobType === "On-site") {
+        await fetchCoordinates();
+        if (latitude && longitude) {
+          navigation.navigate("JobDetails", { formData });
+        } else {
+          Alert.alert("Validation Error", "Please enter a valid job location.");
+        }
       } else {
-        Alert.alert("Validation Error", "Please enter a valid job location.");
+        setJobLocation("india");
+        await fetchCoordinates();
+        if (latitude && longitude) {
+          navigation.navigate("JobDetails", { formData });
+        } else {
+          Alert.alert("Validation Error", "Please enter a valid job location.");
+        }
       }
-    }
-  };
+
+    };
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -182,13 +220,30 @@ const JobRequirementsScreen = ({ navigation }) => {
           <Text style={styles.header}>Job Requirements</Text>
         </View>
 
-        <Text style={styles.label}>Job Location</Text>
-        <TextInput
-          style={styles.input}
-          placeholder=""
-          value={jobLocation}
-          onChangeText={setJobLocation}
-        />
+        <Text style={styles.label}>Job Type</Text>
+        <View style={styles.dropdown}>
+          <Picker
+            selectedValue={jobType}
+            onValueChange={(itemValue) => setJobType(itemValue)}
+          >
+            <Picker.Item label="Select Job Type" value="" />
+            <Picker.Item label="On-site" value="On-site" />
+            <Picker.Item label="Remote" value="Remote" />
+          </Picker>
+        </View>
+
+        {jobType === 'On-site' && (
+          <View>
+            <Text style={styles.label}>Job Location</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter job location"
+              value={jobLocation}
+              onChangeText={setJobLocation}
+            />
+          </View>
+        )}
+
 
         <Text style={styles.label}>Freelancer Type</Text>
         <View style={styles.dropdown}>
@@ -197,9 +252,9 @@ const JobRequirementsScreen = ({ navigation }) => {
             onValueChange={(itemValue) => setFrelancerType(itemValue)}
           >
             <Picker.Item label="Select Freelancer Type" value="" />
-            <Picker.Item label="Part time" value="Part time" />
-            <Picker.Item label="Full time" value="Full time" />
-            <Picker.Item label="Onsite" value="Onsite" />
+            {services.map((service, id) => (
+              <Picker.Item key={id} label={service} value={service} />
+            ))}
           </Picker>
         </View>
 
@@ -323,7 +378,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 20,
     paddingHorizontal: 30,
-    paddingVertical: 30,
+    paddingVertical: 20,
     flexGrow: 1,
   },
   main: {

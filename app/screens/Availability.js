@@ -7,14 +7,43 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
+import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
 const AvailabilityScreen = ({ navigation }) => {
-  const [selectedStatus, setSelectedStatus] = useState("online");
   const [offlineDuration, setOfflineDuration] = useState("1 hour");
+  const { userData } = useAuth();
+  const availability = userData?.currently_available
+  const [selectedStatus, setSelectedStatus] = useState(availability);
+  const freelancerId = userData.$id
 
-  // Function to handle the selected option (Online/Offline)
-  const handleStatusChange = (status) => {
+  const handleStatusChange = async (status) => {
     setSelectedStatus(status);
+
+    try {
+      if (userData.role === "client") {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          freelancerId,
+          {
+            currently_available: status,
+          }
+        );
+      } else {
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          freelancerId,
+          {
+            currently_available: status,
+          }
+        );
+      }
+
+    } catch (error) {
+      console.error("Error updating availability:", error);
+    }
   };
 
   return (
@@ -34,11 +63,11 @@ const AvailabilityScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[
             styles.radioButton,
-            selectedStatus === "online" && styles.radioSelected,
+            selectedStatus === true && styles.radioSelected,
           ]}
-          onPress={() => handleStatusChange("online")}
+          onPress={() => handleStatusChange(true)}
         >
-          {selectedStatus === "online" && <View style={styles.radioInner} />}
+          {selectedStatus === true && <View style={styles.radioInner} />}
         </TouchableOpacity>
         <Text style={styles.radioText}>Online</Text>
       </View>
@@ -48,15 +77,15 @@ const AvailabilityScreen = ({ navigation }) => {
         <TouchableOpacity
           style={[
             styles.radioButton,
-            selectedStatus === "offline" && styles.radioSelected,
+            selectedStatus === false && styles.radioSelected,
           ]}
-          onPress={() => handleStatusChange("offline")}
+          onPress={() => handleStatusChange(false)}
         >
-          {selectedStatus === "offline" && <View style={styles.radioInner} />}
+          {selectedStatus === false && <View style={styles.radioInner} />}
         </TouchableOpacity>
         <Text style={styles.radioText}>Offline for</Text>
         {/* Dropdown for Offline Duration */}
-        {selectedStatus === "offline" && (
+        {selectedStatus === false && (
           <Picker
             selectedValue={offlineDuration}
             onValueChange={(itemValue) => setOfflineDuration(itemValue)}
@@ -69,13 +98,6 @@ const AvailabilityScreen = ({ navigation }) => {
           </Picker>
         )}
       </View>
-
-      {/* Display Selected Values */}
-      {/* <Text style={styles.selectedText}>
-        Selected Status: {selectedStatus}{" "}
-        {selectedStatus === "offline" ? `for ${offlineDuration}` : ""}
-      </Text> */}
-
 
     </View>
   );

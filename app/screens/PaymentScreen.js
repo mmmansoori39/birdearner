@@ -1,20 +1,23 @@
-import React, {useState} from 'react';
-import {View, Button, Text, Image, StyleSheet} from 'react-native';
+import React, { useState } from 'react';
+import { View, Button, Text, Image, StyleSheet } from 'react-native';
 import RazorpayCheckout from 'react-native-razorpay';
+import { useAuth } from '../context/AuthContext';
 
 const PaymentScreen = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const amount = 1000;
+  const { userData } = useAuth();
+  const pic = userData?.profile_photo || 'https://example.com/default-profile-pic.png';  
+  const name = userData?.full_name || 'Guest User';  
 
   const handlePayment = () => {
     const options = {
-      description: 'Thank you',
-      image:
-        'https://maigha.com/wp-content/uploads/2023/10/Untitled_design-2-removebg-preview.png',
+      description: name, 
+      image: pic, 
       currency: 'INR',
-      key: "x088QXDHJ2ooyGJuTMzQvwrA",
-      amount: amount * 100,
-      name: 'Maigha Inc',
+      key: 'rzp_test_Jl7LJ6dEC1YfnX', 
+      amount: amount * 100, 
+      name: name,
       prefill: {
         email: 'mmm@gmail.com',
         phone: '9708283739',
@@ -26,10 +29,10 @@ const PaymentScreen = () => {
           zip: '845426',
         },
       },
-      theme: {color: '#09518e'},
+      theme: { color: '#4B0082' },
     };
 
-    console.log(RazorpayCheckout)
+    console.log(RazorpayCheckout);
 
     RazorpayCheckout.open(options)
       .then(data => {
@@ -47,11 +50,11 @@ const PaymentScreen = () => {
         <View style={styles.paymentContainer}>
           <Image
             source={{
-              uri: 'https://maigha.com/wp-content/uploads/2023/10/Untitled_design-2-removebg-preview.png',
+              uri: pic,  // Use the profile image URL here
             }}
             style={styles.image}
           />
-          <Text style={styles.description}>Thank you for your purchase!</Text>
+          <Text style={styles.description}>Thank you {name}</Text>
           <Text style={styles.amount}>Amount: {amount} INR</Text>
         </View>
       ) : (
@@ -92,7 +95,7 @@ const styles = StyleSheet.create({
   image: {
     width: 150,
     height: 100,
-    resizeMode: 'cover', 
+    resizeMode: 'cover',
     borderRadius: 10,
     marginBottom: 10,
   },

@@ -162,7 +162,7 @@ const NotificationScreen = () => {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Notifications</Text>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView}  >
         {notificationsData.map((notification) => (
           <View key={notification.id} style={styles.notificationItem}>
             <View
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     // flex: 1,
     // padding: 16,
     backgroundColor: '#fff',
-    // marginTop: 20
+    paddingHorizontal: 20
   },
   title: {
     fontSize: 24,
@@ -213,14 +213,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   scrollView: {
-    marginBottom: 16,
+    marginBottom: 40,
   },
   notificationItem: {
     flexDirection: 'row',
     marginBottom: 16,
     backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 40,
+    // padding: 10,
     alignItems: 'center',
   },
   avatarContainer: {

@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect, useCallback } from "react";
 import { account, appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { Alert } from "react-native";
 
 const AuthContext = createContext();
 
@@ -9,30 +10,38 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 
+  // Helper function to fetch user data
+  const fetchUserData = async (email) => {
+    try {
+      const [freelancerResponse, clientResponse] = await Promise.all([
+        databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          [Query.equal("email", email)]
+        ),
+        databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.clientCollectionId,
+          [Query.equal("email", email)]
+        ),
+      ]);
+
+      const freelancerData = freelancerResponse.documents[0];
+      const clientData = clientResponse.documents[0];
+
+      setUserData(freelancerData || clientData || null);
+    } catch (error) {
+      throw new Error("Error fetching user data")
+    }
+  };
+
+  // Check if the user is already logged in
   useEffect(() => {
     const checkUserSession = async () => {
       try {
         const currentUser = await account.get();
         setUser(currentUser);
-
-        const responseF = await databases.listDocuments(
-          appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
-          [Query.equal("email", currentUser.email)]
-        );
-    
-        const responseC = await databases.listDocuments(
-          appwriteConfig.databaseId,
-          appwriteConfig.clientCollectionId,
-          [Query.equal("email", currentUser.email)]
-        );
-    
-        if (responseF.documents.length > 0) {
-          setUserData(responseF.documents[0]);
-        } else {
-          setUserData(responseC.documents[0]);
-        }
-
+        await fetchUserData(currentUser.email);
       } catch (error) {
         setUser(null);
       } finally {
@@ -42,54 +51,42 @@ export const AuthProvider = ({ children }) => {
 
     checkUserSession();
   }, []);
-  // user, setUser
+
   const login = async (email, password) => {
     try {
       await account.createEmailPasswordSession(email, password);
-      const session = await account.get();
-      setUser(session);
+      const currentUser = await account.get();
+      setUser(currentUser);
 
-      const responseF = await databases.listDocuments(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        [Query.equal("email", session.email)]
-      );
-  
-      const responseC = await databases.listDocuments(
-        appwriteConfig.databaseId,
-        appwriteConfig.clientCollectionId,
-        [Query.equal("email", session.email)]
-      );
-  
-      if (responseF.documents.length > 0) {
-        setUserData(responseF.documents[0]);
-      } else {
-        setUserData(responseC.documents[0]);
-      }
-
-
+      // Fetch user-specific data
+      await fetchUserData(currentUser.email);
     } catch (error) {
-      if (error.message.includes('Invalid credentials') || error.message.includes('401')) {
-        // Show alert for incorrect credentials
-        alert("Incorrect email or password. Please try again.");
-      } else {
-        console.error("Login failed:", error);
-        alert("An error occurred during login. Please try again.");
-      }
+      throw new Error("Invalid email or password. Please try again.");
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await account.deleteSession("current");
       setUser(null);
+      setUserData(null);
     } catch (error) {
-      console.error("Logout failed:", error);
+      throw new Error("Logout failed");
     }
-  };
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading , userData, setUser}}>
+    <AuthContext.Provider
+      value={{
+        user,
+        userData,
+        login,
+        logout,
+        loading,
+        setUser,
+        setUserData,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

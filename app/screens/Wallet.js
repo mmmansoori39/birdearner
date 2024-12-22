@@ -5,13 +5,35 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const WalletScreen = ({ navigation }) => {
-  const [amount, setAmount] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [confirmEmail, setConfirmEmail] = useState("");
+const WalletScreen = ({ navigation, route }) => {
+  // const { remainingAmount, paymentHistory } = route.params;
+
+
+  // const renderItem = ({ item }) => (
+  //   <View style={styles.paymentItem}>
+  //     <Text style={styles.name}>{item.name}</Text>
+  //     <Text style={styles.amount}>₹{item.amount}</Text>
+  //     <Text style={styles.date}>{item.date} | {item.time}</Text>
+  //     <Text style={[styles.status, getStatusStyle(item.status)]}>{item.status}</Text>
+  //   </View>
+  // );
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "Success":
+        return { color: "green" };
+      case "Failed":
+        return { color: "red" };
+      case "Pending":
+        return { color: "orange" };
+      default:
+        return {};
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -35,6 +57,20 @@ const WalletScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.signupButton}>
         <Text style={styles.signupButtonText}>Next Page</Text>
       </TouchableOpacity>
+
+      <View style={styles.container}>
+      <Text style={styles.header}>Payment History</Text>
+
+      {/* Remaining Amount */}
+      {/* <Text style={styles.remainingAmount}>Remaining Balance: ₹{256}</Text> */}
+
+      {/* Payment History List */}
+      {/* <FlatList
+        data={paymentHistory}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
+      /> */}
+    </View>
     </View>
   );
 };

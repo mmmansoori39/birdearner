@@ -3,37 +3,31 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal } fr
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import ImageViewer from "react-native-image-zoom-viewer";
 
 
-const JobDescriptionScreen = ({ route, navigation }) => {
-  const { job, clientProfileImage, full_name } = route.params;
-  const { userData } = useAuth();
-  const [appliedStatus, setAppliedStatus] = useState(false);
+const JobDetailsChatScreen = ({ route, navigation }) => {
+  const { projectId } = route.params;
   const [flagged, setFlagged] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [images, setImages] = useState([]);
+  const [job, setJob] = useState()
+  const { userData } = useAuth();
 
-  const projectId = job.$id;
-  const receiverId = job.job_created_by
 
   useEffect(() => {
     const checkAppliedStatus = async () => {
       try {
-        const jobId = job.$id;
-        const freelancerId = userData.$id;
 
         const jobDoc = await databases.getDocument(
           appwriteConfig.databaseId,
           appwriteConfig.jobCollectionID,
-          jobId
+          projectId
         );
 
-        const updatedFreelancers = jobDoc.applied_freelancer;
+        setJob(jobDoc)
 
-        if (updatedFreelancers.includes(freelancerId)) {
-          setAppliedStatus(true);
-        }
       } catch (error) {
         console.error("Error job status:", error);
       }
@@ -41,18 +35,17 @@ const JobDescriptionScreen = ({ route, navigation }) => {
 
     const checkFlaggedStatus = async () => {
       try {
-        const jobId = job.$id;
-        const freelancerId = userData.$id;
-
-        const freelancerDoc = await databases.getDocument(
+        const Id = userData.$id;
+        const clientDoc = await databases.getDocument(
           appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
-          freelancerId
+          userData.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId,
+          Id
         );
 
-        if (freelancerDoc.flags && freelancerDoc.flags.includes(jobId)) {
+        if (clientDoc.flags && clientDoc.flags.includes(projectId)) {
           setFlagged(true);
         }
+
       } catch (error) {
         console.error("Error checking flagged status:", error);
       }
@@ -68,75 +61,37 @@ const JobDescriptionScreen = ({ route, navigation }) => {
     setModalVisible(true);
   };
 
-  const handleSubmit = async () => {
-    try {
-      const jobId = job.$id;
-      const freelancerId = userData.$id
 
-      const jobDoc = await databases.getDocument(
+  const toggleFlag = async () => {
+    try {
+      const freelancerId = userData.$id;
+
+      const freelancerDoc = await databases.getDocument(
         appwriteConfig.databaseId,
-        appwriteConfig.jobCollectionID,
-        jobId
+        userData.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId,
+        freelancerId
       );
 
-      const updatedFreelancers = jobDoc.applied_freelancer || [];
 
-      if (!updatedFreelancers.includes(freelancerId)) {
-        updatedFreelancers.push(freelancerId);
+      let updatedFlags = freelancerDoc.flags || [];
+
+      if (updatedFlags.includes(projectId)) {
+        updatedFlags = updatedFlags.filter(id => id !== projectId);
+        setFlagged(false);
+      } else {
+        updatedFlags.push(projectId);
+        setFlagged(true);
       }
 
       await databases.updateDocument(
         appwriteConfig.databaseId,
-        appwriteConfig.jobCollectionID,
-        jobId,
+        userData.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId,
+        freelancerId,
         {
-          applied_freelancer: updatedFreelancers,
-          updated_at: new Date().toISOString(),
+          flags: updatedFlags,
         }
       );
-      setAppliedStatus(true)
 
-    } catch (error) {
-      console.error("Error updating job document:", error);
-    }
-  };
-
-  const toggleFlag = async () => {
-    try {
-      if (userData) {
-        const freelancerId = userData?.$id;
-        const jobId = job?.$id;
-
-        const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-
-
-        const freelancerDoc = await databases.getDocument(
-          appwriteConfig.databaseId,
-          collectionId,
-          freelancerId
-        );
-
-        let updatedFlags = freelancerDoc.flags || [];
-
-        if (updatedFlags.includes(jobId)) {
-          // If already flagged, remove the projectId
-          updatedFlags = updatedFlags.filter(id => id !== jobId);
-          setFlagged(false);
-        } else {
-          // If not flagged, add the projectId
-          updatedFlags.push(jobId);
-          setFlagged(true);
-        }
-
-        await databases.updateDocument(
-          appwriteConfig.databaseId,
-          collectionId,
-          freelancerId,
-          {
-            flags: updatedFlags,
-          }
-        );
-      }
     } catch (error) {
       console.error("Error updating flags:", error);
     }
@@ -189,17 +144,14 @@ const JobDescriptionScreen = ({ route, navigation }) => {
       <ScrollView style={styles.scrollContent}>
         {/* Job Header */}
         <View style={styles.jobHeader}>
-          <Image
-            source={{ uri: clientProfileImage || "../assets/profile.png" }}
-            style={styles.avatar}
-          />
+
           <View style={styles.jobInfo}>
             <View style={styles.jobTitlebar}>
               <Text style={styles.jobTitle}>
-                {job.title || "Job Heading missing"}
+                {job?.title || "Job Heading missing"}
               </Text>
               <Text style={styles.detailText}>
-                <Text style={styles.boldText}>Budget </Text> Rs. {job.budget}/-
+                <Text style={styles.boldText}>Budget </Text> Rs. {job?.budget}/-
               </Text>
             </View>
             <TouchableOpacity onPress={toggleFlag}>
@@ -217,30 +169,30 @@ const JobDescriptionScreen = ({ route, navigation }) => {
         <Text style={styles.desText}>Description</Text>
         <View style={styles.jobDescription}>
           <Text style={styles.descriptionText}>
-            {job.description}
+            {job?.description}
           </Text>
         </View>
 
         <Text style={styles.desText}>Skills Required</Text>
         <Text style={styles.skillText}>
-          {job.skills.join(", ")}
+          {job?.skills.join(", ")}
         </Text>
 
         <Text style={styles.desText}>Deadline</Text>
         <Text style={styles.detailText}>
-          {new Date(job.deadline).toLocaleDateString()}
+          {new Date(job?.deadline).toLocaleDateString()}
         </Text>
 
         <Text style={styles.desText}>Location</Text>
         <Text style={styles.detailText}>
-          {job.location || "N/A"}
+          {job?.location || "N/A"}
         </Text>
 
         {/* Attached Files */}
         <View style={styles.attachedFilesContainer}>
           <Text style={styles.attachedFilesTitle}>Attached Files</Text>
           <View style={styles.filePreviewContainer}>
-            {job.attached_files.map((image, index) => (
+            {job?.attached_files.map((image, index) => (
               <TouchableOpacity key={index} onPress={() => openImageModal(image)}>
                 <Image
                   source={{ uri: image }}
@@ -250,24 +202,6 @@ const JobDescriptionScreen = ({ route, navigation }) => {
             ))}
           </View>
         </View>
-
-        {/* Apply Button */}
-        {
-          appliedStatus === true ? (
-            <TouchableOpacity onPress={() => {
-              navigation.navigate("Chat", { projectId, full_name, receiverId });
-            }}>
-              <Text style={styles.alreadyapplyButtonText}>Send Message</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.applyButton} onPress={handleSubmit} >
-              <Text style={styles.applyButtonText}>Apply</Text>
-            </TouchableOpacity>
-          )
-        }
-
-        {/* Report Job Link */}
-        <Text style={styles.reportText}>Report this job</Text>
       </ScrollView>
     </ScrollView>
   );
@@ -504,4 +438,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default JobDescriptionScreen;
+export default JobDetailsChatScreen;

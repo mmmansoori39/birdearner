@@ -8,20 +8,26 @@ import {
   ImageBackground,
   ActivityIndicator,
   Share,
+  RefreshControl,
+  Alert
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
 import ReviewCard from "../components/ReviewCard";
-import { reviews } from "../assets/data";
+import reviews from "../assets/data";
 import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
-export default function ReviewsScreen({navigation}) {
-  const { user, loading, userData } = useAuth();
+export default function ReviewsScreen({ navigation }) {
+  const { user, loading, userData, setUserData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   const role = userData?.role
+
 
   useEffect(() => {
     try {
@@ -33,10 +39,43 @@ export default function ReviewsScreen({navigation}) {
     }
   }, [user]);
 
+useEffect(() => {
+    const flagsData = async () => {
+      if(userData){
+        try {
+          const freelancerId = userData?.$id;
+  
+          const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
+  
+  
+          const freelancerDoc = await databases.getDocument(
+            appwriteConfig.databaseId,
+            collectionId,
+            freelancerId
+          );
+          setUserData(freelancerDoc)
+        } catch (error) {
+          Alert.alert("Error updating flags:", error)
+        }
+      }
+      }
+
+    flagsData()
+  }, [refreshing])
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
   const onShare = async () => {
     try {
+      const profileLink = `https://birdearner.com/profile/${userData.$id}`;
+
       const result = await Share.share({
-        message: `Check out my profile on our app! Name: ${data?.full_name}`,
+        message: `Check out my profile on our app! Name: ${data?.full_name}\n\nProfile Link: ${profileLink}`,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
@@ -65,7 +104,16 @@ export default function ReviewsScreen({navigation}) {
 
   return (
     <SafeAreaView>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor="#fff"
+          />
+        }
+      >
         <View style={styles.tab}>
           <TouchableOpacity
             style={styles.tabButtonL}
@@ -82,15 +130,13 @@ export default function ReviewsScreen({navigation}) {
 
         <ImageBackground
           source={
-            { uri: data?.cover_photo } ||
-            require("../assets/backGroungBanner.png")
+            data?.cover_photo ? { uri: data.cover_photo } : require("../assets/backGroungBanner.png")
           }
           style={styles.backgroundImg}
         >
           <Image
             source={
-              { uri: data?.profile_photo } ||
-              require("../assets/userProfile.png")
+              data?.profile_photo ? { uri: data.profile_photo } : require("../assets/profile.png")
             }
             style={styles.profileImage}
           />
@@ -129,7 +175,7 @@ export default function ReviewsScreen({navigation}) {
         </View>
 
         <View style={styles.reviewSection}>
-          {reviews.map((review, index) => (
+          {reviews?.map((review, index) => (
             <ReviewCard
               key={index}
               reviewerName={review.reviewerName}

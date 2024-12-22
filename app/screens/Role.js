@@ -2,12 +2,11 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
-import { router } from "expo-router";
 
-const Role = () => {
+const Role = ({navigation}) => {
 
     const navigateToSignup = (role) => {
-        router.push({ pathname: "/screens/Signup", params: { role } });
+      navigation.navigate("Signup", {role})
       };
 
   return (

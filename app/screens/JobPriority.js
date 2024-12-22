@@ -23,6 +23,7 @@ const JobPriority = ({ route, navigation }) => {
 
   const [priorityJob, setPriorityJob] = useState([]);
   const [clientProfiles, setClientProfiles] = useState({});
+  const [clientName, setClientName] = useState({});
 
   const currentColors = colors[priority] || ["#000", "#333"];
 
@@ -58,6 +59,11 @@ const JobPriority = ({ route, navigation }) => {
         ...prevProfiles,
         [id]: profile.profile_photo,
       }));
+
+      setClientName((prevProfiles) => ({
+        ...prevProfiles,
+        [id]: profile.full_name,
+      }));
     } catch (error) {
       console.error("Error fetching client profile:", error);
     }
@@ -81,15 +87,15 @@ const JobPriority = ({ route, navigation }) => {
   const renderJobs = () => {
     return priorityJob.map((job, index) => {
       const clientProfileImage = clientProfiles[job.job_created_by];
-  
-      console.log(job.job_created_by)
+      const full_name = clientName[job.job_created_by]
+
 
       return (
         <View key={index}>
           <TouchableOpacity
             style={styles.jobCard}
             onPress={() => {
-              navigation.navigate("JobDescription", { job, clientProfileImage });
+              navigation.navigate("JobDescription", { job, clientProfileImage, full_name });
             }}
           >
             {/* Displaying the client's profile image */}
@@ -112,11 +118,11 @@ const JobPriority = ({ route, navigation }) => {
       );
     });
   };
-  
+
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>JOBS</Text>
 
         <View style={styles.priorityContainer}>
@@ -146,7 +152,7 @@ const JobPriority = ({ route, navigation }) => {
         <TouchableOpacity
           style={styles.allJobsButton}
           onPress={() => {
-            router.back();
+            navigation.goBack();
           }}
         >
           <Text style={styles.allJobsText}>
@@ -162,7 +168,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    marginTop: 20,
+    paddingTop: 30
   },
   scrollContent: {
     padding: 20,

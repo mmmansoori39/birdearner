@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import { account } from "../lib/appwrite";
 import { ID } from "react-native-appwrite";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
 
 const validateEmail = (email) => {
@@ -16,13 +15,12 @@ const validateEmail = (email) => {
   return re.test(String(email).toLowerCase());
 };
 
-const Signup = () => {
+const Signup = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const router = useRouter();
-  const {role} = useLocalSearchParams()
+  const role = "client"; // Temporary hard-coded role for demonstration
 
   const showToast = (type, text1, text2) => {
     Toast.show({
@@ -34,43 +32,42 @@ const Signup = () => {
   };
 
   const handleSignup = async () => {
-    if (!email || !password || !fullName) {
-      showToast("info", "Warning", "All fields are required");
-      return;
-    }
-    if (!validateEmail(email)) {
-      showToast("error", "Error", "Please enter a valid email address");
-      return;
-    }
-    if (password !== confirmPassword) {
-      showToast("error", "Error", "Passwords do not match");
-      return;
-    }
-
     try {
+      // Validate inputs
+      if (!fullName || !email || !password || !confirmPassword) {
+        showToast("info", "Warning", "All fields are required.");
+        return;
+      }
+      if (!validateEmail(email)) {
+        showToast("error", "Error", "Please enter a valid email address.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        showToast("error", "Error", "Passwords do not match.");
+        return;
+      }
+      if (password.length < 8) {
+        showToast("error", "Error", "Password must be at least 8 characters.");
+        return;
+      }
+
+      // Call Appwrite signup API
       await account.create(ID.unique(), email, password, fullName);
       showToast("success", "Success", "User registered successfully!");
 
-      router.push({
-        pathname: "/screens/DescribeRole",
-        params: {
-          fullName,
-          email,
-          password,
-          role
-        },
-      });
+      // Navigate to the DescribeRole screen
+      navigation.navigate("DescribeRole", { fullName, email, password, role });
     } catch (error) {
+      // Detailed error handling
       if (error.code === 409) {
-        showToast(
-          "error",
-          "Signup Failed",
-          "User with this email already exists."
-        );
+        showToast("error", "Signup Failed", "User with this email already exists.");
+      } else if (error.code === 400) {
+        showToast("error", "Signup Failed", "Invalid request. Check your inputs.");
+      } else if (error.message.includes("network error")) {
+        showToast("error", "Signup Failed", "Network error. Please try again.");
       } else {
         showToast("error", "Signup Failed", "An unexpected error occurred.");
       }
-      console.error("Signup error: ", error);
     }
   };
 
@@ -132,7 +129,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#4B0082",
-    padding: 20,
+    paddingHorizontal: 40,
     justifyContent: "center",
   },
   label: {
@@ -152,17 +149,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   signupButton: {
-    width: "100%",
+    // width: "100%",
     height: 50,
-    backgroundColor: "#6A0DAD",
+    backgroundColor: "#fff",
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
   },
   signupButtonText: {
-    color: "white",
-    fontSize: 18,
+    color: "#4B0082",
+    fontSize: 20,
     fontWeight: "bold",
   },
   heading: {

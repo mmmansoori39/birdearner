@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -16,7 +17,12 @@ const AppliersScreen = ({ navigation, route }) => {
   const { userData } = useAuth();
   const [freelancers, setFreelancers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { title, freelancersId, color } = route.params;
+  const { title, freelancersId, color, item, projectId } = route.params;
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  console.log(freelancersId);
+
 
   useEffect(() => {
     if (freelancersId.length === 0) {
@@ -32,7 +38,7 @@ const AppliersScreen = ({ navigation, route }) => {
             try {
               const response = await databases.getDocument(
                 appwriteConfig.databaseId,
-                appwriteConfig.freelancerCollectionId, // Replace with your actual collection ID for freelancers
+                appwriteConfig.freelancerCollectionId,
                 id
               );
               return response;
@@ -58,32 +64,47 @@ const AppliersScreen = ({ navigation, route }) => {
     fetchFreelancers();
   }, []);
 
-  const renderAppliedFreelancer = ({ item }) => (
-    <View>
-      <TouchableOpacity
-        style={styles.jobContainer}
-        onPress={() => {
-          navigation.navigate("Chat", { receiverId: item.$id });
-        }}
-      >
-        <Image
-          source={{
-            uri: item.profile_photo || "https://via.placeholder.com/150",
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
+  const renderAppliedFreelancer = ({ item }) => {
+
+    const full_name = item.full_name
+    const receiverId = item.$id
+
+
+    return (
+      <View>
+        <TouchableOpacity
+          style={styles.jobContainer}
+          onPress={() => {
+            navigation.navigate("Chat", { receiverId, full_name, projectId });
           }}
-          style={styles.avatar}
-        />
-        <View style={styles.jobContent}>
-          <Text style={styles.jobTitle} numberOfLines={1}>
-            {title}
-          </Text>
-          <Text style={styles.freelancerName}>
-            Name: {item.full_name || "N/A"}
-          </Text>
-        </View>
-        <View style={[styles.statusIndicator, { backgroundColor: color }]} />
-      </TouchableOpacity>
-    </View>
-  );
+        >
+          <Image
+            source={{
+              uri: item.profile_photo || "https://via.placeholder.com/150",
+            }}
+            style={styles.avatar}
+          />
+          <View style={styles.jobContent}>
+            <Text style={styles.jobTitle} numberOfLines={1}>
+              {title}
+            </Text>
+            <Text style={styles.freelancerName}>
+              Name: {item.full_name || "N/A"}
+            </Text>
+          </View>
+          <View style={[styles.statusIndicator, { backgroundColor: color }]} />
+        </TouchableOpacity>
+      </View>
+    )
+  };
 
   if (loading) {
     return (
@@ -127,6 +148,14 @@ const AppliersScreen = ({ navigation, route }) => {
         renderItem={renderAppliedFreelancer}
         keyExtractor={(item) => item.$id}
         contentContainerStyle={styles.listContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor="#fff"
+          />
+        }
       />
     </View>
   );
@@ -147,8 +176,8 @@ const styles = StyleSheet.create({
   noAppliersText: { fontSize: 18, color: "#6e6e6e", marginBottom: 20 },
   goBackText: { fontSize: 16, marginLeft: 8, color: "black" },
   main: {
-    marginTop: 65,
-    marginBottom: 30,
+    marginTop: 25,
+    marginBottom: 20,
     display: "flex",
     flexDirection: "row",
     gap: 100,

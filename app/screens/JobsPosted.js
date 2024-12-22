@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
@@ -8,26 +8,24 @@ import { differenceInDays } from 'date-fns';
 
 const categorizeJobs = (jobs) => {
   const today = new Date();
-
   return jobs.map((job) => {
     const daysRemaining = differenceInDays(new Date(job.deadline), today);
 
     let priority;
     let color = '#FFCC00';
 
-    if(job.applied_freelancer.length === 0){
-      priority= 'Under process'
-    } else if(job.applied_freelancer.length === 1){
-      priority= `${job.applied_freelancer.length} Entery Recieved`
-    } else if(job.applied_freelancer.length > 1){
-      priority= `${job.applied_freelancer.length} Enteries Recieved`
+    if (job.applied_freelancer.length === 0) {
+      priority = 'Under process';
+    } else if (job.applied_freelancer.length === 1) {
+      priority = `${job.applied_freelancer.length} Entry Received`;
+    } else {
+      priority = `${job.applied_freelancer.length} Entries Received`;
     }
-    
 
     if (daysRemaining <= 2) {
       color = '#FF3B30';
     } else if (daysRemaining <= 10) {
-      color = '#34C759'; 
+      color = '#34C759';
     }
 
     return {
@@ -42,59 +40,78 @@ const JobsPostedScreen = ({ navigation }) => {
   const { userData } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const response = await databases.listDocuments(
-          appwriteConfig.databaseId,
-          appwriteConfig.jobCollectionID,
-          [
-            Query.equal('job_created_by', userData.$id),
-            Query.orderDesc('created_at')
-          ]
-        );
+  const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const cachedJobs = useRef([]);
 
-        const categorizedJobs = categorizeJobs(response.documents);
+  const fetchJobs = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        [
+          Query.equal('job_created_by', userData.$id),
+          Query.orderDesc('created_at'),
+        ]
+      );
+
+      const fetchedJobs = response.documents;
+      if (JSON.stringify(fetchedJobs) !== JSON.stringify(cachedJobs.current)) {
+        const categorizedJobs = categorizeJobs(fetchedJobs);
+        cachedJobs.current = fetchedJobs;
         setJobs(categorizedJobs);
-      } catch (error) {
-        console.error("Failed to fetch jobs:", error);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch jobs:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const unsubscribe = navigation.addListener('focus', fetchJobs);
-
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (cachedJobs.current.length === 0) {
+        fetchJobs();
+      }
+    });
     return unsubscribe;
   }, [navigation]);
 
-  const renderJobItem = ({ item }) => {
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchJobs();
+    setRefreshing(false);
+  };
 
-    const title = item.title
-    const freelancersId = item.applied_freelancer
-    const color = item.color
+  const renderJobItem = ({ item }) => {
+    const title = item.title;
+    const freelancersId = item.applied_freelancer;
+    const color = item.color;
+    const projectId = item.$id;
 
     return (
-      <View>
-        <TouchableOpacity style={styles.jobContainer} onPress={() => {
-          navigation.navigate("AppliersScreen", {title, freelancersId, color})
-        }} >
-          <Image
-            source={{ uri: "https://randomuser.me/api/portraits/women/3.jpg" }}
-            style={styles.avatar}
-          />
-          <View style={styles.jobContent}>
-            <Text style={styles.jobTitle} numberOfLines={1}>
-              {item.title}
-            </Text>
-            <Text style={styles.jobStatus}>Status: {item.priority}</Text>
-          </View>
-          <View
-            style={[styles.statusIndicator, { backgroundColor: item.color }]}
-          />
-        </TouchableOpacity>
-      </View>
-    )
+      <TouchableOpacity
+        style={styles.jobContainer}
+        onPress={() => {
+          navigation.navigate('AppliersScreen', { title, freelancersId, color, item, projectId });
+        }}
+      >
+        <Image
+          source={{ uri: 'https://randomuser.me/api/portraits/women/3.jpg' }}
+          style={styles.avatar}
+        />
+        <View style={styles.jobContent}>
+          <Text style={styles.jobTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.jobStatus}>Status: {item.priority}</Text>
+        </View>
+        <View style={[styles.statusIndicator, { backgroundColor: item.color }]} />
+      </TouchableOpacity>
+    );
   };
 
   if (loading) {
@@ -102,6 +119,28 @@ const JobsPostedScreen = ({ navigation }) => {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3b006b" />
         <Text>Loading jobs...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorMessage}>Failed to load jobs. Please try again later.</Text>
+        <TouchableOpacity onPress={fetchJobs} style={styles.retryButton}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (jobs.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyMessage}>No jobs posted yet.</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -119,6 +158,15 @@ const JobsPostedScreen = ({ navigation }) => {
         renderItem={renderJobItem}
         keyExtractor={(item) => item.$id}
         contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#3b006b']}
+            progressBackgroundColor="#fff"
+          />
+        }
       />
     </View>
   );
@@ -129,23 +177,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
+    paddingTop: 30,
   },
-  backButton: {
-    // marginTop: 20,
-    // marginBottom: 10,
-  },
+  backButton: {},
   main: {
-    marginTop: 65,
-    marginBottom: 30,
-    display: "flex",
-    flexDirection: "row",
+    marginTop: 25,
+    marginBottom: 10,
+    display: 'flex',
+    flexDirection: 'row',
     gap: 100,
-    alignItems: "center"
+    alignItems: 'center',
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    // marginBottom: 20,
     textAlign: 'center',
   },
   listContainer: {
@@ -155,7 +200,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F5F5F5',
-    // padding: 10,
     borderTopRightRadius: 10,
     borderBottomRightRadius: 10,
     borderTopLeftRadius: 40,
@@ -166,7 +210,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
     elevation: 2,
-    height: 70
+    height: 70,
   },
   avatar: {
     width: 80,
@@ -176,7 +220,7 @@ const styles = StyleSheet.create({
   },
   jobContent: {
     flex: 1,
-    paddingRight: 6
+    paddingRight: 6,
   },
   jobTitle: {
     fontSize: 16,
@@ -194,12 +238,46 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 10,
   },
   loadingContainer: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    alignContent: "center",
-    marginTop: 350
-  }
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#3b006b',
+    padding: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#fff"
+  },
+  emptyMessage: {
+    fontSize: 16,
+    color: '#6D6D6D',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  backButtonText: {
+    color: '#3b006b',
+    fontSize: 16,
+  },
 });
 
 export default JobsPostedScreen;

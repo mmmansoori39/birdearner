@@ -8,78 +8,63 @@ import {
   Image,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { Link, useNavigation, useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
-import { Toast } from "react-native-toast-message/lib/src/Toast";
+import Toast from "react-native-toast-message";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const Login = ({ navigation }) => {
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
   const { login } = useAuth();
-  const navigation = useNavigation();
+
+  const handleInputChange = (field, value) => {
+    setCredentials({ ...credentials, [field]: value });
+  };
+
+  const validateInputs = () => {
+    const { email, password } = credentials;
+
+    if (!email || !password) {
+      showToast("info", "Warning", "All fields are required.");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showToast("info", "Warning", "Please enter a valid email address.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const showToast = (type, title, message) => {
+    Toast.show({
+      type,
+      text1: title,
+      text2: message,
+      position: "top",
+    });
+  };
 
   const handleLogin = async () => {
+    if (!validateInputs()) return;
+
     try {
-      if (!email || !password) {
-        Toast.show({
-          type: "info",
-          text1: "Warning",
-          text2: "All fields are required",
-          position: "top",
-        });
-        return;
-      }
-      // Validate email syntax
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        Toast.show({
-          type: "info",
-          text1: "warning",
-          text2: "Please enter a valid email address",
-          position: "top",
-        });
-        return;
+      await login(credentials.email, credentials.password);
+      showToast("success", "Login Successful!", "Redirecting to Home...");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Tabs" }],
+      });
+    } catch (error) {
+      let errorMessage = "An unexpected error occurred.";
+
+      if (error.message.includes("Invalid email or password")) {
+        errorMessage = "Incorrect email or password. Please try again.";
+      } else if (error.message.includes("Invalid `password` param")) {
+        errorMessage = "Password must be between 8 and 256 characters long.";
       }
 
-      await login(email, password);
-      Toast.show({
-        type: "success",
-        text1: "Login Successful!",
-        text2: "Redirecting to Home...",
-        position: "top",
-      });
-      navigation.getParent()?.reset({
-        index: 0,
-        routes: [{ name: "Home" }],
-      });
-      
-    } catch (error) {
-      // Handle specific errors
-    if (error.message.includes('Invalid credentials') || error.message.includes('401')) {
-      // Incorrect credentials error
-      Toast.show({
-        type: "error",
-        text1: "Login Failed",
-        text2: "Incorrect email or password. Please try again.",
-        position: "top",
-      });
-    } else if (error.message.includes('Invalid `password` param')) {
-      // Password length validation error
-      Toast.show({
-        type: "error",
-        text1: "Login Failed",
-        text2: "Password must be between 8 and 256 characters long.",
-        position: "top",
-      });
-    } else {
-      // Generic error handling
-      Toast.show({
-        type: "error",
-        text1: "Login Failed",
-        text2: error.message || "An unexpected error occurred",
-        position: "top",
-      });
-    }
+      showToast("error", "Login Failed", errorMessage);
     }
   };
 
@@ -92,40 +77,37 @@ const Login = () => {
       <Text style={styles.title}>BirdEARNER</Text>
       <Text style={styles.subtitle}>Be BirdEARNER, Become Bread Earner!</Text>
 
-      {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="yourname@gmail.com"
-        placeholderTextColor="#999"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      {/* Password Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="********"
-        placeholderTextColor="#999"
-        secureTextEntry={true}
-        value={password}
-        onChangeText={setPassword}
-      />
+      {/* Inputs */}
+      {["email", "password"].map((field, index) => (
+        <TextInput
+          key={index}
+          style={styles.input}
+          placeholder={field === "email" ? "yourname@gmail.com" : "********"}
+          placeholderTextColor="#999"
+          keyboardType={field === "email" ? "email-address" : "default"}
+          secureTextEntry={field === "password"}
+          value={credentials[field]}
+          onChangeText={(value) => handleInputChange(field, value)}
+        />
+      ))}
 
       {/* Login Button */}
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Log In</Text>
       </TouchableOpacity>
 
-      {/* Forget Password */}
-      <Link href="/screens/ForgotPassword">
-        <Text style={styles.linkText}>Forget Password</Text>
-      </Link>
-
-      {/* Create Account */}
-      <Link href="/screens/Role">
-        <Text style={styles.linkText}>New Here? Create Your Account Here!</Text>
-      </Link>
+      {/* Links */}
+      {[
+        { text: "Forget Password", screen: "ForgetPassword" },
+        { text: "New Here? Create Your Account Here!", screen: "Role" },
+      ].map((link, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() => navigation.navigate(link.screen)}
+        >
+          <Text style={styles.linkText}>{link.text}</Text>
+        </TouchableOpacity>
+      ))}
 
       {/* Google Login */}
       <TouchableOpacity style={styles.googleButton}>
@@ -135,21 +117,18 @@ const Login = () => {
 
       {/* Social Icons */}
       <View style={styles.socialContainer}>
-        <FontAwesome
-          name="instagram"
-          size={24}
-          color="white"
-          style={styles.socialIcon}
-        />
-        <FontAwesome
-          name="facebook"
-          size={24}
-          color="white"
-          style={styles.socialIcon}
-        />
+        {["instagram", "facebook"].map((icon, index) => (
+          <FontAwesome
+            key={index}
+            name={icon}
+            size={24}
+            color="white"
+            style={styles.socialIcon}
+          />
+        ))}
       </View>
 
-      {/* Toast container for displaying messages */}
+      {/* Toast container */}
       <Toast />
     </View>
   );
@@ -190,7 +169,7 @@ const styles = StyleSheet.create({
   loginButton: {
     width: "100%",
     height: 50,
-    backgroundColor: "#6A0DAD", // Dark purple for button
+    backgroundColor: "#6A0DAD",
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",

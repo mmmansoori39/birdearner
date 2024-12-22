@@ -48,10 +48,6 @@ const settingsData = [
         stack_name: "Notifications Setting"
       },
       {
-        name: "In-app Currency",
-        stack_name: "Availability"
-      },
-      {
         name: "Appearance",
         stack_name: "Appearance"
       },
@@ -70,7 +66,7 @@ const settingsData = [
       },
       {
         name: "Feedback",
-        stack_name: "Availability"
+        stack_name: "MyReview"
       },
       {
         name: "Privacy Policy",
@@ -125,7 +121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
-    marginTop: 20
+    // marginTop: 20
   },
   title: {
     fontSize: 24,
