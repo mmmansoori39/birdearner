@@ -234,7 +234,7 @@ const Chat = ({ route, navigation }) => {
         Alert.alert("Marked Unread", "The chat has been marked as unread.");
         break;
       case "Star":
-        navigation.navigate("ReviewGive")
+        navigation.navigate("ReviewGive", {receiverId})
         break;
       case "Delete":
         Alert.alert("Deleted", "The chat has been deleted.");

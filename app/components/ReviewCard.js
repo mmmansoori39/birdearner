@@ -4,33 +4,70 @@ import { FontAwesome } from "@expo/vector-icons";
 
 export default function ReviewCard({
   reviewerName,
-  reviewerLocation,
+  reviewerState,
+  reviewerCountry,
   starRating,
   reviewText,
+  reviewerPhoto,
 }) {
+  const renderStars = () => {
+    const stars = [];
+    const fullStars = Math.floor(starRating); // Number of full stars
+    const fractionalPart = starRating % 2; // Fractional part for partial stars
+    const emptyStars = 5 - Math.ceil(starRating); // Remaining empty stars
+
+    // Add full stars
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <FontAwesome key={`full-${i}`} name="star" size={20} color="#4B0082" />
+      );
+    }
+
+    // Add a partially filled star if applicable
+    if (fractionalPart > 0) {
+      stars.push(
+        <View key="partial" style={styles.partialStarContainer}>
+          <FontAwesome name="star-o" size={20} color="#4B0082" />
+          <View
+            style={[
+              styles.partialFill,
+              { width: `${fractionalPart * 150}%` },
+            ]}
+          >
+            <FontAwesome name="star" size={20} color="#4B0082" />
+          </View>
+        </View>
+      );
+    }
+
+    // Add empty stars for the remaining slots
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <FontAwesome key={`empty-${i}`} name="star-o" size={20} color="#4B0082" />
+      );
+    }
+
+    return stars;
+  };
+
   return (
     <View style={styles.reviewCard}>
-      <View style={styles.card} >
+      <View style={styles.card}>
         <View style={styles.reviewHeader}>
           <Image
-            source={require("../assets/userProfile.png")}
+            source={
+              reviewerPhoto
+                ? { uri: reviewerPhoto }
+                : require("../assets/userProfile.png")
+            }
             style={styles.reviewerImage}
           />
           <View style={styles.reviewerInfo}>
             <Text style={styles.reviewerName}>{reviewerName}</Text>
-            <Text style={styles.reviewerLocation}>{reviewerLocation}</Text>
-            <View style={styles.starRating}>
-              {Array(starRating)
-                .fill()
-                .map((_, index) => (
-                  <FontAwesome
-                    key={index}
-                    name="star"
-                    size={20}
-                    color="#4B0082"
-                  />
-                ))}
-            </View>
+            <Text style={styles.reviewerLocation}>
+              {reviewerState}, {reviewerCountry}
+            </Text>
+            <View style={styles.starRating}>{renderStars()}</View>
           </View>
         </View>
         <FontAwesome
@@ -55,7 +92,7 @@ const styles = StyleSheet.create({
   card: {
     display: "flex",
     flexDirection: "row",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   reviewHeader: {
     flexDirection: "row",
@@ -82,10 +119,20 @@ const styles = StyleSheet.create({
     marginTop: 3,
     gap: 5,
   },
+  partialStarContainer: {
+    position: "relative",
+    width: 20,
+    height: 20,
+  },
+  partialFill: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    overflow: "hidden",
+  },
   reviewText: {
     marginTop: 10,
     color: "#555",
     fontSize: 14,
-    // paddingHorizontal: 10
   },
 });

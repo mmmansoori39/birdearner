@@ -5,63 +5,26 @@ import {
     StyleSheet,
     TouchableOpacity,
     TextInput,
-    Button,
+    Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
 
-const ReviewGive = ({navigation}) => {
+const ReviewGive = ({ navigation, route }) => {
     const [ratings, setRatings] = useState({
         experience: 0,
         knowledge: 0,
         response: 0,
     });
 
-    const { userData } = useAuth()
-
+    const { receiverId } = route.params;
+    const { userData } = useAuth();
     const [reviewText, setReviewText] = useState("");
 
     const handleStarPress = (category, index) => {
         setRatings({ ...ratings, [category]: index });
     };
-
-    const updateFreelancerXP = async (freelancerId, baseXP, starRating) => {
-        try {
-
-            const freelancer = await databases.getDocument(
-                appwriteConfig.databaseId,
-                appwriteConfig.freelancerCollectionId,
-                freelancerId
-            );
-
-            const earnedXP = Math.round(baseXP + (starRating * 9));
-
-            const updatedXP = freelancer.XP + earnedXP;
-
-            const currentRating = freelancer.rating || 0;
-            const completedJobs = freelancer.completedJobs || 0;
-            const updatedCompletedJobs = completedJobs + 1;
-
-            const updatedRating = ((currentRating * completedJobs) + starRating) / updatedCompletedJobs;
-
-            const level = calculateLevel(updatedXP);
-
-            await databases.updateDocument(
-                appwriteConfig.databaseId,
-                appwriteConfig.freelancerCollectionId,
-                freelancerId,
-                {
-                    XP: updatedXP,
-                    level: level,
-                    rating: parseFloat(updatedRating.toFixed(1)),
-                }
-            );
-
-        } catch (error) {
-            console.error('Error updating freelancer XP and level:', error);
-        }
-    }
 
     const calculateLevel = (totalXP) => {
         const baseXP = 100;
@@ -77,20 +40,80 @@ const ReviewGive = ({navigation}) => {
         }
 
         return level;
-    }
+    };
 
-    const handleSubmit = async () => {
-        const freelancerId = userData.$id
-        const { experience, knowledge, response } = ratings;
-        const baseXP = 30
-        const averageRating = ((experience + knowledge + response) / 3).toFixed(2);
-        await updateFreelancerXP(freelancerId, baseXP, averageRating);
-        // navigation.getParent()?.reset({
-        //     index: 1,
-        //     routes: [{ name: "Home" }],
-        //   });
+    const updateFreelancerXP = async (freelancerId, baseXP, starRating) => {
+        try {
+            const collectionId = userData?.role === "client"
+                ? appwriteConfig.freelancerCollectionId
+                : appwriteConfig.clientCollectionId;
 
-        navigation.goBack();
+            const freelancer = await databases.getDocument(
+                appwriteConfig.databaseId,
+                collectionId,
+                freelancerId
+            );
+
+            const earnedXP = Math.round(baseXP + starRating * 9);
+            const updatedXP = freelancer.XP + earnedXP;
+
+            const currentRating = freelancer.rating || 0;
+            const completedJobs = freelancer.completedJobs || 0;
+            const updatedCompletedJobs = completedJobs + 1;
+
+            const updatedRating =
+                (currentRating * completedJobs + starRating) /
+                updatedCompletedJobs;
+
+            const level = calculateLevel(updatedXP);
+
+            await databases.updateDocument(
+                appwriteConfig.databaseId,
+                collectionId,
+                freelancerId,
+                {
+                    XP: updatedXP,
+                    level,
+                    rating: parseFloat(updatedRating.toFixed(1)),
+                }
+            );
+        } catch (error) {
+            console.error("Error updating freelancer XP and level:", error);
+        }
+    };
+
+    const submitReview = async () => {
+        try {
+            const { experience, knowledge, response } = ratings;
+            const averageRating = parseFloat(
+                ((experience + knowledge + response) / 3).toFixed(1)
+            );
+            
+
+            // Save the review in the database
+            await databases.createDocument(
+                appwriteConfig.databaseId,
+                appwriteConfig.reviewCollectionId,
+                'unique()',
+                {
+                    giverId: userData?.$id,
+                    receiverId,
+                    rating: averageRating,
+                    message_text: reviewText,
+                }
+            );
+
+
+            // Update the receiver's XP and rating
+            const baseXP = 30;
+            await updateFreelancerXP(receiverId, baseXP, averageRating);
+
+            Alert.alert("Success", "Review submitted successfully!");
+            navigation.goBack();
+        } catch (error) {
+            console.error("Error submitting review:", error);
+            Alert.alert("Error", "Failed to submit review. Please try again.");
+        }
     };
 
     return (
@@ -160,12 +183,12 @@ const ReviewGive = ({navigation}) => {
             />
 
             {/* Submit Button */}
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <TouchableOpacity style={styles.submitButton} onPress={submitReview}>
                 <Text style={styles.submitButtonText}>Submit</Text>
             </TouchableOpacity>
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -173,14 +196,14 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFF",
         padding: 20,
         alignItems: "center",
-        paddingTop: 30
+        paddingTop: 30,
     },
     heading: {
         fontSize: 26,
         fontWeight: "bold",
         color: "#4B0082",
         marginBottom: 10,
-        marginTop: 25
+        marginTop: 25,
     },
     label: {
         fontSize: 15,
@@ -191,7 +214,7 @@ const styles = StyleSheet.create({
     starContainer: {
         flexDirection: "row",
         marginVertical: 5,
-        gap: 18
+        gap: 18,
     },
     subHeading: {
         fontSize: 26,
@@ -223,7 +246,7 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.17,
         shadowRadius: 3.05,
-        elevation: 4
+        elevation: 4,
     },
     submitButtonText: {
         color: "#FFF",
