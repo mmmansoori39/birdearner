@@ -28,6 +28,7 @@ import ForgotPasswordScreen from "./screens/ForgotPassword";
 import Role from "./screens/Role";
 import PortfolioComScreen from "./screens/PortfolioCom";
 import ChatList from "./screens/ChatList";
+import OffersScreen from "./screens/Offers";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -154,6 +155,7 @@ export default function App() {
                         <Stack.Screen name="PortfolioCom" component={PortfolioComScreen} />
                         <Stack.Screen name="TellUsAboutYouCom" component={TellUsAboutYouScreen} />
                         <Stack.Screen name="Chatlist" component={ChatList} />
+                        <Stack.Screen name="Offers" component={OffersScreen} />
                     </>
                 ) : (
                     <>

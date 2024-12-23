@@ -314,7 +314,7 @@ const ClientHomeScreen = () => {
           <TouchableOpacity
             style={styles.notificationIcon}
             onPress={() => {
-              navigation.navigate("Notification");
+              navigation.navigate("Offers");
             }}
           >
             <Image source={
