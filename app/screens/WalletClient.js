@@ -29,7 +29,11 @@ const WalletClientScreen = ({ navigation }) => {
                 appwriteConfig.paymentHistoryCollectionId,
                 [Query.equal("userId", userId)]
             );
-            setPaymentHistory(response.documents || []);
+
+            const sortedDocuments = response.documents.sort((a,b) => {
+                return new Date(b.$createdAt) - new Date(a.$createdAt)
+            })
+            setPaymentHistory(sortedDocuments || []);
         } catch (error) {
             console.error("Error fetching payment history:", error);
         }
@@ -47,6 +51,8 @@ const WalletClientScreen = ({ navigation }) => {
                     collectionId,
                     userId
                 );
+
+
                 setWalletAmount(userDoc.wallet || 0);
 
                 // Fetch payment history
@@ -74,12 +80,14 @@ const WalletClientScreen = ({ navigation }) => {
         <View style={styles.paymentItem}>
             <Text style={styles.paymentId}>Payment ID: {item.paymentId}</Text>
             <Text style={styles.paymentAmount}>Amount: ₹{item.amount}</Text>
-            <Text style={[styles.paymentStatus, getStatusStyle(item.status)]}>
-                Status: {item.status}
-            </Text>
-            <Text style={styles.paymentDate}>
-                Date: {new Date(item.date).toLocaleString()}
-            </Text>
+            <View style={styles.paymentCon}>
+                <Text style={[styles.paymentStatus, getStatusStyle(item.status)]}>
+                   Status: {item.status}
+                </Text>
+                <Text style={styles.paymentDate}>
+                    {new Date(item.date).toLocaleString()}
+                </Text>
+            </View>
         </View>
     );
 
@@ -184,6 +192,14 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 3,
     },
+    paymentCon: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 50,
+        marginLeft: 1,
+        alignItems: "center"
+    },
     paymentId: {
         fontSize: 14,
         fontWeight: "600",
@@ -197,12 +213,12 @@ const styles = StyleSheet.create({
     paymentStatus: {
         fontSize: 14,
         fontWeight: "600",
-        marginTop: 5,
+        // marginTop: 5,
     },
     paymentDate: {
         fontSize: 12,
         color: "#888",
-        marginTop: 5,
+        // marginTop: 5,
     },
     noHistory: {
         fontSize: 16,
