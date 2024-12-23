@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     },
     egg1: {
         position: "absolute",
-        bottom: 270,
+        bottom: 267,
         right: 100
     },
     nest2: {
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     },
     egg2: {
         position: "absolute",
-        bottom: 360,
+        bottom: 357,
         left: 110
     },
     nest3: {
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     },
     egg3: {
         position: "absolute",
-        bottom: 450,
+        bottom: 447,
         right: 100
     },
     nest4: {
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     },
     egg4: {
         position: "absolute",
-        bottom: 540,
+        bottom: 537,
         left: 110
     },
     nest5: {
