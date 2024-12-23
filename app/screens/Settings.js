@@ -1,86 +1,101 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
-
-const settingsData = [
-  {
-    title: 'Account Settings',
-    options: [
-      {
-        name: "Availability",
-        stack_name: "Availability"
-      },
-      {
-        name: "My profile",
-        stack_name: "MyProfile"
-      },
-      {
-        name: "Password update",
-        stack_name: "Password update"
-      },
-      {
-        name: "Change your email",
-        stack_name: "Email update"
-      },
-    ]
-  },
-  {
-    title: 'Payment Settings',
-    options: [
-      {
-        name: "Withdrawal Earning",
-        stack_name: "Withdrawal Earning"
-      },
-      {
-        name: "Link your wallet/Bank account",
-        stack_name: "Bank Account details"
-      },
-      {
-        name: "Your Wallet & History",
-        stack_name: "Wallet"
-      },
-    ]
-  },
-  {
-    title: 'Preferences',
-    options: [
-      {
-        name: "Notifications",
-        stack_name: "Notifications Setting"
-      },
-      {
-        name: "Appearance",
-        stack_name: "Appearance"
-      },
-      {
-        name: "Security",
-        stack_name: "Availability"
-      },
-    ]
-  },
-  {
-    title: 'About',
-    options: [
-      {
-        name: "Terms & Conditions",
-        stack_name: "Availability"
-      },
-      {
-        name: "Feedback",
-        stack_name: "MyReview"
-      },
-      {
-        name: "Privacy Policy",
-        stack_name: "Availability"
-      },
-      {
-        name: "Blogs & Forum",
-        stack_name: "Availability"
-      },
-    ]
-  },
-];
+import { useAuth } from '../context/AuthContext';
 
 const SettingsScreen = ({navigation}) => {
+
+  const {userData} = useAuth()
+
+  const role = userData?.role;
+
+
+  const settingsData = [
+    {
+      title: 'Account Settings',
+      options: [
+        {
+          name: "Availability",
+          stack_name: "Availability"
+        },
+        {
+          name: "My profile",
+          stack_name: "MyProfile"
+        },
+        {
+          name: "Password update",
+          stack_name: "Password update"
+        },
+        {
+          name: "Change your email",
+          stack_name: "Email update"
+        },
+      ]
+    },
+    {
+      title: 'Payment Settings',
+      options: role === "freelancer" ?  [
+        {
+          name: "Withdrawal Earning",
+          stack_name: "Withdrawal Earning"
+        },
+        {
+          name: "Link your wallet/Bank account",
+          stack_name: "Bank Account details"
+        },
+        {
+          name: "Your Wallet & History",
+          stack_name: "Wallet"
+        },
+      ] :  [
+        {
+          name: "Link your wallet/Bank account",
+          stack_name: "Bank Account details"
+        },
+        {
+          name: "Your Wallet & History",
+          stack_name: "WalletClient"
+        },
+      ]
+    },
+    {
+      title: 'Preferences',
+      options: [
+        {
+          name: "Notifications",
+          stack_name: "Notifications Setting"
+        },
+        {
+          name: "Appearance",
+          stack_name: "Appearance"
+        },
+        {
+          name: "Security",
+          stack_name: "Availability"
+        },
+      ]
+    },
+    {
+      title: 'About',
+      options: [
+        {
+          name: "Terms & Conditions",
+          stack_name: "Availability"
+        },
+        {
+          name: "Feedback",
+          stack_name: "MyReview"
+        },
+        {
+          name: "Privacy Policy",
+          stack_name: "Availability"
+        },
+        {
+          name: "Blogs & Forum",
+          stack_name: "Availability"
+        },
+      ]
+    },
+  ];
  
   return (
     <SafeAreaView style={styles.container}>
@@ -121,7 +136,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
-    // marginTop: 20
+    paddingTop: 50
   },
   title: {
     fontSize: 24,

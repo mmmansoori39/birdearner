@@ -12,6 +12,7 @@ import NotificationsSettingScreen from '../screens/NotificationsSetting';
 import AppearanceScreen from '../screens/Appearance';
 import WalletScreen from '../screens/Wallet';
 import PaymentScreen from '../screens/PaymentScreen';
+import WalletClientScreen from '../screens/WalletClient';
 
 
 const Stack = createStackNavigator();
@@ -73,6 +74,11 @@ export default function ProfileStack() {
       <Stack.Screen
       name="Wallet"
       component={WalletScreen}
+      options={{headerShown: false}}
+       />
+      <Stack.Screen
+      name="WalletClient"
+      component={WalletClientScreen}
       options={{headerShown: false}}
        />
       <Stack.Screen

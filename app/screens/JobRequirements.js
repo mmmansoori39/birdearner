@@ -19,7 +19,7 @@ import * as Location from "expo-location";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
 
-const JobRequirementsScreen = ({ navigation }) => {
+const JobRequirementsScreen = ({ navigation, route }) => {
   const [jobLocation, setJobLocation] = useState("");
   const [deadline, setDeadline] = useState(new Date());
   const [budget, setBudget] = useState("");
@@ -36,16 +36,22 @@ const JobRequirementsScreen = ({ navigation }) => {
   const [isOnSite, setIsOnSite] = useState(true); // Default state
   const toggleAnim = new Animated.Value(isOnSite ? 0 : 1); // Animation value
 
+  useEffect(() => {
+    if (route.params?.freelancerType) {
+      
+      setFrelancerType(route.params.freelancerType);
+    }
+  }, [route.params?.freelancerType]);
   const handleToggle = () => {
     // Toggle state and animate translation
     setIsOnSite(!isOnSite);
 
-    if(isOnSite){
+    if (isOnSite) {
       setJobType("On-site")
     } else {
       setJobType("Remote")
     }
-    
+
     Animated.timing(toggleAnim, {
       toValue: isOnSite ? 1 : 0,
       duration: 300,
@@ -243,46 +249,46 @@ const JobRequirementsScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.toggleContainer}>
-        {/* Animated View for Toggle */}
-        <Animated.View
-          style={[
-            styles.toggle,
-            {
-              transform: [
-                {
-                  translateX: toggleAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 100], // Translate horizontally
-                  }),
-                },
-              ],
-              backgroundColor: toggleAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ["#6A0DAD", "#6A0DAD"], // Purple for "On-site", Dark Gray for "Remote"
-              }),
-            },
-          ]}
-        />
-        {/* Touchable for changing state */}
-        <TouchableOpacity
-          style={[styles.side, styles.leftSide]}
-          onPress={() => !isOnSite && handleToggle()}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.text, isOnSite && styles.activeText]}>
-            Remote
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.side, styles.rightSide]}
-          onPress={() => isOnSite && handleToggle()}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.text, !isOnSite && styles.activeText]}>
-            On-site
-          </Text>
-        </TouchableOpacity>
-      </View>
+          {/* Animated View for Toggle */}
+          <Animated.View
+            style={[
+              styles.toggle,
+              {
+                transform: [
+                  {
+                    translateX: toggleAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 100], // Translate horizontally
+                    }),
+                  },
+                ],
+                backgroundColor: toggleAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["#6A0DAD", "#6A0DAD"], // Purple for "On-site", Dark Gray for "Remote"
+                }),
+              },
+            ]}
+          />
+          {/* Touchable for changing state */}
+          <TouchableOpacity
+            style={[styles.side, styles.leftSide]}
+            onPress={() => !isOnSite && handleToggle()}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.text, isOnSite && styles.activeText]}>
+              Remote
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.side, styles.rightSide]}
+            onPress={() => isOnSite && handleToggle()}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.text, !isOnSite && styles.activeText]}>
+              On-site
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {jobType === 'On-site' && (
           <View>
@@ -585,7 +591,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ededed",
     flexDirection: "row",
     position: "relative",
-    overflow: "hidden", 
+    overflow: "hidden",
   },
   toggle: {
     position: "absolute",

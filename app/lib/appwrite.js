@@ -10,6 +10,7 @@ export const appwriteConfig = {
   roleCollectionID: "6733184d001684b89a24",
   jobCollectionID: "673327260000fb1f8aed",
   messageCollectionID: "674f23ba0019a93a384f",
+  paymentHistoryCollectionId: "6769187c002cd44cc156"
 };
 export const client = new Client();
 
