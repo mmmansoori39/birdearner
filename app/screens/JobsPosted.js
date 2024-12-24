@@ -43,6 +43,7 @@ const JobsPostedScreen = ({ navigation }) => {
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const cachedJobs = useRef([]);
+  const profilePic = userData?.profile_photo
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -100,7 +101,7 @@ const JobsPostedScreen = ({ navigation }) => {
         }}
       >
         <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/women/3.jpg' }}
+          source={{ uri: profilePic || 'https://randomuser.me/api/portraits/women/3.jpg' }}
           style={styles.avatar}
         />
         <View style={styles.jobContent}>

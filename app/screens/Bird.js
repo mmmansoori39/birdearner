@@ -18,7 +18,7 @@ const Bird = () => {
     if (!input.trim()) return;
 
     const userMessage = {
-      sender: "user", 
+      sender: "user",
       text: input,
     };
 
@@ -112,7 +112,7 @@ const Bird = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20, marginHorizontal: 10, paddingTop: 40 },
+  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20, marginHorizontal: 10, paddingTop: 50 },
   chatList: { flex: 1 },
   chatListContainer: { padding: 10 },
   messageContainer: {

@@ -15,15 +15,16 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
 import ReviewCard from "../components/ReviewCard";
-import reviews from "../assets/data";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { Query } from "react-native-appwrite";
 
 export default function ReviewsScreen({ navigation }) {
   const { user, loading, userData, setUserData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [reviews, setReviews] = useState([]);
 
 
   const role = userData?.role
@@ -62,6 +63,60 @@ useEffect(() => {
 
     flagsData()
   }, [refreshing])
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const receiverId = userData?.$id;
+        const userCollectionId =
+          role === "client"
+            ? appwriteConfig.freelancerCollectionId
+            : appwriteConfig.clientCollectionId;
+  
+        // Fetch reviews for the current user (receiverId)
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.reviewCollectionId,
+          [Query.equal("receiverId", receiverId)] // Correct query syntax
+        );
+  
+        // Sort reviews by createdAt field in descending order
+        const sortedDocuments = response.documents.sort((a, b) =>
+          new Date(b.$createdAt) - new Date(a.$createdAt)
+        );
+  
+        const reviewsWithGiverData = await Promise.all(
+          sortedDocuments.map(async (review) => {
+            try {
+              const giverResponse = await databases.getDocument(
+                appwriteConfig.databaseId,
+                userCollectionId,
+                review.giverId
+              );
+  
+              return {
+                ...review,
+                giverName: giverResponse.full_name,
+                giverPhoto: giverResponse.profile_photo,
+                state: giverResponse.state,
+                country: giverResponse.country,
+              };
+            } catch (giverError) {
+              console.error("Error fetching giver data:", giverError);
+              return review; // Return review without giver info if fetch fails
+            }
+          })
+        );
+  
+        setReviews(reviewsWithGiverData); // Update state with enriched reviews
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error.message || error);
+      }
+    };
+  
+    fetchReviews();
+  }, [refreshing]);
+  
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -178,10 +233,12 @@ useEffect(() => {
           {reviews?.map((review, index) => (
             <ReviewCard
               key={index}
-              reviewerName={review.reviewerName}
-              reviewerLocation={review.reviewerLocation}
-              starRating={review.starRating}
-              reviewText={review.reviewText}
+              reviewerName={review.giverName}
+              reviewerstate={review.state}
+              reviewerCountry={review.country}
+              starRating={review.rating}
+              reviewText={review.message_text}
+              reviewerPhoto={review.giverPhoto}
             />
           ))}
         </View>

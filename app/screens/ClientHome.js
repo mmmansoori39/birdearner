@@ -49,17 +49,19 @@ const categorizeJobs = (jobs) => {
 };
 
 
-const RenderServiceItem = React.memo(({ item }) => (
-  <View style={styles.serviceCard}>
-    <View style={styles.imageShadow}>
-      <Image source={{ uri: item.image }} style={styles.serviceImage} />
+const RenderServiceItem = React.memo(({ item, onPress }) => (
+  <TouchableOpacity onPress={() => onPress(item)}>
+    <View style={styles.serviceCard}>
+      <View style={styles.imageShadow}>
+        <Image source={{ uri: item.image }} style={styles.serviceImage} />
+      </View>
+      <View style={styles.serviceTextlay}>
+        <Text style={styles.serviceText} numberOfLines={2} ellipsizeMode="tail">
+          {item.title}
+        </Text>
+      </View>
     </View>
-    <View style={styles.serviceTextlay}>
-      <Text style={styles.serviceText} numberOfLines={2} ellipsizeMode="tail">
-        {item.title}
-      </Text>
-    </View>
-  </View>
+  </TouchableOpacity>
 ));
 
 const ClientHomeScreen = () => {
@@ -86,6 +88,13 @@ const ClientHomeScreen = () => {
 
     setProfilePercentage(percentage);
   }, [userData, refreshing]);
+
+  const sendTitle = (item) => {
+    const title = item.title;
+    const freelancerType = item.id;
+
+    navigation.navigate("Job Requirements", { title, freelancerType });
+  };
 
   useEffect(() => {
     const fetchOngoingJobs = async () => {
@@ -115,6 +124,7 @@ const ClientHomeScreen = () => {
 
         const jobsWithColor = categorizeJobs(onGoingJobs);
 
+        // Mapping combined data with job details and freelancer profiles
         const combinedData = validProfiles.map((profile) => {
           const correspondingJob = jobsWithColor.find(
             (job) => job.assigned_freelancer === profile.$id
@@ -127,8 +137,29 @@ const ClientHomeScreen = () => {
           };
         });
 
+        // Limiting to maximum 3 ongoing jobs
+        const maxOngoingJobs = jobsWithColor.slice(0, 3);
+
+        let emptySlots = [];
+
+        if (maxOngoingJobs.length < 3) {
+          const remainingEmptySlots = 3 - maxOngoingJobs.length;
+
+          // Add empty slots based on how many jobs we have
+          emptySlots = Array(remainingEmptySlots).fill({
+            jobDetails: null,
+            full_name: "?",
+            profile_photo: placeholderImageURL,
+            color: "#D3D3D3", // Placeholder for empty slots
+          });
+        }
+
+        // Ensuring combinedData always has exactly 3 entries
+        const finalData = [...combinedData, ...emptySlots].slice(0, 3);
+
         setOngoingJobs(jobsWithColor);
-        setCombinedData(combinedData);
+        setCombinedData(finalData);
+
       } catch (error) {
         console.error("Error fetching ongoing jobs:", error.message);
       }
@@ -136,6 +167,7 @@ const ClientHomeScreen = () => {
 
     fetchOngoingJobs();
   }, [refreshing]);
+
 
   const handleCompleteProfile = () => {
     if (userData) {  // Check if userData is not null
@@ -178,15 +210,15 @@ const ClientHomeScreen = () => {
     setFilteredHouseholdServices(householdData);
   }, [refreshing]);
 
-useEffect(() => {
+  useEffect(() => {
     const flagsData = async () => {
-      if(userData){
+      if (userData) {
         try {
           const freelancerId = userData?.$id;
-  
+
           const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-  
-  
+
+
           const freelancerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             collectionId,
@@ -197,7 +229,7 @@ useEffect(() => {
           Alert.alert("Error updating flags:", error)
         }
       }
-      }
+    }
 
     flagsData()
   }, [refreshing])
@@ -255,7 +287,11 @@ useEffect(() => {
   };
 
 
-  const renderService = useCallback(({ item }) => <RenderServiceItem item={item} />, []);
+  const renderService = useCallback(
+    ({ item }) => <RenderServiceItem item={item} onPress={sendTitle} />,
+    []
+  );
+
 
   return (
     <SafeAreaView style={styles.safeContainer} showsVerticalScrollIndicator={true}>
@@ -278,7 +314,7 @@ useEffect(() => {
           <TouchableOpacity
             style={styles.notificationIcon}
             onPress={() => {
-              navigation.navigate("Notification");
+              navigation.navigate("Offers");
             }}
           >
             <Image source={
@@ -290,42 +326,49 @@ useEffect(() => {
 
         <View style={styles.line}></View>
 
-        {/* Your Ongoing Jobs */}
         <View style={styles.ongoingJobsContainer}>
-          <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.StoryContainer}>
-            <TouchableOpacity onPress={() => {
-              navigation.navigate("Job Requirements")
-            }}><View style={styles.addStory}>
-                <Text style={styles.addText}>+</Text>
-              </View></TouchableOpacity>
-            {combinedData.map((item, index) => (
-              <View
+      <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.StoryContainer}>
+        <TouchableOpacity onPress={() => navigation.navigate("Job Requirements")}>
+          <View style={styles.addStory}>
+            <Text style={styles.addText}>+</Text>
+          </View>
+        </TouchableOpacity>
+
+        {combinedData.length > 0 ? (
+          combinedData.map((item, index) => {
+            const { jobDetails, full_name, profile_photo, color } = item;
+            const freelancerId = jobDetails?.assigned_freelancer || null;
+            const jobId = jobDetails?._id || null;
+
+            return (
+              <TouchableOpacity
                 key={index}
-                style={[
-                  styles.storyItem,
-                  { borderWidth: 4, borderColor: item.color, borderRadius: 50 },
-                ]}
+                onPress={() => openChat(freelancerId, full_name, profile_photo, jobId)}
               >
-                <TouchableOpacity onPress={() =>
-                  openChat(
-                    item.$id,
-                    item.full_name,
-                    item.profile_photo,
-                    item.jobDetails.$id,
-                  )
-                }>
-                  <Image
-                    source={{ uri: item.profile_photo }}
-                    style={styles.storyImage}
-                  />
-                </TouchableOpacity>
-              </View>
-            ))}
+                <View style={styles.ongoingStory}>
+                  <View
+                    style={[
+                      styles.profileImgContainer,
+                      { backgroundColor: color || '#D3D3D3' },
+                    ]}
+                  >
+                    <Image
+                      source={{ uri: profile_photo || placeholderImageURL }}
+                      style={styles.profileImg}
+                    />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        ) : (
+          <Text style={styles.noJobsText}>No ongoing jobs</Text>
+        )}
+      </ScrollView>
+    </View>
 
 
-          </ScrollView>
-        </View>
 
         <View style={styles.searchContainer}>
           <TextInput
@@ -535,15 +578,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flexWrap: "wrap",
   },
-  // imageShadow: {
-  //   shadowColor: "#000000",
-  //   shadowOffset: { width: 2, height: 3 },
-  //   shadowOpacity: 0.1,
-  //   shadowRadius: 3,
-  //   elevation: 3,
-  //   borderRadius: 45,
-  //   padding: 1
-  // },
   serviceImage: {
     width: 90,
     height: 90,
@@ -707,8 +741,8 @@ const styles = StyleSheet.create({
     marginVertical: 12
   },
   StoryContainer: {
-    paddingLeft: 40,
-    paddingRight: 30
+    paddingLeft: 35,
+    paddingRight: 20
   },
   storyImage: { width: 74, height: 74, borderRadius: 50 },
   addStory: {

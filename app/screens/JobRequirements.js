@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TextInput,
   Alert,
+  Animated
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -18,7 +19,7 @@ import * as Location from "expo-location";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
 
-const JobRequirementsScreen = ({ navigation }) => {
+const JobRequirementsScreen = ({ navigation, route }) => {
   const [jobLocation, setJobLocation] = useState("");
   const [deadline, setDeadline] = useState(new Date());
   const [budget, setBudget] = useState("");
@@ -32,6 +33,31 @@ const JobRequirementsScreen = ({ navigation }) => {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [services, setServices] = useState([]);
+  const [isOnSite, setIsOnSite] = useState(true); // Default state
+  const toggleAnim = new Animated.Value(isOnSite ? 0 : 1); // Animation value
+
+  useEffect(() => {
+    if (route.params?.freelancerType) {
+      
+      setFrelancerType(route.params.freelancerType);
+    }
+  }, [route.params?.freelancerType]);
+  const handleToggle = () => {
+    // Toggle state and animate translation
+    setIsOnSite(!isOnSite);
+
+    if (isOnSite) {
+      setJobType("On-site")
+    } else {
+      setJobType("Remote")
+    }
+
+    Animated.timing(toggleAnim, {
+      toValue: isOnSite ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
 
   const formData = {
     jobLocation,
@@ -62,20 +88,22 @@ const JobRequirementsScreen = ({ navigation }) => {
   useEffect(() => {
     async function fetchServices() {
       try {
+        const jobCategory = isOnSite
+          ? ["freelance_service"]
+          : ["household_service"];
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
           appwriteConfig.roleCollectionID,
-          [Query.equal("category", ["freelance_service", "household_service"])]
+          [Query.equal("category", jobCategory)]
         );
         const roles = response.documents.map((doc) => doc.role).flat();
-
         setServices(roles);
       } catch (error) {
         console.error("Error fetching services:", error);
       }
     }
     fetchServices();
-  }, []);
+  }, [isOnSite]);
 
   const fetchCoordinates = async () => {
     const hasPermission = await requestPermission();
@@ -220,16 +248,46 @@ const JobRequirementsScreen = ({ navigation }) => {
           <Text style={styles.header}>Job Requirements</Text>
         </View>
 
-        <Text style={styles.label}>Job Type</Text>
-        <View style={styles.dropdown}>
-          <Picker
-            selectedValue={jobType}
-            onValueChange={(itemValue) => setJobType(itemValue)}
+        <View style={styles.toggleContainer}>
+          {/* Animated View for Toggle */}
+          <Animated.View
+            style={[
+              styles.toggle,
+              {
+                transform: [
+                  {
+                    translateX: toggleAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, 100], // Translate horizontally
+                    }),
+                  },
+                ],
+                backgroundColor: toggleAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["#6A0DAD", "#6A0DAD"], // Purple for "On-site", Dark Gray for "Remote"
+                }),
+              },
+            ]}
+          />
+          {/* Touchable for changing state */}
+          <TouchableOpacity
+            style={[styles.side, styles.leftSide]}
+            onPress={() => !isOnSite && handleToggle()}
+            activeOpacity={0.8}
           >
-            <Picker.Item label="Select Job Type" value="" />
-            <Picker.Item label="On-site" value="On-site" />
-            <Picker.Item label="Remote" value="Remote" />
-          </Picker>
+            <Text style={[styles.text, isOnSite && styles.activeText]}>
+              Remote
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.side, styles.rightSide]}
+            onPress={() => isOnSite && handleToggle()}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.text, !isOnSite && styles.activeText]}>
+              On-site
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {jobType === 'On-site' && (
@@ -523,6 +581,47 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 20,
+  },
+  toggleContainer: {
+    width: 200, // Total width
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: "#fff",
+    backgroundColor: "#ededed",
+    flexDirection: "row",
+    position: "relative",
+    overflow: "hidden",
+  },
+  toggle: {
+    position: "absolute",
+    width: "50%",
+    height: "100%",
+    borderRadius: 25,
+    zIndex: 1,
+  },
+  side: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2, // Keep text above toggle
+  },
+  text: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#343434",
+    textAlign: "center",
+  },
+  activeText: {
+    color: "#FFFFFF",
+  },
+  leftSide: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rightSide: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
