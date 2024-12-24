@@ -10,7 +10,7 @@ import {
   Image,
   ScrollView,
   RefreshControl,
-  Alert
+  Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation, useRouter } from "expo-router";
@@ -18,7 +18,7 @@ import { household_service, freelance_service } from "../lib/roleData";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
-import { differenceInDays } from 'date-fns';
+import { differenceInDays } from "date-fns";
 
 const placeholderImageURL = "https://picsum.photos/seed/";
 
@@ -32,13 +32,13 @@ const categorizeJobs = (jobs) => {
     let color;
 
     if (daysRemaining < 0) {
-      color = '#000';
+      color = "#000";
     } else if (daysRemaining <= 2) {
-      color = '#FF3B30';
+      color = "#FF3B30";
     } else if (daysRemaining <= 10) {
-      color = '#FFCC00';
+      color = "#FFCC00";
     } else {
-      color = '#34C759';
+      color = "#34C759";
     }
 
     return {
@@ -47,7 +47,6 @@ const categorizeJobs = (jobs) => {
     };
   });
 };
-
 
 const RenderServiceItem = React.memo(({ item, onPress }) => (
   <TouchableOpacity onPress={() => onPress(item)}>
@@ -66,16 +65,20 @@ const RenderServiceItem = React.memo(({ item, onPress }) => (
 
 const ClientHomeScreen = () => {
   const [search, setSearch] = useState("");
-  const router = useRouter()
-  const [filteredFreelanceServices, setFilteredFreelanceServices] = useState([]);
-  const [filteredHouseholdServices, setFilteredHouseholdServices] = useState([]);
+  const router = useRouter();
+  const [filteredFreelanceServices, setFilteredFreelanceServices] = useState(
+    []
+  );
+  const [filteredHouseholdServices, setFilteredHouseholdServices] = useState(
+    []
+  );
   const [ongoingJobs, setOngoingJobs] = useState([]);
-  const [freelanceProfile, setFreelanceProfile] = useState([])
+  const [freelanceProfile, setFreelanceProfile] = useState([]);
   const [profilePercentage, setProfilePercentage] = useState(20);
   const [refreshing, setRefreshing] = useState(false);
   const [combinedData, setCombinedData] = useState([]);
   const { userData, setUserData } = useAuth();
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   useEffect(() => {
     let percentage = 0;
@@ -84,7 +87,6 @@ const ClientHomeScreen = () => {
     if (userData?.country) percentage = 40;
     if (userData?.profile_photo) percentage = 70;
     if (userData?.terms_accepted) percentage = 100;
-
 
     setProfilePercentage(percentage);
   }, [userData, refreshing]);
@@ -95,6 +97,8 @@ const ClientHomeScreen = () => {
 
     navigation.navigate("Job Requirements", { title, freelancerType });
   };
+
+  console.log({ ongoingJobs });
 
   useEffect(() => {
     const fetchOngoingJobs = async () => {
@@ -113,7 +117,11 @@ const ClientHomeScreen = () => {
         );
 
         const freelancePromises = onGoingJobs.map((freelance) =>
-          databases.getDocument(appwriteConfig.databaseId, appwriteConfig.freelancerCollectionId, freelance.assigned_freelancer)
+          databases.getDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.freelancerCollectionId,
+            freelance.assigned_freelancer
+          )
         );
 
         const freelanceProfiles = await Promise.allSettled(freelancePromises);
@@ -159,7 +167,6 @@ const ClientHomeScreen = () => {
 
         setOngoingJobs(jobsWithColor);
         setCombinedData(finalData);
-
       } catch (error) {
         console.error("Error fetching ongoing jobs:", error.message);
       }
@@ -168,31 +175,44 @@ const ClientHomeScreen = () => {
     fetchOngoingJobs();
   }, [refreshing]);
 
-
   const handleCompleteProfile = () => {
-    if (userData) {  // Check if userData is not null
-      const fullName = userData.full_name
-      const email = userData.email
-      const password = userData.password
-      const role = userData.role
+    if (userData) {
+      // Check if userData is not null
+      const fullName = userData.full_name;
+      const email = userData.email;
+      const password = userData.password;
+      const role = userData.role;
 
       if (profilePercentage < 20) {
-        navigation.navigate("DescribeRoleCom", { fullName, email, password, role })
+        navigation.navigate("DescribeRoleCom", {
+          fullName,
+          email,
+          password,
+          role,
+        });
       } else if (profilePercentage >= 20 && profilePercentage < 40) {
-        navigation.navigate("DescribeRoleCom", { fullName, email, password, role })
+        navigation.navigate("DescribeRoleCom", {
+          fullName,
+          email,
+          password,
+          role,
+        });
       } else if (profilePercentage >= 40 && profilePercentage < 70) {
-        navigation.navigate("TellUsAboutYouCom", { role })
+        navigation.navigate("TellUsAboutYouCom", { role });
       } else if (profilePercentage >= 70 && profilePercentage < 100) {
-        navigation.navigate("PortfolioCom", { role })
+        navigation.navigate("PortfolioCom", { role });
       }
     }
   };
 
-
   const openChat = (receiverId, full_name, profileImage, projectId) => {
-    navigation.navigate("Chat", { receiverId, full_name, profileImage, projectId });
+    navigation.navigate("Chat", {
+      receiverId,
+      full_name,
+      profileImage,
+      projectId,
+    });
   };
-
 
   useEffect(() => {
     const freelanceData = freelance_service.map((service) => ({
@@ -216,23 +236,25 @@ const ClientHomeScreen = () => {
         try {
           const freelancerId = userData?.$id;
 
-          const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-
+          const collectionId =
+            userData?.role === "client"
+              ? appwriteConfig.clientCollectionId
+              : appwriteConfig.freelancerCollectionId;
 
           const freelancerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             collectionId,
             freelancerId
           );
-          setUserData(freelancerDoc)
+          setUserData(freelancerDoc);
         } catch (error) {
-          Alert.alert("Error updating flags:", error)
+          Alert.alert("Error updating flags:", error);
         }
       }
-    }
+    };
 
-    flagsData()
-  }, [refreshing])
+    flagsData();
+  }, [refreshing]);
 
   const handleSearch = (text) => {
     setSearch(text);
@@ -255,9 +277,7 @@ const ClientHomeScreen = () => {
     } else {
       // Filter services based on search text
       const filteredFreelance = freelance_service
-        .filter((service) =>
-          service.toLowerCase().includes(text.toLowerCase())
-        )
+        .filter((service) => service.toLowerCase().includes(text.toLowerCase()))
         .map((service) => ({
           title: service,
           image: `${placeholderImageURL}${encodeURIComponent(service)}/160/160`,
@@ -265,9 +285,7 @@ const ClientHomeScreen = () => {
         }));
 
       const filteredHousehold = household_service
-        .filter((service) =>
-          service.toLowerCase().includes(text.toLowerCase())
-        )
+        .filter((service) => service.toLowerCase().includes(text.toLowerCase()))
         .map((service) => ({
           title: service,
           image: `${placeholderImageURL}${encodeURIComponent(service)}/160/160`,
@@ -286,16 +304,18 @@ const ClientHomeScreen = () => {
     }, 1000);
   };
 
-
   const renderService = useCallback(
     ({ item }) => <RenderServiceItem item={item} onPress={sendTitle} />,
     []
   );
 
-
   return (
-    <SafeAreaView style={styles.safeContainer} showsVerticalScrollIndicator={true}>
-      <ScrollView showsVerticalScrollIndicator={false}
+    <SafeAreaView
+      style={styles.safeContainer}
+      showsVerticalScrollIndicator={true}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -317,58 +337,68 @@ const ClientHomeScreen = () => {
               navigation.navigate("Offers");
             }}
           >
-            <Image source={
-              userData?.profile_photo ? { uri: userData.profile_photo } : require("../assets/profile.png")
-            }
-              style={styles.serviceImage} />
+            <Image
+              source={
+                userData?.profile_photo
+                  ? { uri: userData.profile_photo }
+                  : require("../assets/profile.png")
+              }
+              style={styles.serviceImage}
+            />
           </TouchableOpacity>
         </View>
 
         <View style={styles.line}></View>
 
         <View style={styles.ongoingJobsContainer}>
-      <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.StoryContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate("Job Requirements")}>
-          <View style={styles.addStory}>
-            <Text style={styles.addText}>+</Text>
-          </View>
-        </TouchableOpacity>
+          <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.StoryContainer}
+          >
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Job Requirements")}
+            >
+              <View style={styles.addStory}>
+                <Text style={styles.addText}>+</Text>
+              </View>
+            </TouchableOpacity>
 
-        {combinedData.length > 0 ? (
-          combinedData.map((item, index) => {
-            const { jobDetails, full_name, profile_photo, color } = item;
-            const freelancerId = jobDetails?.assigned_freelancer || null;
-            const jobId = jobDetails?._id || null;
+            {combinedData.length > 0 ? (
+              combinedData.map((item, index) => {
+                const { jobDetails, full_name, profile_photo, color } = item;
+                const freelancerId = jobDetails?.assigned_freelancer || null;
+                const jobId = jobDetails?._id || null;
 
-            return (
-              <TouchableOpacity
-                key={index}
-                onPress={() => openChat(freelancerId, full_name, profile_photo, jobId)}
-              >
-                <View style={styles.ongoingStory}>
-                  <View
-                    style={[
-                      styles.profileImgContainer,
-                      { backgroundColor: color || '#D3D3D3' },
-                    ]}
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() =>
+                      openChat(freelancerId, full_name, profile_photo, jobId)
+                    }
                   >
-                    <Image
-                      source={{ uri: profile_photo || placeholderImageURL }}
-                      style={styles.profileImg}
-                    />
-                  </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        ) : (
-          <Text style={styles.noJobsText}>No ongoing jobs</Text>
-        )}
-      </ScrollView>
-    </View>
-
-
+                    <View style={styles.ongoingStory}>
+                      <View
+                        style={[
+                          styles.profileImgContainer,
+                          { backgroundColor: color || "#D3D3D3" },
+                        ]}
+                      >
+                        <Image
+                          source={{ uri: profile_photo || placeholderImageURL }}
+                          style={styles.profileImg}
+                        />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            ) : (
+              <Text style={styles.noJobsText}>No ongoing jobs</Text>
+            )}
+          </ScrollView>
+        </View>
 
         <View style={styles.searchContainer}>
           <TextInput
@@ -397,7 +427,9 @@ const ClientHomeScreen = () => {
             })}
             ListEmptyComponent={() => (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No Freelance Services Found</Text>
+                <Text style={styles.emptyText}>
+                  No Freelance Services Found
+                </Text>
               </View>
             )}
           />
@@ -418,12 +450,13 @@ const ClientHomeScreen = () => {
             })}
             ListEmptyComponent={() => (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No Household Services Found</Text>
+                <Text style={styles.emptyText}>
+                  No Household Services Found
+                </Text>
               </View>
             )}
           />
         </View>
-
 
         {/* Job Notifications */}
         <View style={styles.sectionContainer}>
@@ -435,7 +468,11 @@ const ClientHomeScreen = () => {
                   key={index}
                   style={[
                     styles.notiItem,
-                    { borderWidth: 4, borderColor: index % 2 === 0 ? "#F81919" : "#1DCE44", borderRadius: 50 }
+                    {
+                      borderWidth: 4,
+                      borderColor: index % 2 === 0 ? "#F81919" : "#1DCE44",
+                      borderRadius: 50,
+                    },
                   ]}
                 >
                   <Image
@@ -445,7 +482,11 @@ const ClientHomeScreen = () => {
                 </View>
               ))}
               <View style={styles.notiTextLay}>
-                <Text style={styles.notiText} numberOfLines={2} ellipsizeMode="tail">
+                <Text
+                  style={styles.notiText}
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                >
                   Jack234 has sent you 2 files.
                 </Text>
               </View>
@@ -453,28 +494,63 @@ const ClientHomeScreen = () => {
           </View>
         </View>
 
-        {
-          !userData?.terms_accepted && profilePercentage !== 100 && (
-            <View style={styles.sectionContainer}>
-              <View style={styles.profileContainers}>
-                <Text style={styles.profileText}>Complete Your Profile</Text>
-                <Text style={styles.whatsNewText}>Your profile is {profilePercentage}% complete</Text>
-                <View style={styles.boxColor}>
-                  <View style={profilePercentage >= 20 ? styles.redBox : styles.pBoxColor}></View>
-                  <View style={profilePercentage >= 40 ? styles.redBox : styles.pBoxColor}></View>
-                  <View style={profilePercentage >= 70 ? styles.yellowBox : styles.pBoxColor}></View>
-                  <View style={profilePercentage >= 70 ? styles.yellowBox : styles.pBoxColor}></View>
-                  <View style={profilePercentage === 100 ? styles.greenBox : styles.pBoxColor}></View>
-                  <View style={profilePercentage === 100 ? styles.greenBox : styles.pBoxColor}></View>
-                </View>
-                <TouchableOpacity style={styles.loginButton} onPress={handleCompleteProfile} F>
-                  <Text style={styles.loginButtonText}>Complete Now</Text>
-                </TouchableOpacity>
+        {!userData?.terms_accepted && profilePercentage !== 100 && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.profileContainers}>
+              <Text style={styles.profileText}>Complete Your Profile</Text>
+              <Text style={styles.whatsNewText}>
+                Your profile is {profilePercentage}% complete
+              </Text>
+              <View style={styles.boxColor}>
+                <View
+                  style={
+                    profilePercentage >= 20 ? styles.redBox : styles.pBoxColor
+                  }
+                ></View>
+                <View
+                  style={
+                    profilePercentage >= 40 ? styles.redBox : styles.pBoxColor
+                  }
+                ></View>
+                <View
+                  style={
+                    profilePercentage >= 70
+                      ? styles.yellowBox
+                      : styles.pBoxColor
+                  }
+                ></View>
+                <View
+                  style={
+                    profilePercentage >= 70
+                      ? styles.yellowBox
+                      : styles.pBoxColor
+                  }
+                ></View>
+                <View
+                  style={
+                    profilePercentage === 100
+                      ? styles.greenBox
+                      : styles.pBoxColor
+                  }
+                ></View>
+                <View
+                  style={
+                    profilePercentage === 100
+                      ? styles.greenBox
+                      : styles.pBoxColor
+                  }
+                ></View>
               </View>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleCompleteProfile}
+                F
+              >
+                <Text style={styles.loginButtonText}>Complete Now</Text>
+              </TouchableOpacity>
             </View>
-          )
-        }
-
+          </View>
+        )}
 
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>What's New</Text>
@@ -487,15 +563,13 @@ const ClientHomeScreen = () => {
           <TouchableOpacity
             style={styles.chats}
             onPress={() => {
-              navigation.navigate("Inbox")
+              navigation.navigate("Inbox");
             }}
           >
             <FontAwesome name="comments" size={28} color="#fff" />
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-
     </SafeAreaView>
   );
 };
@@ -540,7 +614,7 @@ const styles = StyleSheet.create({
     alignContent: "center",
     alignItems: "center",
     borderRadius: 35,
-    marginBottom: 24
+    marginBottom: 24,
   },
   searchInput: {
     backgroundColor: "#ffffff",
@@ -550,11 +624,11 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderWidth: 1,
     width: "100%",
-    height: "100%"
+    height: "100%",
   },
   carousel: {
     marginBottom: 20,
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
   },
   serviceCard: {
     alignItems: "center",
@@ -566,7 +640,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     width: 100,
     flexWrap: "wrap",
-    gap: 5
+    gap: 5,
   },
   serviceTextlay: {
     flex: 1,
@@ -614,7 +688,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     flexDirection: "row",
-    gap: 12
+    gap: 12,
   },
   notiText: {
     fontSize: 18,
@@ -624,7 +698,6 @@ const styles = StyleSheet.create({
   },
   notiTextLay: {
     flex: 1,
-
   },
   sectionContainer: {
     marginBottom: 20,
@@ -647,7 +720,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.17,
     shadowRadius: 3.05,
-    elevation: 4
+    elevation: 4,
   },
   whatsNewContainer: {
     backgroundColor: "#ffffff",
@@ -711,7 +784,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.17,
     shadowRadius: 3.05,
-    elevation: 4
+    elevation: 4,
   },
   chats: {
     // backgroundColor: "#3b006b",
@@ -719,13 +792,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   line: {
     backgroundColor: "#5F5959",
     width: "90%",
     height: 1,
-    margin: "auto"
+    margin: "auto",
   },
 
   ongoingJobsContainer: {
@@ -734,15 +807,15 @@ const styles = StyleSheet.create({
   ongoingTitle: {
     fontSize: 17,
     fontWeight: "480",
-    marginLeft: 44
+    marginLeft: 44,
   },
   storyItem: {
     marginRight: 10,
-    marginVertical: 12
+    marginVertical: 12,
   },
   StoryContainer: {
     paddingLeft: 35,
-    paddingRight: 20
+    paddingRight: 20,
   },
   storyImage: { width: 74, height: 74, borderRadius: 50 },
   addStory: {
@@ -762,45 +835,49 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.17,
     shadowRadius: 3.05,
     elevation: 4,
-    alignContent: "center"
+    alignContent: "center",
   },
   addText: { fontSize: 60, color: "#A39E9E" },
-  profileContainer: { padding: 15, backgroundColor: "#f9f9f9", borderRadius: 10 },
+  profileContainer: {
+    padding: 15,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+  },
 
   profileText: {
     fontSize: 24,
     fontWeight: "500",
-    textAlign: "center"
+    textAlign: "center",
   },
   boxColor: {
     flex: 1,
     flexDirection: "row",
     gap: 5,
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   pBoxColor: {
     backgroundColor: "#CCD2CE",
     height: 12,
     width: 48,
-    borderRadius: 12
+    borderRadius: 12,
   },
   redBox: {
     backgroundColor: "#FF3131",
     height: 12,
     width: 48,
-    borderRadius: 12
+    borderRadius: 12,
   },
   yellowBox: {
     backgroundColor: "#CEBF1D",
     height: 12,
     width: 48,
-    borderRadius: 12
+    borderRadius: 12,
   },
   greenBox: {
     backgroundColor: "#00871E",
     height: 12,
     width: 48,
-    borderRadius: 12
+    borderRadius: 12,
   },
   loginButton: {
     width: "100%",
@@ -817,7 +894,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-
 });
 
 export default ClientHomeScreen;

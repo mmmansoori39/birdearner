@@ -7,6 +7,7 @@ export const appwriteConfig = {
   freelancerCollectionId: "671cc8be00219424fe65",
   clientCollectionId: "671cceb9002cacc68e57",
   bucketId: "671d0e22001ee9f5b509",
+  filesBucketId: "6769c9d1002a8bd22e16",
   roleCollectionID: "6733184d001684b89a24",
   jobCollectionID: "673327260000fb1f8aed",
   messageCollectionID: "674f23ba0019a93a384f",

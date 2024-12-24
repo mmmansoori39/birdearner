@@ -11,6 +11,7 @@ import { account, databases, appwriteConfig } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
+import { useAuth } from "../context/AuthContext";
 
 const DescribeRole = ({ navigation, route }) => {
   const { fullName, email, password, role } = route.params;
@@ -27,6 +28,7 @@ const DescribeRole = ({ navigation, route }) => {
     designations: [],
   });
   const [services, setServices] = useState([]);
+  const { userData } = useAuth();
 
   // List of Indian states
   const indianStates = [
@@ -93,7 +95,15 @@ const DescribeRole = ({ navigation, route }) => {
   const validateForm = () => {
     const requiredFields =
       role === "client"
-        ? ["designation", "heading", "city", "state", "zipCode", "country", "bio"]
+        ? [
+            "designation",
+            "heading",
+            "city",
+            "state",
+            "zipCode",
+            "country",
+            "bio",
+          ]
         : [
             "designations",
             "qualification",
@@ -106,7 +116,10 @@ const DescribeRole = ({ navigation, route }) => {
           ];
 
     for (const field of requiredFields) {
-      if (!formData[field] || (Array.isArray(formData[field]) && !formData[field].length)) {
+      if (
+        !formData[field] ||
+        (Array.isArray(formData[field]) && !formData[field].length)
+      ) {
         showToast("info", "All fields are required.");
         return false;
       }
@@ -146,6 +159,7 @@ const DescribeRole = ({ navigation, route }) => {
               zipcode: parseInt(formData.zipCode),
               country: formData.country,
               profile_description: formData.bio,
+              user_id: userData.$id,
             }
           : {
               full_name: fullName,
@@ -159,6 +173,7 @@ const DescribeRole = ({ navigation, route }) => {
               state: formData.state,
               zipcode: parseInt(formData.zipCode),
               country: formData.country,
+              user_id: userData.$id,
             };
 
       await databases.createDocument(
@@ -206,13 +221,21 @@ const DescribeRole = ({ navigation, route }) => {
         <View style={styles.dropdown}>
           <Picker
             selectedValue={formData.designation}
-            onValueChange={(itemValue) => handleInputChange("designation", itemValue)}
+            onValueChange={(itemValue) =>
+              handleInputChange("designation", itemValue)
+            }
           >
             <Picker.Item label="Select Organization Type" value="" />
             <Picker.Item label="Individual" value="Individual" />
             <Picker.Item label="Business" value="Business" />
-            <Picker.Item label="Non-Profit Organization" value="Non-Profit Organization" />
-            <Picker.Item label="Educational Institution" value="Educational Institution" />
+            <Picker.Item
+              label="Non-Profit Organization"
+              value="Non-Profit Organization"
+            />
+            <Picker.Item
+              label="Educational Institution"
+              value="Educational Institution"
+            />
             <Picker.Item label="Government Agency" value="Government Agency" />
             <Picker.Item label="Other" value="Other" />
           </Picker>
@@ -222,7 +245,9 @@ const DescribeRole = ({ navigation, route }) => {
           <View style={styles.dropdown}>
             <Picker
               selectedValue={formData.designation}
-              onValueChange={(itemValue) => handleInputChange("designation", itemValue)}
+              onValueChange={(itemValue) =>
+                handleInputChange("designation", itemValue)
+              }
             >
               <Picker.Item label="Select Role" value="" />
               {services.map((service, id) => (
@@ -250,10 +275,15 @@ const DescribeRole = ({ navigation, route }) => {
           <View style={styles.dropdown}>
             <Picker
               selectedValue={formData.qualification}
-              onValueChange={(itemValue) => handleInputChange("qualification", itemValue)}
+              onValueChange={(itemValue) =>
+                handleInputChange("qualification", itemValue)
+              }
             >
               <Picker.Item label="Select Qualification" value="" />
-              <Picker.Item label="Bachelor's Degree" value="Bachelor's Degree" />
+              <Picker.Item
+                label="Bachelor's Degree"
+                value="Bachelor's Degree"
+              />
               <Picker.Item label="Master's Degree" value="Master's Degree" />
               <Picker.Item label="PhD" value="PhD" />
             </Picker>
@@ -279,7 +309,9 @@ const DescribeRole = ({ navigation, route }) => {
       </Text>
       <TextInput
         style={styles.input}
-        placeholder={role === "client" ? "Company name" : "E.g. I am a designer"}
+        placeholder={
+          role === "client" ? "Company name" : "E.g. I am a designer"
+        }
         value={formData.heading}
         onChangeText={(text) => handleInputChange("heading", text)}
       />
@@ -299,7 +331,9 @@ const DescribeRole = ({ navigation, route }) => {
           <View style={styles.dropdown}>
             <Picker
               selectedValue={formData.state}
-              onValueChange={(itemValue) => handleInputChange("state", itemValue)}
+              onValueChange={(itemValue) =>
+                handleInputChange("state", itemValue)
+              }
             >
               <Picker.Item label="Select State" value="" />
               {indianStates.map((state, index) => (
@@ -327,7 +361,9 @@ const DescribeRole = ({ navigation, route }) => {
           <View style={styles.dropdown}>
             <Picker
               selectedValue={formData.country}
-              onValueChange={(itemValue) => handleInputChange("country", itemValue)}
+              onValueChange={(itemValue) =>
+                handleInputChange("country", itemValue)
+              }
             >
               <Picker.Item label="Select Country" value="" />
               <Picker.Item label="India" value="India" />
@@ -413,7 +449,7 @@ const styles = StyleSheet.create({
   charCount: {
     color: "#fff",
     marginTop: 2,
-    left: "auto"
+    left: "auto",
   },
   addMoreRole: {
     color: "#fff",
