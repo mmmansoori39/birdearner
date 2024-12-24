@@ -30,6 +30,7 @@ const Bird = () => {
 
       // Prepare chat history
       const history = messages.map((msg) => msg.text);
+
       // API request to backend
       const response = await fetch("http://ai.birdearner.com/faq", {
         method: "POST",
