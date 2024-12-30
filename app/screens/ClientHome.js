@@ -327,46 +327,50 @@ const ClientHomeScreen = () => {
         <View style={styles.line}></View>
 
         <View style={styles.ongoingJobsContainer}>
-      <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.StoryContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate("Job Requirements")}>
-          <View style={styles.addStory}>
-            <Text style={styles.addText}>+</Text>
-          </View>
-        </TouchableOpacity>
+          <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.StoryContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate("Job Requirements")}>
+              <View style={styles.addStory}>
+                <Text style={styles.addText}>+</Text>
+              </View>
+            </TouchableOpacity>
 
-        {combinedData.length > 0 ? (
-          combinedData.map((item, index) => {
-            const { jobDetails, full_name, profile_photo, color } = item;
-            const freelancerId = jobDetails?.assigned_freelancer || null;
-            const jobId = jobDetails?._id || null;
+            {combinedData.length > 0 ? (
+              combinedData.map((item, index) => {
+                const { jobDetails, full_name, profile_photo, color } = item;
+                const freelancerId = jobDetails?.assigned_freelancer || null;
+                const jobId = jobDetails?._id || null;
 
-            return (
-              <TouchableOpacity
-                key={index}
-                onPress={() => openChat(freelancerId, full_name, profile_photo, jobId)}
-              >
-                <View style={styles.ongoingStory}>
-                  <View
-                    style={[
-                      styles.profileImgContainer,
-                      { backgroundColor: color || '#D3D3D3' },
-                    ]}
-                  >
-                    <Image
-                      source={{ uri: profile_photo || placeholderImageURL }}
-                      style={styles.profileImg}
-                    />
+                return (
+                  <View key={index}>
+                    <TouchableOpacity onPress={() => openChat(freelancerId, full_name, profile_photo, jobId)}>
+                      <View style={styles.ongoingStory}>
+                        <View
+                          style={[
+                            styles.profileImgContainer,
+                            { backgroundColor: color || '#D3D3D3' },
+                          ]}
+                        >
+                          <Image
+                            source={{ uri: profile_photo }} // Ensure profile_photo is wrapped in a { uri: "URL" } format
+                            style={styles.profileImg}
+                            resizeMode="cover" // Ensures the image fits well
+                            onError={() => console.error(`Failed to load image: ${profile_photo}`)} // Debugging failed images
+                          />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        ) : (
-          <Text style={styles.noJobsText}>No ongoing jobs</Text>
-        )}
-      </ScrollView>
-    </View>
+                );
+              })
+            ) : (
+              <Text style={styles.noJobsText}>No ongoing jobs</Text>
+            )}
+
+
+
+          </ScrollView>
+        </View>
 
 
 
