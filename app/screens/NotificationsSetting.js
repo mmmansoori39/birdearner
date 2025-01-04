@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     marginBottom: 50,
     display: "flex",
     flexDirection: "row",
-    gap: 100,
+    // gap: 100,
     alignItems: "center",
   },
   header: {

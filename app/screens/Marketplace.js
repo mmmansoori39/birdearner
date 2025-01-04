@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     width: "100%",
     padding: 10,
     paddingHorizontal: 20,
-    borderRadius: 34,
+    borderRadius: 12,
     marginBottom: 12,
     alignItems: "baseline",
     flexDirection: "row",

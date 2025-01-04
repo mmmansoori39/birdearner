@@ -2,9 +2,9 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
-const SettingsScreen = ({navigation}) => {
+const SettingsScreen = ({ navigation }) => {
 
-  const {userData} = useAuth()
+  const { userData } = useAuth()
 
   const role = userData?.role;
 
@@ -33,7 +33,7 @@ const SettingsScreen = ({navigation}) => {
     },
     {
       title: 'Payment Settings',
-      options: role === "freelancer" ?  [
+      options: role === "freelancer" ? [
         {
           name: "Withdrawal Earning",
           stack_name: "Withdrawal Earning"
@@ -46,7 +46,7 @@ const SettingsScreen = ({navigation}) => {
           name: "Your Wallet & History",
           stack_name: "Wallet"
         },
-      ] :  [
+      ] : [
         {
           name: "Link your wallet/Bank account",
           stack_name: "Bank Account details"
@@ -96,31 +96,30 @@ const SettingsScreen = ({navigation}) => {
       ]
     },
   ];
- 
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <Text style={styles.title}>Settings</Text>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Search"
-          style={styles.searchInput}
-          placeholderTextColor="#888"
-        />
-      </View>
-
       {/* Settings List */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            placeholder="Search"
+            style={styles.searchInput}
+            placeholderTextColor="#888"
+          />
+        </View>
         {settingsData.map((section, index) => (
           <View key={index} style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
             {section.options.map((option, idx) => (
               <TouchableOpacity key={idx} style={styles.optionContainer} onPress={() => {
-              navigation.navigate(option.stack_name);
-            }} >
-              <Text style={styles.optionText} >{option.name}</Text>
+                navigation.navigate(option.stack_name);
+              }} >
+                <Text style={styles.optionText} >{option.name}</Text>
                 <Text style={styles.arrowIcon}>›</Text>
               </TouchableOpacity>
             ))}
@@ -146,10 +145,10 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     marginBottom: 20,
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
   },
   searchInput: {
-    height: 40,
+    height: 45,
     borderRadius: 8,
     backgroundColor: '#f0f0f0',
     paddingHorizontal: 16,

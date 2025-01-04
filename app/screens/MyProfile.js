@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5732a8",
     paddingVertical: 12,
     marginHorizontal: 20,
-    borderRadius: 25,
+    borderRadius: 12,
     marginBottom: 15,
     marginTop: 40,
   },
@@ -497,13 +497,19 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     borderRadius: 20,
-    // gap: 8
+    gap: 8,
+    height: 20,
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center"
   },
   xp: {
     backgroundColor: "#56118F",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    position: "absolute",
+    left: 0,
   },
   xpText: {
     fontSize: 14,
@@ -511,23 +517,23 @@ const styles = StyleSheet.create({
     color: "#fff"
   },
   randomText: {
-    fontSize: 13,
+    fontSize:10,
     fontWeight: "400",
     color: "#A1A1A1",
     paddingHorizontal: 5,
-    paddingVertical: 8,
+    // paddingVertical: 4,
   },
   level: {
     backgroundColor: "#56118F",
-    paddingHorizontal: 6,
-    paddingVertical: 15,
+    paddingHorizontal: 4,
+    paddingVertical: 12,
     borderRadius: 50,
     position: "absolute",
     right: 0,
     top: "-10"
   },
   levelText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#fff"
   }
