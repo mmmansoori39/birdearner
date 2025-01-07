@@ -343,7 +343,7 @@ const ClientHomeScreen = () => {
                   ? { uri: userData.profile_photo }
                   : require("../assets/profile.png")
               }
-              style={styles.serviceImage}
+              style={styles.proileImage}
             />
           </TouchableOpacity>
         </View>
@@ -352,14 +352,8 @@ const ClientHomeScreen = () => {
 
         <View style={styles.ongoingJobsContainer}>
           <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.StoryContainer}
-          >
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Job Requirements")}
-            >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.StoryContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate("Job Requirements")}>
               <View style={styles.addStory}>
                 <Text style={styles.addText}>+</Text>
               </View>
@@ -477,7 +471,7 @@ const ClientHomeScreen = () => {
                 >
                   <Image
                     source={{ uri: `${placeholderImageURL}${index}/100/100` }}
-                    style={styles.storyImage}
+                    style={styles.notiImage}
                   />
                 </View>
               ))}
@@ -584,18 +578,19 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: 15,
+    marginBottom: 10,
     marginTop: 30,
     // backgroundColor: "red",
     padding: 4,
     paddingHorizontal: 20,
+    alignItems: "center"
   },
   welcome: {
-    fontSize: 40,
+    fontSize: 25,
     fontWeight: "600",
   },
   how: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "300",
   },
   squareBox: {
@@ -613,14 +608,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignContent: "center",
     alignItems: "center",
-    borderRadius: 35,
+    borderRadius: 12,
     marginBottom: 24,
   },
   searchInput: {
     backgroundColor: "#ffffff",
     paddingHorizontal: 12,
-    borderRadius: 35,
-    marginVertical: 15,
+    borderRadius: 12,
+    marginVertical: 12,
     borderColor: "#ddd",
     borderWidth: 1,
     width: "100%",
@@ -647,14 +642,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   serviceText: {
-    fontSize: 15,
-    fontWeight: "400",
+    fontSize: 13,
+    fontWeight: "500",
     textAlign: "center",
     flexWrap: "wrap",
   },
+  proileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 45,
+    shadowColor: "#000000", // Shadow color
+    shadowOffset: { width: 2, height: 4 }, // Shadow position
+    shadowOpacity: 0.2, // Shadow transparency (iOS)
+    shadowRadius: 4, // Shadow blur (iOS)
+    elevation: 3,
+  },
   serviceImage: {
-    width: 90,
-    height: 90,
+    width: 80,
+    height: 80,
     borderRadius: 45,
     shadowColor: "#000000", // Shadow color
     shadowOffset: { width: 2, height: 4 }, // Shadow position
@@ -664,7 +669,7 @@ const styles = StyleSheet.create({
   },
   notificationsContainer: {
     backgroundColor: "#fff",
-    padding: 10,
+    padding: 6,
     // borderRadius: 10,
     marginTop: 12,
     marginHorizontal: 20,
@@ -691,7 +696,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   notiText: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "500",
     color: "#000000",
     lineHeight: 25,
@@ -805,7 +810,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   ongoingTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "480",
     marginLeft: 44,
   },
@@ -818,6 +823,7 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   storyImage: { width: 74, height: 74, borderRadius: 50 },
+  notiImage: { width: 55, height: 55, borderRadius: 50 },
   addStory: {
     width: 80,
     height: 80,
@@ -883,7 +889,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     backgroundColor: "#4B0082",
-    borderRadius: 25,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 5,

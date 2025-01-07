@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     backgroundColor: "#ededed",
-    borderRadius: 20,
+    borderRadius: 12,
     marginBottom: 20,
     height: 44,
   },
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#ededed",
-    borderRadius: 20,
+    borderRadius: 12,
     paddingHorizontal: 10,
     marginBottom: 15,
     height: 44,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 12,
     paddingHorizontal: 10,
     backgroundColor: "#ededed",
     justifyContent: "center",
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3b006b",
     paddingHorizontal: 9,
     paddingVertical: 5,
-    borderRadius: 15,
+    borderRadius: 12,
   },
   removeButtonText: {
     color: "#ffffff",
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     width: "35%",
     height: 40,
     backgroundColor: "#6A0DAD",
-    borderRadius: 25,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     width: "35%",
     height: 40,
     backgroundColor: "#9a9a9a",
-    borderRadius: 25,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   toggleContainer: {
     width: 200, // Total width
     height: 50,
-    borderRadius: 25,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: "#fff",
     backgroundColor: "#ededed",
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "50%",
     height: "100%",
-    borderRadius: 25,
+    borderRadius: 12,
     zIndex: 1,
   },
   side: {

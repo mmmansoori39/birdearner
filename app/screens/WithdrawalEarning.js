@@ -77,17 +77,10 @@ const WithdrawalEarningScreen = ({ navigation }) => {
         autoComplete="off"
       />
 
-      {/* Warning message */}
-      {warning ? <Text style={styles.warning}>{warning}</Text> : null}
-
-      {/* Platform Charges */}
-      <Text style={styles.label}>Platform Charge (2%)</Text>
-      <Text style={styles.colorText}>RS. {(parseFloat(amount) * platformChargeRate).toFixed(2)}</Text>
-
       {/* Amount to Withdraw */}
       <Text style={styles.label}>You’re withdrawing</Text>
       <View style={styles.withdrawal}>
-        <Text style={styles.withdrawalText}>RS. {calculateWithdrawalAmount()}</Text>
+        <Text style={styles.withdrawalText}>RS. {amount}</Text>
       </View>
 
       <TouchableOpacity style={styles.signupButton} onPress={handleProcess}>
@@ -170,7 +163,7 @@ const styles = StyleSheet.create({
     width: "50%",
     height: 50,
     backgroundColor: "#6A0DAD",
-    borderRadius: 25,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 50,

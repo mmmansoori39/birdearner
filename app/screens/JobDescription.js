@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   applyButton: {
     backgroundColor: '#4e2587',
     // paddingHorizontal: 15,
-    borderRadius: 25,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
     paddingVertical: 8
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 24,
     backgroundColor: '#c2c2c2',
-    borderRadius: 25,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
     paddingVertical: 10,

@@ -14,7 +14,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to display maps."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,8 +32,8 @@
       "package": "com.mmmansoori39.birdearner",
       "buildToolsVersion": "33.0.2",
       "config": {
-        "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        "olaMaps": {
+          "apiKey": "MTaKhXqkZwxQn4MQfUeSynGw092Nfkf6RIJbx2YH"
         }
       }
     },

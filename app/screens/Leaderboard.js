@@ -100,7 +100,7 @@ const LeaderboardScreen = () => {
           style={[styles.tab, styles.tabShadow, selectedTab === 'global' && styles.activeTab]}
           onPress={() => handleTabPress('global')}
         >
-          <Text style={[styles.tabText, selectedTab === 'global' && styles.activeTabText]}>Global</Text>
+          <Text style={[styles.tabText, selectedTab === 'global' && styles.activeTabText]}>India</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     // padding: 12,
     marginVertical: 4,
-    borderRadius: 20,
+    borderRadius: 12,
   },
   topRankRow: {
     backgroundColor: '#71C232',
@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
   },
   blueBackgroundd: {
     backgroundColor: '#762BAD',
-    borderTopRightRadius: 20,
-    borderBottomRightRadius: 20,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
     paddingVertical: 12,
     flex: 1,
     alignItems: 'center',
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   tab: {
     paddingHorizontal: 30,
     paddingVertical: 8,
-    borderRadius: 30,
+    borderRadius: 10,
     backgroundColor: '#ccc',
   },
   activeTab: {
