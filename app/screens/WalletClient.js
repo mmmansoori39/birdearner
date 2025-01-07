@@ -30,7 +30,7 @@ const WalletClientScreen = ({ navigation }) => {
                 [Query.equal("userId", userId)]
             );
 
-            const sortedDocuments = response.documents.sort((a,b) => {
+            const sortedDocuments = response.documents.sort((a, b) => {
                 return new Date(b.$createdAt) - new Date(a.$createdAt)
             })
             setPaymentHistory(sortedDocuments || []);
@@ -76,13 +76,92 @@ const WalletClientScreen = ({ navigation }) => {
         }
     };
 
+    function getStatusColor(status) {
+        switch (status) {
+            case 'Pending':
+                return '#FFCC00';
+            case 'Failed':
+                return '#FF3B30';
+            case 'Success':
+                return '#71C232';
+            default:
+                return '#808080';
+        }
+    }
+
+    function getStatusText(status) {
+        switch (status) {
+            case 'Pending':
+                return 'Requested amount successfully';
+            case 'Failed':
+                return 'Withdrawal has been rejected';
+            case 'Success':
+                return 'Received amount successfully';
+            default:
+                return 'Something went wrong';
+        }
+    }
+
+    const renderItem = ({ item }) => {
+        const createdAt = item?.date
+        const date = new Date(createdAt);
+
+        // Format the date and time
+        const formattedDate = date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+        const formattedTime = date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+        });
+
+        return (
+            <View style={[styles.paymentItem]}>
+                {/* Triangle Indicator and Payment Details */}
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    {/* Payment Details */}
+                    <View style={styles.paymentDetails}>
+                        {/* Triangle Indicator */}
+                        <View
+                            style={[
+                                styles.triangleIndicator,
+                                {
+                                    borderLeftColor: getStatusColor(item?.status), // Color based on status
+                                },
+                            ]}
+                        />
+                        <Text style={styles.name}>ID: {item?.paymentId} </Text>
+                        <Text style={styles.amount}>₹{item?.amount}</Text>
+                    </View>
+                </View>
+
+                {/* Date and Status */}
+                <View style={[styles.paymentDetailsn, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+                    <Text style={styles.date}>{formattedDate} | {formattedTime}</Text>
+                    <Text
+                        style={[
+                            styles.status,
+                            { color: getStatusColor(item?.status) }  // Set color based on status
+                        ]}
+                    >
+                        {item?.status}
+                    </Text>
+                </View>
+            </View>
+        )
+    };
+
     const renderPaymentItem = ({ item }) => (
         <View style={styles.paymentItem}>
             <Text style={styles.paymentId}>Payment ID: {item.paymentId}</Text>
             <Text style={styles.paymentAmount}>Amount: ₹{item.amount}</Text>
             <View style={styles.paymentCon}>
                 <Text style={[styles.paymentStatus, getStatusStyle(item.status)]}>
-                   Status: {item.status}
+                    Status: {item.status}
                 </Text>
                 <Text style={styles.paymentDate}>
                     {new Date(item.date).toLocaleString()}
@@ -115,7 +194,7 @@ const WalletClientScreen = ({ navigation }) => {
                 {paymentHistory.length > 0 ? (
                     <FlatList
                         data={paymentHistory}
-                        renderItem={renderPaymentItem}
+                        renderItem={renderItem}
                         keyExtractor={(item) => item.$id} // Use the unique document ID as the key
                         style={styles.historyList}
                     />
@@ -139,7 +218,7 @@ const styles = StyleSheet.create({
         marginBottom: 50,
         display: "flex",
         flexDirection: "row",
-        gap: 50,
+        gap: 100,
         alignItems: "center",
     },
     addAmount: {
@@ -226,6 +305,56 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginTop: 20,
     },
+
+    paymentItem: {
+        backgroundColor: "#fff",
+        // padding: 12,
+        marginVertical: 5,
+        borderRadius: 8,
+        elevation: 3, // Add shadow for elevation (optional)
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 1.5,
+        paddingVertical: 5,
+        paddingHorizontal: 10
+      },
+      triangleIndicator: {
+        width: 0,
+        height: 0,
+        borderTopWidth: 8,
+        borderBottomWidth: 8,
+        borderLeftWidth: 16,
+        borderStyle: "solid",
+        borderTopColor: "transparent",
+        borderBottomColor: "transparent",
+        marginRight: 10, // Space between the triangle and the details
+      },
+      paymentDetails: {
+        flex: 1, // Ensure details take remaining space
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 5,
+      },
+      name: {
+        fontSize: 16,
+        fontWeight: "500",
+        color: "#333",
+      },
+      amount: {
+        fontSize: 16,
+        fontWeight: "500",
+        color: "#71C232",
+      },
+      date: {
+        fontSize: 12,
+        color: "#666",
+      },
+      status: {
+        fontSize: 12,
+        fontWeight: "bold",
+      },
 });
 
 export default WalletClientScreen;

@@ -1,38 +1,123 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
+import { Query } from "react-native-appwrite";
 
 const WalletScreen = ({ navigation, route }) => {
-  // const { remainingAmount, paymentHistory } = route.params;
 
+  const { userData } = useAuth();
+  const [history, setHistory] = useState()
 
-  // const renderItem = ({ item }) => (
-  //   <View style={styles.paymentItem}>
-  //     <Text style={styles.name}>{item.name}</Text>
-  //     <Text style={styles.amount}>₹{item.amount}</Text>
-  //     <Text style={styles.date}>{item.date} | {item.time}</Text>
-  //     <Text style={[styles.status, getStatusStyle(item.status)]}>{item.status}</Text>
-  //   </View>
-  // );
+  useEffect(() => {
+    const fetchHistry = async () => {
+      try {
+        const freelancerId = userData?.$id;
 
-  const getStatusStyle = (status) => {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.withdrawalRequestsCollectionId,
+          [Query.equal("freelancerId", freelancerId)]
+        );
+
+        const sortedDocuments = response.documents.sort((a, b) =>
+          new Date(b.$createdAt) - new Date(a.$createdAt)
+        );
+
+        setHistory(sortedDocuments);
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error.message || error);
+      }
+    };
+
+    fetchHistry()
+
+  }, [userData])
+
+  function getStatusColor(status) {
     switch (status) {
-      case "Success":
-        return { color: "green" };
-      case "Failed":
-        return { color: "red" };
-      case "Pending":
-        return { color: "orange" };
+      case 'pending':
+        return '#FFCC00';
+      case 'rejected':
+        return '#FF3B30';
+      case 'approved':
+        return '#71C232';
       default:
-        return {};
+        return '#808080';
     }
+  }
+
+  function getStatusText(status) {
+    switch (status) {
+      case 'pending':
+        return 'Requested amount successfully';
+      case 'rejected':
+        return 'Withdrawal has been rejected';
+      case 'approved':
+        return 'Received amount successfully';
+      default:
+        return 'Something went wrong';
+    }
+  }
+
+  const renderItem = ({ item }) => {
+    const createdAt = item?.createdAt
+    const date = new Date(createdAt);
+
+    // Format the date and time
+    const formattedDate = date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+
+    return (
+      <View style={[styles.paymentItem]}>
+        {/* Triangle Indicator and Payment Details */}
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {/* Payment Details */}
+          <View style={styles.paymentDetails}>
+            {/* Triangle Indicator */}
+            <View
+              style={[
+                styles.triangleIndicator,
+                {
+                  borderLeftColor: getStatusColor(item?.status), // Color based on status
+                },
+              ]}
+            />
+            <Text style={styles.name}>{getStatusText(item?.status)} </Text>
+            <Text style={styles.amount}>₹{item?.requestedAmount}</Text>
+          </View>
+        </View>
+
+        {/* Date and Status */}
+        <View style={[styles.paymentDetailsn, { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}>
+          <Text style={styles.date}>{formattedDate} | {formattedTime}</Text>
+          <Text
+            style={[
+              styles.status,
+              { color: getStatusColor(item?.status) }  // Set color based on status
+            ]}
+          >
+            {item?.status}
+          </Text>
+        </View>
+      </View>
+    )
   };
 
   return (
@@ -49,28 +134,25 @@ const WalletScreen = ({ navigation, route }) => {
 
       {/* Full Name Input */}
       <Text style={styles.label}>Total Amount in Wallet</Text>
-      <Text style={styles.colorText}>RS. 5,000</Text>
+      <Text style={styles.colorText}>RS. {userData?.withdrawableAmount || "0"}</Text>
 
-      {/* Password Input */}
-      <Text style={styles.label}>Withdrawal Amount </Text>
-
-      <TouchableOpacity style={styles.signupButton}>
-        <Text style={styles.signupButtonText}>Next Page</Text>
+      <TouchableOpacity onPress={() => navigation.navigate("Withdrawal Earning")}>
+        <Text style={styles.addAmount}>Withdrawal Amount</Text>
       </TouchableOpacity>
 
+      {/* <TouchableOpacity style={styles.signupButton}>
+        <Text style={styles.signupButtonText}>Next Page</Text>
+      </TouchableOpacity> */}
+
       <View style={styles.container}>
-      <Text style={styles.header}>Payment History</Text>
+        <Text style={styles.headerHis}>Payment History</Text>
 
-      {/* Remaining Amount */}
-      {/* <Text style={styles.remainingAmount}>Remaining Balance: ₹{256}</Text> */}
-
-      {/* Payment History List */}
-      {/* <FlatList
-        data={paymentHistory}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
-      /> */}
-    </View>
+        <FlatList
+          data={history}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+        />
+      </View>
     </View>
   );
 };
@@ -80,7 +162,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#FFF",
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
   },
   main: {
     marginTop: 45,
@@ -89,12 +171,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 80,
     alignItems: "center",
+    paddingHorizontal: 40
   },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     // marginBottom: 20,
     textAlign: "center",
+  },
+  headerHis: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#8F8F8F"
   },
   label: {
     fontSize: 18,
@@ -104,14 +194,21 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     textAlign: "center",
   },
+  addAmount: {
+    textAlign: "center",
+    textDecorationLine: "underline",
+    fontSize: 16,
+    color: "#4B0082",
+    marginBottom: 30,
+  },
   colorText: {
     fontSize: 30,
     fontWeight: "600",
     color: "#4B0082",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 10,
   },
-  withdrwal: { 
+  withdrwal: {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -156,6 +253,56 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
     fontWeight: "700",
+  },
+
+  paymentItem: {
+    backgroundColor: "#fff",
+    // padding: 12,
+    marginVertical: 5,
+    borderRadius: 8,
+    elevation: 3, // Add shadow for elevation (optional)
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+    paddingVertical: 5,
+    paddingHorizontal: 10
+  },
+  triangleIndicator: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftWidth: 16,
+    borderStyle: "solid",
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    marginRight: 10, // Space between the triangle and the details
+  },
+  paymentDetails: {
+    flex: 1, // Ensure details take remaining space
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  amount: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#71C232",
+  },
+  date: {
+    fontSize: 12,
+    color: "#666",
+  },
+  status: {
+    fontSize: 12,
+    fontWeight: "bold",
   },
 });
 

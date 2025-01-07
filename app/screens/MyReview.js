@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 80,
   },
   tabButtonR: {
-    backgroundColor: "#5732a8",
+    backgroundColor: "#4C0183",
     width: "50%",
     height: 40,
     display: "flex",

@@ -18,7 +18,7 @@ const dummyData = {
     { name: 'Manish Roy', xp: 1000, orders: 30, rank: 5 },
     { name: 'You', xp: 8, orders: 19, rank: '500+' },
   ],
-  global: [
+  india: [
     { name: 'Suraj Kumar', xp: 1356, orders: 48, rank: 1 },
     { name: 'Alex Matthew', xp: 1301, orders: 35, rank: 2 },
     { name: 'Irshad Khan', xp: 1258, orders: 35, rank: 3 },
@@ -28,8 +28,8 @@ const dummyData = {
   ],
 };
 const LeaderboardScreen = () => {
-  const [selectedTab, setSelectedTab] = useState('global');
-  const [leaderboardData, setLeaderboardData] = useState(dummyData.global);
+  const [selectedTab, setSelectedTab] = useState('india');
+  const [leaderboardData, setLeaderboardData] = useState(dummyData.india);
 
   const handleTabPress = (tab) => {
     setSelectedTab(tab);
@@ -97,10 +97,10 @@ const LeaderboardScreen = () => {
           <Text style={[styles.tabText, selectedTab === 'state' && styles.activeTabText]}>State</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, styles.tabShadow, selectedTab === 'global' && styles.activeTab]}
-          onPress={() => handleTabPress('global')}
+          style={[styles.tab, styles.tabShadow, selectedTab === 'india' && styles.activeTab]}
+          onPress={() => handleTabPress('india')}
         >
-          <Text style={[styles.tabText, selectedTab === 'global' && styles.activeTabText]}>India</Text>
+          <Text style={[styles.tabText, selectedTab === 'india' && styles.activeTabText]}>India</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
   },
   currentredBackgroundd: {
     backgroundColor: '#DC3737',
-    borderTopRightRadius: 20,
-    borderBottomRightRadius: 20,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
     paddingVertical: 12,
     flex: 1,
     alignItems: 'center',

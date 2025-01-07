@@ -98,8 +98,6 @@ const ClientHomeScreen = () => {
     navigation.navigate("Job Requirements", { title, freelancerType });
   };
 
-  console.log({ ongoingJobs });
-
   useEffect(() => {
     const fetchOngoingJobs = async () => {
       try {
@@ -362,28 +360,31 @@ const ClientHomeScreen = () => {
             {combinedData.length > 0 ? (
               combinedData.map((item, index) => {
                 const { jobDetails, full_name, profile_photo, color } = item;
-                const freelancerId = jobDetails?.assigned_freelancer || null;
-                const jobId = jobDetails?._id || null;
+                const receiverId = jobDetails?.assigned_freelancer || null;
+                const projectId = jobDetails?.$id || null;
 
                 return (
                   <TouchableOpacity
                     key={index}
                     onPress={() =>
-                      openChat(freelancerId, full_name, profile_photo, jobId)
+                      openChat(receiverId, full_name, profile_photo, projectId)
                     }
                   >
-                    <View style={styles.ongoingStory}>
-                      <View
-                        style={[
-                          styles.profileImgContainer,
-                          { backgroundColor: color || "#D3D3D3" },
-                        ]}
-                      >
-                        <Image
-                          source={{ uri: profile_photo || placeholderImageURL }}
-                          style={styles.profileImg}
-                        />
-                      </View>
+                    <View
+                      key={index}
+                      style={[
+                        styles.onGoItem,
+                        {
+                          borderWidth: 4,
+                          borderColor: index % 2 === 0 ? "#F81919" : "#1DCE44",
+                          borderRadius: 50,
+                        },
+                      ]}
+                    >
+                      <Image
+                        source={{ uri: item.profile_photo }}
+                        style={styles.ongoingImage}
+                      />
                     </View>
                   </TouchableOpacity>
                 );
@@ -824,6 +825,11 @@ const styles = StyleSheet.create({
   },
   storyImage: { width: 74, height: 74, borderRadius: 50 },
   notiImage: { width: 55, height: 55, borderRadius: 50 },
+  ongoingImage: { width: 70, height: 70, borderRadius: 50 },
+  onGoItem: {
+    marginRight: 8,
+    marginTop: 15
+  },
   addStory: {
     width: 80,
     height: 80,

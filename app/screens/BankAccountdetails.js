@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { appwriteConfig, databases } from "../lib/appwrite";
+import { useAuth } from "../context/AuthContext";
+import Toast from 'react-native-toast-message';
 
 const BankAccountdetailsScreen = ({ navigation }) => {
   const [bankName, setBankName] = useState("");
@@ -14,76 +18,133 @@ const BankAccountdetailsScreen = ({ navigation }) => {
   const [accountNumber, setAccountNumber] = useState("");
   const [confirmAccountNumber, setConfirmAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
+  const { userData } = useAuth()
 
-  const handleSave = () => {
-    // Implement functionality for saving bank details
+  useEffect(() => {
+    fetchBankDetails();
+  }, []);
+
+  const handleError = (message) => {
+    Toast.show({
+      type: 'error',
+      text1: 'Error',
+      text2: message,
+    });
+  };
+
+  const handleSuccess = (message) => {
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: message,
+    });
+  };
+
+  const fetchBankDetails = async () => {
+    try {
+
+      if (userData) {
+        setBankName(userData?.bankName || "");
+        setAccountHolderName(userData?.accountHolderName || "");
+        setAccountNumber(userData?.accountNumber.toString() || "");
+        setConfirmAccountNumber(userData?.accountNumber.toString() || "");
+        setIfscCode(userData?.ifscCode || "");
+      }
+    } catch (error) {
+      handleError("Error fetching bank details")
+    }
+  };
+
+  const handleSave = async () => {
     if (accountNumber === confirmAccountNumber) {
-      // Save data or call API to save the bank details
-      console.log("Bank Details Saved", { bankName, accountHolderName, accountNumber, ifscCode });
-      navigation.goBack(); // Navigate back after saving
+      try {
+        const document = {
+          bankName,
+          accountHolderName,
+          accountNumber: parseInt(accountNumber),
+          ifscCode,
+        };
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.freelancerCollectionId,
+          userData?.$id,
+          document
+        );
+
+        handleSuccess("Bank Details Saved successfully!")
+        // navigation.goBack();
+      } catch (error) {
+        handleError("Error saving bank details")
+      }
     } else {
-      alert("Account numbers do not match!");
+      handleError("Account numbers do not match!")
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.main}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="black" />
+    <ScrollView style={styles.container}>
+      <View >
+        <View style={styles.main}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.header}>
+            Bank Account details
+          </Text>
+        </View>
+
+        <Text style={styles.label}>Select your bank</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter bank name"
+          value={bankName}
+          onChangeText={setBankName}
+        />
+
+        <Text style={styles.label}>Account holder name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter account holder's name"
+          value={accountHolderName}
+          onChangeText={setAccountHolderName}
+        />
+
+        <Text style={styles.label}>Enter your account number</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter account number"
+          value={accountNumber}
+          onChangeText={setAccountNumber}
+          keyboardType="numeric"
+        />
+
+        <Text style={styles.label}>Confirm your account number</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Re-enter account number"
+          value={confirmAccountNumber}
+          onChangeText={setConfirmAccountNumber}
+          keyboardType="numeric"
+        />
+
+        <Text style={styles.label}>Enter your bank IFSC code</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter IFSC code"
+          value={ifscCode}
+          onChangeText={setIfscCode}
+        />
+
+        <TouchableOpacity style={styles.signupButton} onPress={handleSave}>
+          <Text style={styles.signupButtonText}>Save</Text>
         </TouchableOpacity>
-        <Text style={styles.header}>Bank Account details</Text>
       </View>
 
-      <Text style={styles.label}>Select your bank</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter bank name"
-        value={bankName}
-        onChangeText={setBankName}
-      />
-
-      <Text style={styles.label}>Account holder name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter account holder's name"
-        value={accountHolderName}
-        onChangeText={setAccountHolderName}
-      />
-
-      <Text style={styles.label}>Enter your account number</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter account number"
-        value={accountNumber}
-        onChangeText={setAccountNumber}
-        keyboardType="numeric"
-      />
-
-      <Text style={styles.label}>Confirm your account number</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Re-enter account number"
-        value={confirmAccountNumber}
-        onChangeText={setConfirmAccountNumber}
-        keyboardType="numeric"
-      />
-
-      <Text style={styles.label}>Enter your bank IFSC code</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter IFSC code"
-        value={ifscCode}
-        onChangeText={setIfscCode}
-      />
-
-      <TouchableOpacity style={styles.signupButton} onPress={handleSave}>
-        <Text style={styles.signupButtonText}>Save</Text>
-      </TouchableOpacity>
-    </View>
+      <Toast />
+    </ScrollView>
   );
 };
 
@@ -121,7 +182,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 20,
     marginBottom: 20,
-    fontSize: 16,
+    fontSize: 14,
+    color: "#898686"
   },
   signupButton: {
     width: "40%",

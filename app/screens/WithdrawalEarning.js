@@ -1,57 +1,98 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
+import Toast from 'react-native-toast-message';
+import { ID } from "react-native-appwrite";
+
 
 const WithdrawalEarningScreen = ({ navigation }) => {
-  const [amount, setAmount] = useState("");
-  const [totalAmountInWallet, setTotalAmountInWallet] = useState(5000); // Example wallet amount, can be dynamic
-  const [warning, setWarning] = useState(""); // State to store warning message
-  const platformChargeRate = 0.02; // 2% platform charge
+  const [amount, setAmount] = useState(0);
+  const [warning, setWarning] = useState("");
+  const { userData } = useAuth()
+  const totalAmountInWallet = userData?.withdrawableAmount || 0
 
-  // Function to calculate the withdrawal amount after platform charge
-  const calculateWithdrawalAmount = () => {
-    const withdrawalAmount = parseFloat(amount);
-    if (!isNaN(withdrawalAmount) && withdrawalAmount > 0 && withdrawalAmount <= totalAmountInWallet) {
-      const platformCharge = withdrawalAmount * platformChargeRate;
-      const finalAmount = withdrawalAmount - platformCharge;
-      return finalAmount.toFixed(2);
-    }
-    return 0;
+  const handleError = (message) => {
+    Toast.show({
+      type: 'error',
+      text1: 'Error',
+      text2: message,
+    });
   };
 
-  // Handle input change
+  const handleSuccess = (message) => {
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: message,
+    });
+  };
+
+
   const handleAmountChange = (value) => {
     const numericValue = parseFloat(value);
+    console.log(warning);
+
     if (isNaN(numericValue) || numericValue < 0) {
       setWarning("Please enter a valid amount.");
       setAmount("");
     } else if (numericValue > totalAmountInWallet) {
-      // If the entered amount exceeds the total amount, adjust it to totalAmount - platform charge
-      const adjustedAmount = totalAmountInWallet - (totalAmountInWallet * platformChargeRate);
-      setAmount(adjustedAmount.toFixed(2)); // Automatically adjust the amount
+      // If the entered amount exceeds the total amount, adjust it to totalAmount
+      setAmount(totalAmountInWallet.toString());
       setWarning("Adjusted to maximum withdrawal.");
     } else {
-      setWarning(""); // Clear warning if the amount is valid
+      setWarning("");
       setAmount(value);
     }
   };
 
-  const handleProcess = () => {
-    const remainingAmount = totalAmountInWallet - parseFloat(amount);
-    const paymentHistory = [
-      {
-        name: "Freelancer A", // Example data
-        amount: parseFloat(amount),
-        date: "02 May, 2024",
-        time: "12:19 PM",
-        status: "Pending",
-      },
-      // Add more payment history records as needed
-    ];
 
-    // Navigate to HistoryScreen with remaining balance and payment history
-    navigation.navigate("Payment", { remainingAmount, paymentHistory });
-  }; 
+  const handleProcess = async () => {
+    const freelancerId = userData?.$id;
+
+    if (amount <= 0) {
+      handleError("PLease enter amount")
+      return;
+    }
+
+    try {
+
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.withdrawalRequestsCollectionId,
+        ID.unique(),
+        {
+          freelancerId,
+          requestedAmount: parseInt(amount),
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      );
+
+      const remainingAmount = totalAmountInWallet - amount;
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId,
+        {
+          withdrawableAmount: remainingAmount,
+        }
+      );
+
+
+
+      handleSuccess("Withdrawal request submitted successfully!");
+
+      navigation.navigate("Wallet");
+
+    } catch (error) {
+      console.log(error)
+      handleError("Failed to submit withdrawal request.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -64,7 +105,7 @@ const WithdrawalEarningScreen = ({ navigation }) => {
 
       {/* Total Amount in Wallet */}
       <Text style={styles.label}>Total Amount in Wallet</Text>
-      <Text style={styles.colorText}>RS. {totalAmountInWallet}</Text>
+      <Text style={styles.colorText}>RS. {userData?.withdrawableAmount || "0"}</Text>
 
       {/* Withdrawal Amount Input */}
       <Text style={styles.label}>Enter the amount you want to withdraw</Text>
@@ -77,6 +118,9 @@ const WithdrawalEarningScreen = ({ navigation }) => {
         autoComplete="off"
       />
 
+      {warning !== "" && <Text style={styles.warning}>{warning}</Text>}
+
+
       {/* Amount to Withdraw */}
       <Text style={styles.label}>You’re withdrawing</Text>
       <View style={styles.withdrawal}>
@@ -86,6 +130,8 @@ const WithdrawalEarningScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.signupButton} onPress={handleProcess}>
         <Text style={styles.signupButtonText}>Process</Text>
       </TouchableOpacity>
+
+      <Toast />
     </View>
   );
 };
@@ -142,22 +188,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   input: {
-    width: "80%",
+    // width: "100%",
     height: 44,
     backgroundColor: "#fff",
     borderRadius: 12,
     paddingHorizontal: 20,
-    marginBottom: 40,
+    // marginBottom: 40,
     fontSize: 16,
     borderColor: "#4B0082",
     borderWidth: 2,
     marginVertical: 10,
+    margin: "auto"
   },
   warning: {
     color: "red",
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
-    marginTop: 10,
+    marginBottom: 40,
   },
   signupButton: {
     width: "50%",

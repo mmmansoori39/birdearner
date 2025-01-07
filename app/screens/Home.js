@@ -23,6 +23,9 @@ const HomeScreen = () => {
   const [cancelledOrders, setCancelledOrdersOrders] = useState(0)
   const navigation = useNavigation()
 
+  // console.log(userData);
+  
+
 
   useEffect(() => {
     const fetchOrderRecords = async () => {
@@ -182,19 +185,21 @@ useEffect(() => {
           <Text style={styles.sectionTitle}>Your Earnings</Text>
           <View style={styles.earningsContainer}>
             <View style={styles.earningItem}>
-              <Text style={styles.earningValue}>Rs. 5,052</Text>
+              <Text style={styles.earningValue}>Rs. {userData?.totalEarnings || "0"} </Text>
               <Text style={styles.earningLabel}>Total Earnings</Text>
             </View>
             <View style={styles.earningItem}>
-              <Text style={styles.earningValue}>Rs. 1,531</Text>
+              <Text style={styles.earningValue}>Rs. {userData?.monthlyEarnings || "0"}</Text>
               <Text style={styles.earningLabel}>Monthly</Text>
             </View>
             <View style={styles.earningItem}>
-              <Text style={styles.earningValue}>0</Text>
+              <Text style={styles.earningValue}>{userData?.outstandingAmount || "0"}</Text>
               <Text style={styles.earningLabel}>Outstanding Amount</Text>
             </View>
             <View style={styles.earningItem}>
-              <Text style={styles.earningValue}>Rs. 5,000</Text>
+              <TouchableOpacity onPress={() => navigation.navigate("Profile", { screen: "Withdrawal Earning" })}>
+              <Text style={styles.earningValue}>Rs. {userData?.withdrawableAmount || "0"}</Text>
+              </TouchableOpacity>
               <Text style={styles.earningLabel}>For Withdrawal</Text>
             </View>
           </View>

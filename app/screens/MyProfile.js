@@ -28,6 +28,16 @@ export default function ProfileScreen({ navigation }) {
   const [images, setImages] = useState([]);
   const role = userData?.role;
 
+  const createdAt = userData?.$createdAt
+  const date = new Date(createdAt);
+
+  // Format the date and time
+  const formattedDate = date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   useEffect(() => {
     try {
       setData(userData);
@@ -40,13 +50,13 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     const flagsData = async () => {
-      if(userData){
+      if (userData) {
         try {
           const freelancerId = userData?.$id;
-  
+
           const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-  
-  
+
+
           const freelancerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             collectionId,
@@ -57,7 +67,7 @@ export default function ProfileScreen({ navigation }) {
           Alert.alert("Error updating flags:", error)
         }
       }
-      }
+    }
 
     flagsData()
   }, [refreshing])
@@ -235,7 +245,7 @@ export default function ProfileScreen({ navigation }) {
             : data?.profile_heading}
         </Text>
 
-        <Text style={styles.about}>About myself</Text>
+        <Text style={styles.about}>About me</Text>
         <Text style={styles.about_des}>
           {data?.profile_description || "No description available"}
         </Text>
@@ -278,6 +288,14 @@ export default function ProfileScreen({ navigation }) {
             )}
           </View>
         )}
+
+        <View style={styles.line}></View>
+
+        <Text style={styles.locTitle}>Location</Text>
+        <Text style={styles.locSubTitle}> {userData?.city}, {userData?.state} ({userData?.country}) </Text>
+
+        <Text style={styles.locTitle}>Member Since</Text>
+        <Text style={styles.locSubTitle}>{formattedDate}</Text>
 
         {/* Edit Profile Button */}
         <TouchableOpacity
@@ -330,7 +348,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   tabButtonL: {
-    backgroundColor: "#5732a8",
+    backgroundColor: "#4C0183",
     width: "50%",
     height: 40,
     display: "flex",
@@ -448,7 +466,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   editProfileButton: {
-    backgroundColor: "#5732a8",
+    backgroundColor: "#4C0183",
     paddingVertical: 12,
     marginHorizontal: 20,
     borderRadius: 12,
@@ -462,7 +480,7 @@ const styles = StyleSheet.create({
   },
   deactivateLink: {
     textAlign: "center",
-    color: "#5732a8",
+    color: "#4C0183",
     marginBottom: 20,
   },
   Profile_heading: {
@@ -517,7 +535,7 @@ const styles = StyleSheet.create({
     color: "#fff"
   },
   randomText: {
-    fontSize:10,
+    fontSize: 10,
     fontWeight: "400",
     color: "#A1A1A1",
     paddingHorizontal: 5,
@@ -536,6 +554,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#fff"
+  },
+
+  line: {
+    backgroundColor: "#E2E2E2",
+    width: "90%",
+    height: 1,
+    margin: "auto",
+    marginTop: 10
+  },
+  locTitle: {
+    color: "#8F8F8F",
+    fontSize: 18,
+    fontWeight: "600",
+    marginLeft: 25,
+    marginTop: 15
+  },
+  locSubTitle: {
+    color: "#000",
+    fontSize: 15,
+    marginLeft: 25,
   }
 
 });

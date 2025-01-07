@@ -12,7 +12,8 @@ export const appwriteConfig = {
   jobCollectionID: "673327260000fb1f8aed",
   messageCollectionID: "674f23ba0019a93a384f",
   paymentHistoryCollectionId: "6769187c002cd44cc156",
-  reviewCollectionId: "676922e0000cae8e2c3f"
+  reviewCollectionId: "676922e0000cae8e2c3f",
+  withdrawalRequestsCollectionId: "677cd4020023da8571b7"
 };
 export const client = new Client();
 
