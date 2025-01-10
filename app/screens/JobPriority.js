@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { router } from "expo-router";
 import {
   SafeAreaView,
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Image,
+  FlatList
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { PanResponder, Animated } from "react-native";
+// import Sound from 'react-native-sound';
 import { appwriteConfig, databases } from "../lib/appwrite";
 
 const colors = {
@@ -18,28 +19,37 @@ const colors = {
   Standard: ["#34660C", "#77CB35"],
 };
 
-const JobPriority = ({ route, navigation }) => {
+const priorities = ["Immediate", "High", "Standard"];
+
+const JobPriority = ({ navigation, route }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [rotation] = useState(new Animated.Value(0)); // Handle rotation animation
+
   const { priority, jobs } = route.params;
 
   const [priorityJob, setPriorityJob] = useState([]);
   const [clientProfiles, setClientProfiles] = useState({});
   const [clientName, setClientName] = useState({});
 
-  const currentColors = colors[priority] || ["#000", "#333"];
+  // const currentColors = colors[priority] || ["#000", "#333"];
+
+  const currentColors = colors[priorities[currentIndex]] || ["#000", "#333"];
+  const currentPriority = priorities[currentIndex];
+
 
   useEffect(() => {
-    if (priority === "Immediate") {
+    if (currentPriority === "Immediate") {
       const selectedJobs = jobs.Immediate || [];
       setPriorityJob(selectedJobs);
-    } else if (priority === "High") {
+    } else if (currentPriority === "High") {
       const selectedJobs = jobs.High || [];
       setPriorityJob(selectedJobs);
-    } else if (priority === "Standard") {
+    } else if (currentPriority === "Standard") {
       const selectedJobs = jobs.Standard || [];
       setPriorityJob(selectedJobs);
     }
 
-  }, [priority]);
+  }, [currentPriority]);
 
   useEffect(() => {
     priorityJob.forEach((job) => {
@@ -84,82 +94,119 @@ const JobPriority = ({ route, navigation }) => {
       : `${budget}`;
   };
 
-  const renderJobs = () => {
-    return priorityJob.map((job, index) => {
-      const clientProfileImage = clientProfiles[job.job_created_by];
-      const full_name = clientName[job.job_created_by]
+  const renderJobItem = ({ item: job }) => {
+    const clientProfileImage = clientProfiles[job.job_created_by];
+    const full_name = clientName[job.job_created_by];
 
-
-      return (
-        <View key={index}>
-          <TouchableOpacity
-            style={styles.jobCard}
-            onPress={() => {
-              navigation.navigate("JobDescription", { job, clientProfileImage, full_name });
-            }}
-          >
-            {/* Displaying the client's profile image */}
-            <Image
-              source={{ uri: clientProfileImage || "../assets/profile.png" }}
-              style={styles.profileImage}
-            />
-            <View style={{ flex: 1, paddingVertical: 2 }}>
-              <Text style={styles.jobTitle}>{job.title}</Text>
-              <Text style={styles.jobDetails}>
-                Budget: ₹{formatBudget(job.budget)} Deadline:{" "}
-                {formatDeadline(job.deadline)}
-              </Text>
-              <Text style={styles.jobDescription} numberOfLines={2}>
-                {job.description}
-              </Text>
-            </View>
-          </TouchableOpacity>
+    return (
+      <TouchableOpacity
+        style={styles.jobCard}
+        onPress={() => {
+          navigation.navigate("JobDescription", { job, clientProfileImage, full_name });
+        }}
+      >
+        {/* Displaying the client's profile image */}
+        <Image
+          source={{ uri: clientProfileImage || "../assets/profile.png" }}
+          style={styles.profileImage}
+        />
+        <View style={{ flex: 1, paddingVertical: 2 }}>
+          <Text style={styles.jobTitle}>{job.title}</Text>
+          <Text style={styles.jobDetails}>
+            Budget: ₹{formatBudget(job.budget)} Deadline: {formatDeadline(job.deadline)}
+          </Text>
+          <Text style={styles.jobDescription} numberOfLines={2}>
+            {job.description}
+          </Text>
         </View>
-      );
-    });
+      </TouchableOpacity>
+    );
   };
+
+
+  const handleRotation = (direction) => {
+    const newIndex =
+      direction === "left"
+        ? (currentIndex + 1) % priorities.length
+        : (currentIndex - 1 + priorities.length) % priorities.length;
+
+    setCurrentIndex(newIndex);
+
+    Animated.timing(rotation, {
+      toValue: direction === "left" ? -180 : 180,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => rotation.setValue(0));
+  };
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx > 50) {
+        handleRotation("right"); // Swipe right
+      } else if (gestureState.dx < -50) {
+        handleRotation("left"); // Swipe left
+      }
+    },
+  });
 
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>JOBS</Text>
+      <Text style={styles.title}>JOBS</Text>
 
-        <View style={styles.priorityContainer}>
-          <TouchableOpacity>
-            <LinearGradient
-              colors={currentColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.priorityButton}
-            >
-              <Text style={styles.priorityText}>
-                {priority} {priority === "Immediate" ? "Attention" : "Priority"}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {renderJobs()}
-      </ScrollView>
-
-      <LinearGradient
-        colors={currentColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.allJobsContainer}
-      >
-        <TouchableOpacity
-          style={styles.allJobsButton}
-          onPress={() => {
-            navigation.goBack();
-          }}
-        >
-          <Text style={styles.allJobsText}>
-            {priority} {priority === "Immediate" ? "Attention" : "Priority"}
-          </Text>
+      <View style={styles.priorityContainer}>
+        <TouchableOpacity>
+          <LinearGradient
+            colors={currentColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.priorityButton}
+          >
+            <Text style={styles.priorityText}>
+              {currentPriority} {currentPriority === "Immediate" ? "Attention" : "Priority"}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
-      </LinearGradient>
+      </View>
+
+      <FlatList
+        data={priorityJob}
+        renderItem={renderJobItem}
+        keyExtractor={(item, index) => `${item.job_id}_${index}`}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        style={{ flex: 1, paddingHorizontal: 20 }}
+        showsVerticalScrollIndicator={false}
+      />
+
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[
+          styles.allJobsContainer,
+          {
+            transform: [
+              {
+                rotate: rotation.interpolate({
+                  inputRange: [-180, 180],
+                  outputRange: ["-180deg", "180deg"],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={currentColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.allJobsCircle}
+        >
+          <TouchableOpacity style={styles.allJobsContent} onPress={() => navigation.goBack()}>
+            <Text style={styles.allJobsText}>{currentPriority}</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -168,10 +215,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 30
+    paddingTop: 45,
+    paddingBottom: 70
   },
   scrollContent: {
     padding: 20,
+    height: 743
   },
   title: {
     fontSize: 22,
@@ -182,7 +231,7 @@ const styles = StyleSheet.create({
   },
   priorityContainer: {
     alignItems: "center",
-    marginBottom: 20,
+    // marginBottom: 20,
   },
   priorityButton: {
     width: 355,
@@ -196,9 +245,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
   },
   priorityText: {
-    color: "#fff",
-    fontWeight: "semibold",
     fontSize: 22,
+    fontWeight: "500",
+    color: "#fff",
   },
   prioritySubText: {
     color: "#fff",
@@ -246,25 +295,31 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   allJobsContainer: {
-    alignItems: "center",
     width: 450,
     height: 450,
     borderRadius: 300,
     position: "absolute",
     bottom: -380,
     right: -30,
-    padding: 10,
+    overflow: "hidden",
   },
-  allJobsButton: {
-    paddingVertical: 15,
+  allJobsCircle: {
+    flex: 1,
+    justifyContent: "flex-start",
     alignItems: "center",
-    justifyContent: "center",
-    width: "90%",
+  },
+  allJobsContent: {
+    justifyContent: "flex-start",
+    alignItems: "center",
+    width: "80%",
+    height: "80%",
   },
   allJobsText: {
     color: "#fff",
     fontSize: 20,
-    fontWeight: "semibold",
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: 20
   },
 });
 
