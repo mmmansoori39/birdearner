@@ -40,15 +40,15 @@ export default function ReviewsScreen({ navigation }) {
     }
   }, [user]);
 
-useEffect(() => {
+  useEffect(() => {
     const flagsData = async () => {
-      if(userData){
+      if (userData) {
         try {
           const freelancerId = userData?.$id;
-  
+
           const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-  
-  
+
+
           const freelancerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             collectionId,
@@ -59,7 +59,7 @@ useEffect(() => {
           Alert.alert("Error updating flags:", error)
         }
       }
-      }
+    }
 
     flagsData()
   }, [refreshing])
@@ -72,19 +72,19 @@ useEffect(() => {
           role === "client"
             ? appwriteConfig.freelancerCollectionId
             : appwriteConfig.clientCollectionId;
-  
+
         // Fetch reviews for the current user (receiverId)
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
           appwriteConfig.reviewCollectionId,
           [Query.equal("receiverId", receiverId)] // Correct query syntax
         );
-  
+
         // Sort reviews by createdAt field in descending order
         const sortedDocuments = response.documents.sort((a, b) =>
           new Date(b.$createdAt) - new Date(a.$createdAt)
         );
-  
+
         const reviewsWithGiverData = await Promise.all(
           sortedDocuments.map(async (review) => {
             try {
@@ -93,7 +93,7 @@ useEffect(() => {
                 userCollectionId,
                 review.giverId
               );
-  
+
               return {
                 ...review,
                 giverName: giverResponse.full_name,
@@ -107,16 +107,16 @@ useEffect(() => {
             }
           })
         );
-  
+
         setReviews(reviewsWithGiverData); // Update state with enriched reviews
       } catch (error) {
         console.error("Failed to fetch reviews:", error.message || error);
       }
     };
-  
+
     fetchReviews();
   }, [refreshing]);
-  
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -195,7 +195,7 @@ useEffect(() => {
             }
             style={styles.profileImage}
           />
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.settings}
             onPress={() => {
               navigation.navigate("Settings");
@@ -205,7 +205,7 @@ useEffect(() => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.share} onPress={onShare}>
             <FontAwesome name="share" size={24} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ImageBackground>
 
         <View style={styles.userDetails}>
@@ -224,8 +224,9 @@ useEffect(() => {
           )}
           <Text style={styles.statusText}>
             Status:
-            {data?.currently_available ? "Active" : "Inactive"}
-            <FontAwesome name="circle" size={12} color="#6BCD2F" />
+            {userData?.currently_available === true ? " Active " : " Inactive "}
+            {userData?.currently_available === true ? (<FontAwesome name="circle" size={12} color="#6BCD2F" />)
+              : (<FontAwesome name="circle" size={12} color="#FF3131" />)}
           </Text>
         </View>
 
@@ -233,12 +234,12 @@ useEffect(() => {
           {reviews?.map((review, index) => (
             <ReviewCard
               key={index}
-              reviewerName={review.giverName}
-              reviewerstate={review.state}
-              reviewerCountry={review.country}
-              starRating={review.rating}
-              reviewText={review.message_text}
-              reviewerPhoto={review.giverPhoto}
+              reviewerName={review?.giverName}
+              reviewerstate={review?.state}
+              reviewerCountry={review?.country}
+              starRating={review?.rating}
+              reviewText={review?.message_text}
+              reviewerPhoto={review?.giverPhoto}
             />
           ))}
         </View>

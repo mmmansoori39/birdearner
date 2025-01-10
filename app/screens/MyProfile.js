@@ -85,6 +85,16 @@ export default function ProfileScreen({ navigation }) {
     setModalVisible(true);
   };
 
+  const formatXP = (xp) => {
+    if (xp >= 1000000) {
+      return (xp / 1000000).toFixed(1) + 'M'; // For millions
+    } else if (xp >= 1000) {
+      return (xp / 1000).toFixed(1) + 'K'; // For thousands
+    } else {
+      return xp; // For values less than 1000
+    }
+  };
+
   const onShare = async () => {
     try {
       const profileLink = `https://birdearner.com/profile/${userData.$id}`;
@@ -198,7 +208,8 @@ export default function ProfileScreen({ navigation }) {
             <MaterialIcons name="settings" size={30} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.share} onPress={onShare}>
-            <FontAwesome name="share" size={24} />
+            {/* <FontAwesome name="share" size={24} /> */}
+            <MaterialIcons name="share" size={30} />
           </TouchableOpacity>
         </ImageBackground>
 
@@ -227,17 +238,21 @@ export default function ProfileScreen({ navigation }) {
           </Text>
         </View>
 
-        <View style={styles.levelContainer}>
-          <View style={styles.xpRan}>
-            <View style={styles.xp}>
-              <Text style={styles.xpText}>{userData?.XP || 0} xp</Text>
+        {
+          userData?.role === "freelancer" && (
+            <View style={styles.levelContainer}>
+              <View style={styles.xpRan}>
+                <View style={styles.xp}>
+                  <Text style={styles.xpText}>{formatXP(userData?.XP) || 0} xp</Text>
+                </View>
+                <Text style={styles.randomText}>Earn xp and promote to next level</Text>
+              </View>
+              <View style={styles.level}>
+                <Text style={styles.levelText}>Lev. {userData?.level || 1}</Text>
+              </View>
             </View>
-            <Text style={styles.randomText}>Earn xp and promote to next level</Text>
-          </View>
-          <View style={styles.level}>
-            <Text style={styles.levelText}>Lev. {userData?.level || 1}</Text>
-          </View>
-        </View>
+          )
+        }
 
         <Text style={styles.Profile_heading}>
           {role === "client"
