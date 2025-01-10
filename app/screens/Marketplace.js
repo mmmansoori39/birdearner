@@ -43,9 +43,9 @@ const MarketplaceScreen = ({ navigation }) => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in kilometers
   };
@@ -87,7 +87,7 @@ const MarketplaceScreen = ({ navigation }) => {
             location.latitude,
             location.longitude,
             job.latitude,
-            job.longitude 
+            job.longitude
           );
           return jobDistance <= distance;
         });
@@ -146,8 +146,16 @@ const MarketplaceScreen = ({ navigation }) => {
 
   const renderLines = () => {
     const lines = [];
-    for (let i = 0; i < 70; i++) {
-      lines.push(<View key={i} style={styles.line}></View>);
+    for (let i = 0; i < 50; i++) {
+      lines.push(
+        <LinearGradient
+          key={i}
+          colors={["#232222", "#898686"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 0 }}
+          style={styles.line}
+        />
+      );
     }
     return lines;
   };
@@ -168,16 +176,9 @@ const MarketplaceScreen = ({ navigation }) => {
           <Text style={styles.distanceText}>{distance} km</Text>
 
           <View style={styles.customSliderWrapper}>
-            <TouchableOpacity
-              onPress={() => setDistance(Math.max(0, distance - 1))}
-              style={styles.iconButton}
-            >
-              <Entypo name="circle-with-minus" size={24} color="black" />
-            </TouchableOpacity>
-
             <LinearGradient
-              colors={["#898686", "#232222"]}
-              start={{ x: 0, y: 0 }}
+              colors={["#232222", "#898686"]}
+              start={{ x: 0, y: 1 }}
               end={{ x: 1, y: 0 }}
               style={styles.sliderBackground}
               onStartShouldSetResponder={(e) => {
@@ -203,12 +204,22 @@ const MarketplaceScreen = ({ navigation }) => {
               </View>
             </LinearGradient>
 
-            <TouchableOpacity
-              onPress={() => setDistance(Math.min(maxDist, distance + 1))}
-              style={styles.iconButton}
-            >
-              <Entypo name="circle-with-plus" size={24} color="black" />
-            </TouchableOpacity>
+            <View style={styles.iconButtonContain}>
+              <TouchableOpacity
+                onPress={() => setDistance(Math.min(maxDist, distance + 1))}
+                style={styles.iconButtonminus}
+              >
+                <Entypo name="circle-with-plus" size={29} color="black" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.iconButtonContainminus}>
+              <TouchableOpacity
+                onPress={() => setDistance(Math.max(0, distance - 1))}
+                style={styles.iconButton}
+              >
+                <Entypo name="circle-with-minus" size={29} color="black" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Text style={styles.sliderLabel}>
@@ -377,21 +388,56 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   customSliderWrapper: {
-    flexDirection: "row",
+    // flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    width: 370,
+    // justifyContent: "space-between",
+    width: 360,
     height: 24,
-    backgroundColor: "transparent",
+    // backgroundColor: "transparent",
+    margin: "auto",
+    position: "relative"
   },
-  iconButton: {},
+  iconButtonContain: {
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    right: 14,
+    top: 1,
+    backgroundColor: "white",
+    width: 29,
+    height: 29,
+    borderRadius: 20
+  },
+  iconButtonContainminus: {
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+    left: 15,
+    top: 1,
+    backgroundColor: "white",
+    width: 29,
+    height: 29,
+    borderRadius: 20,
+    padding: 0,
+    margin: 0
+  },
+  // iconButton: {
+  //   position: "absolute",
+  //   right: 14,
+  //   top: 1
+  // },
+  // iconButtonminus: {
+  //   position: "absolute",
+  //   left: 15,
+  //   top: 1
+  // },
   sliderBackground: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    width: 307,
-    height: 24,
-    borderRadius: 12,
+    width: 332,
+    height: 32,
+    borderRadius: 6,
     backgroundColor: "#232222",
     position: "relative",
   },
@@ -400,12 +446,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     height: "100%",
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
+    alignItems: "center"
   },
   line: {
-    width: 1,
-    height: "100%",
-    backgroundColor: "#898686",
+    width: 3,
+    height: "72%",
+    // backgroundColor: "#898686",
   },
   sliderIndicator: {
     position: "absolute",
