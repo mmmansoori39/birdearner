@@ -85,6 +85,16 @@ const LeaderboardScreen = () => {
     return topFive.slice(0, 6);
   };
 
+  const formatXP = (xp) => {
+    if (xp >= 1000000) {
+      return (xp / 1000000).toFixed(1) + 'M'; // For millions
+    } else if (xp >= 1000) {
+      return (xp / 1000).toFixed(1) + 'K'; // For thousands
+    } else {
+      return xp; // For values less than 1000
+    }
+  };
+
   const handleTabPress = (tab) => {
     setSelectedTab(tab);
   };
@@ -128,7 +138,7 @@ const LeaderboardScreen = () => {
                 user.isCurrentUser ? styles.currentredBackground : styles.blueBackground,
               ]}
             >
-              <Text style={styles.blueText}>{user.XP}</Text>
+              <Text style={styles.blueText}>{formatXP(user?.XP)}</Text>
             </View>
             <Text style={[styles.tableText, styles.ordersColumn]}>
               {user?.assigned_jobs.length}
@@ -141,7 +151,7 @@ const LeaderboardScreen = () => {
                   : styles.blueBackgroundd,
               ]}
             >
-              <Text style={styles.blueText}>{user.rank}</Text>
+              <Text style={styles.blueText}>{formatXP(user?.rank)}</Text>
             </View>
           </View>
         ))}
