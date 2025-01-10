@@ -46,8 +46,9 @@ const BankAccountdetailsScreen = ({ navigation }) => {
       if (userData) {
         setBankName(userData?.bankName || "");
         setAccountHolderName(userData?.accountHolderName || "");
-        setAccountNumber(userData?.accountNumber.toString() || "");
-        setConfirmAccountNumber(userData?.accountNumber.toString() || "");
+        const accountNumber = userData?.accountNumber;
+        setAccountNumber(accountNumber ? accountNumber.toString() : "");
+        setConfirmAccountNumber(accountNumber ? accountNumber.toString() : "");
         setIfscCode(userData?.ifscCode || "");
       }
     } catch (error) {
@@ -57,6 +58,9 @@ const BankAccountdetailsScreen = ({ navigation }) => {
 
   const handleSave = async () => {
     if (accountNumber === confirmAccountNumber) {
+
+      const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
+
       try {
         const document = {
           bankName,
@@ -66,7 +70,7 @@ const BankAccountdetailsScreen = ({ navigation }) => {
         };
         await databases.updateDocument(
           appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
+          collectionId,
           userData?.$id,
           document
         );
