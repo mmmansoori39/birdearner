@@ -13,6 +13,11 @@ import AppearanceScreen from '../screens/Appearance';
 import WalletScreen from '../screens/Wallet';
 import PaymentScreen from '../screens/PaymentScreen';
 import WalletClientScreen from '../screens/WalletClient';
+import SecurityScreen from '../screens/SecurityScreen';
+import TermsAndConditionsScreen from '../screens/TermsAndConditionsScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import BlogsAndForumScreen from '../screens/BlogsAndForumScreen';
 
 
 const Stack = createStackNavigator();
@@ -84,6 +89,31 @@ export default function ProfileStack() {
       <Stack.Screen
       name="Payment"
       component={PaymentScreen}
+      options={{headerShown: false}}
+       />
+      <Stack.Screen
+      name="Security"
+      component={SecurityScreen}
+      options={{headerShown: false}}
+       />
+      <Stack.Screen
+      name="TermsAndConditions"
+      component={TermsAndConditionsScreen}
+      options={{headerShown: false}}
+       />
+      <Stack.Screen
+      name="Feedback"
+      component={FeedbackScreen}
+      options={{headerShown: false}}
+       />
+      <Stack.Screen
+      name="PrivacyPolicy"
+      component={PrivacyPolicyScreen}
+      options={{headerShown: false}}
+       />
+      <Stack.Screen
+      name="BlogsAndForum"
+      component={BlogsAndForumScreen}
       options={{headerShown: false}}
        />
     </Stack.Navigator>
