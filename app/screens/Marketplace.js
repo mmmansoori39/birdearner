@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   View,
@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Animated,
+  PanResponder
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import MapView, { Marker } from "react-native-maps";
@@ -27,12 +29,32 @@ const MarketplaceScreen = ({ navigation }) => {
   const [distance, setDistance] = useState(600);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const step = 5;
+  const animatedValue = useRef(new Animated.Value(0)).current;
   const [jobs, setJobs] = useState({
     Immediate: [],
     High: [],
     Standard: [],
   });
   const [loading, setLoading] = useState(true);
+
+  const updateDistance = (newDistance) => {
+    const boundedDistance = Math.min(maxDist, Math.max(0, newDistance));
+    const snappedDistance = Math.round(boundedDistance / step) * step; // Snap to nearest 5km
+    setDistance(snappedDistance);
+
+    Animated.timing(animatedValue, {
+      toValue: (snappedDistance / maxDist) * 100, // Convert distance to percentage
+      duration: 300, // Animation duration
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleSlide = (locationX) => {
+    const percentage = (locationX / 307) * 100;
+    const newDistance = (percentage / 100) * maxDist;
+    updateDistance(newDistance);
+  };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
@@ -96,7 +118,6 @@ const MarketplaceScreen = ({ navigation }) => {
         setJobs(categorizeJobs(allJobs));
       }
     } catch (error) {
-      throw error
       Alert.alert(
         "Error",
         "Failed to fetch jobs. Please try again later.",
@@ -122,17 +143,20 @@ const MarketplaceScreen = ({ navigation }) => {
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
+
       setLocation(currentLocation.coords);
       fetchJobs(true); // Fetch jobs filtered by location
     } catch (error) {
-      console.error("Error fetching location:", error);
       setErrorMsg("Failed to fetch location. Please try again.");
+      Alert.alert("Error fetching location:", error);
     }
   };
 
   useEffect(() => {
+    getLocation()
     fetchJobs();
   }, []);
+
 
   useEffect(() => {
     if (location) {
@@ -183,21 +207,41 @@ const MarketplaceScreen = ({ navigation }) => {
               style={styles.sliderBackground}
               onStartShouldSetResponder={(e) => {
                 const { locationX } = e.nativeEvent;
-                const percentage = (locationX / 307) * 100;
-                const newDistance = Math.min(
-                  maxDist,
-                  Math.max(0, (percentage / 100) * maxDist)
-                );
-                setDistance(parseInt(newDistance));
+                handleSlide(locationX);
                 return true;
               }}
+              onMoveShouldSetResponder={() => true}
+              onResponderMove={(e) => {
+                const { locationX } = e.nativeEvent;
+                handleSlide(locationX);
+              }}
             >
-              <View style={styles.linesContainer}>{renderLines()}</View>
+              {/* <Animated.View
+                style={[
+                  styles.linesContainer,
+                  {
+                    transform: [
+                      {
+                        translateX: animatedValue.interpolate({
+                          inputRange: [0, 100],
+                          outputRange: [0, -200], // Move lines left when sliding right
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                {renderLines()}
+              </Animated.View> */}
+
+              <View style={styles.linesContainer}>
+              {renderLines()}
+              </View>
 
               <View
                 style={[
                   styles.sliderIndicator,
-                  { left: `${(distance / 100) * 100}%` },
+                  { left: `${(distance / maxDist) * 100}%` },
                 ]}
               >
                 <Text style={styles.sliderIndicatorText}>▼</Text>
@@ -206,7 +250,7 @@ const MarketplaceScreen = ({ navigation }) => {
 
             <View style={styles.iconButtonContain}>
               <TouchableOpacity
-                onPress={() => setDistance(Math.min(maxDist, distance + 1))}
+                onPress={() => updateDistance(distance + step)}
                 style={styles.iconButtonminus}
               >
                 <Entypo name="circle-with-plus" size={29} color="black" />
@@ -214,7 +258,7 @@ const MarketplaceScreen = ({ navigation }) => {
             </View>
             <View style={styles.iconButtonContainminus}>
               <TouchableOpacity
-                onPress={() => setDistance(Math.max(0, distance - 1))}
+                onPress={() => updateDistance(distance - step)}
                 style={styles.iconButton}
               >
                 <Entypo name="circle-with-minus" size={29} color="black" />
@@ -227,26 +271,23 @@ const MarketplaceScreen = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* <MapView style={styles.map}>
 
-        </MapView> */}
-
-        {/* <MapView
+        <MapView
           style={styles.map}
           region={
             location
               ? {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  latitudeDelta: 0.05,
-                  longitudeDelta: 0.05,
-                }
+                latitude: location.latitude,
+                longitude: location.longitude,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              }
               : {
-                  latitude: 37.7749,
-                  longitude: -122.4194,
-                  latitudeDelta: 1.0,
-                  longitudeDelta: 1.0,
-                }
+                latitude: 37.7749,
+                longitude: -122.4194,
+                latitudeDelta: 1.0,
+                longitudeDelta: 1.0,
+              }
           }
         >
           {location && (
@@ -261,46 +302,52 @@ const MarketplaceScreen = ({ navigation }) => {
             />
           )}
 
-          {jobs.Immediate.map((job, index) => (
-            <Marker
-              key={`immediate-${index}`}
-              coordinate={{
-                latitude: job.latitude,
-                longitude: job.longitude,
-              }}
-              title={job.title}
-              description={job.description}
-              pinColor="red"
-            />
-          ))}
+          {jobs.Immediate.map((job, index) =>
+            job.latitude && job.longitude ? (
+              <Marker
+                key={`immediate-${index}`}
+                coordinate={{
+                  latitude: job.latitude,
+                  longitude: job.longitude,
+                }}
+                title={job.title}
+                description={job.description}
+                pinColor="red"
+              />
+            ) : null
+          )}
 
-          {jobs.High.map((job, index) => (
-            <Marker
-              key={`high-${index}`}
-              coordinate={{
-                latitude: job.latitude,
-                longitude: job.longitude,
-              }}
-              title={job.title}
-              description={job.description}
-              pinColor="orange"
-            />
-          ))}
+          {jobs.High.map((job, index) =>
+            job.latitude && job.longitude ? (
+              <Marker
+                key={`high-${index}`}
+                coordinate={{
+                  latitude: job.latitude,
+                  longitude: job.longitude,
+                }}
+                title={job.title}
+                description={job.description}
+                pinColor="orange"
+              />
+            ) : null
+          )}
 
+          {jobs.Standard.map((job, index) =>
+            job.latitude && job.longitude ? (
+              <Marker
+                key={`standard-${index}`}
+                coordinate={{
+                  latitude: job.latitude,
+                  longitude: job.longitude,
+                }}
+                title={job.title}
+                description={job.description}
+                pinColor="green"
+              />
+            ) : null
+          )}
+        </MapView>
 
-          {jobs.Standard.map((job, index) => (
-            <Marker
-              key={`standard-${index}`}
-              coordinate={{
-                latitude: job.latitude,
-                longitude: job.longitude,
-              }}
-              title={job.title}
-              description={job.description}
-              pinColor="green"
-            />
-          ))}
-        </MapView> */}
 
         <Text style={styles.jobsAround}>Jobs around...</Text>
 
@@ -440,6 +487,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: "#232222",
     position: "relative",
+    // overflow: "hidden"
   },
   linesContainer: {
     flexDirection: "row",
