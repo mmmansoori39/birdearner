@@ -1,79 +1,141 @@
-import { ImageBackground, StyleSheet, SafeAreaView, Image, View, TouchableOpacity, Text, Modal } from "react-native";
-import React, { useState, useEffect } from "react";
+import {
+  ImageBackground,
+  StyleSheet,
+  SafeAreaView,
+  Image,
+  View,
+  TouchableOpacity,
+  Text,
+  Modal,
+  Animated,
+} from "react-native";
+import React, { useState, useEffect, useRef } from "react";
 import offerBackground from "../assets/offerBackground.png";
 import egg from "../assets/egg.png";
 import nest from "../assets/nest.png";
 import tree from "../assets/tree.png";
+import brEgg from "../assets/brEgg.png";
 
-// Sample cashback offers (You can customize this)
-const offers = [
-  "10rs",
-  "50rs",
-  "0",
-  "25rs",
-  "10%<500rs",
-];
+const offers = ["10rs", "50rs", "0", "25rs", "15rs"];
 
 const OffersScreen = ({ navigation }) => {
-  const [eggStatus, setEggStatus] = useState([false, false, false, false, false]); // Tracks egg unlock status
+  const [eggStatus, setEggStatus] = useState([false, false, false, false, false]);
+  const [brokenEggs, setBrokenEggs] = useState([false, false, false, false, false]);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
   const [showVideoPopup, setShowVideoPopup] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
-  const [selectedEggIndex, setSelectedEggIndex] = useState(null);
 
-  // Function to handle egg clicks
+  // Create refs for the shake animations
+  const shakeAnimations = useRef(
+    Array(5)
+      .fill()
+      .map(() => new Animated.Value(0))
+  ).current;
+
+  useEffect(() => {
+    // Start shaking animations for all unbroken eggs
+    eggStatus.forEach((_, index) => {
+      if (!brokenEggs[index]) {
+        startShakeAnimation(index);
+      }
+    });
+  }, [brokenEggs]);
+
+  const startShakeAnimation = (index) => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(shakeAnimations[index], {
+          toValue: 1,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shakeAnimations[index], {
+          toValue: -1,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shakeAnimations[index], {
+          toValue: 0,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  const stopShakeAnimation = (index) => {
+    shakeAnimations[index].stopAnimation();
+  };
+
   const handleEggClick = (index) => {
-    // If the egg is unlocked, show offer, else show video popup
     if (eggStatus[index]) {
       const randomOffer = offers[Math.floor(Math.random() * offers.length)];
       setSelectedOffer(randomOffer);
-      setSelectedEggIndex(index);
       setShowOfferPopup(true);
+
+      const updatedBrokenEggs = [...brokenEggs];
+      updatedBrokenEggs[index] = true;
+      setBrokenEggs(updatedBrokenEggs);
+
+      // Stop shaking animation for the broken egg
+      stopShakeAnimation(index);
     } else {
       setShowVideoPopup(true);
     }
   };
 
-  // Function to close popups
   const closePopup = () => {
     setShowOfferPopup(false);
     setShowVideoPopup(false);
   };
 
-  // Function to mark the egg as unlocked (this would typically be tied to a project completion)
-  const unlockEgg = (eggIndex) => {
+  const unlockEgg = (index) => {
     const updatedEggStatus = [...eggStatus];
-    updatedEggStatus[eggIndex] = true;
+    updatedEggStatus[index] = true;
     setEggStatus(updatedEggStatus);
   };
 
-  // Reset the eggs at the end of the month (This can be triggered based on your system's time or a button)
-  const resetEggs = () => {
-    setEggStatus([false, false, false, false, false]);
+  const unlockAllEggs = () => {
+    setEggStatus([true, true, true, true, true]);
   };
-
-  useEffect(() => {
-    // This is just an example trigger, you can replace it with real-time data (e.g., when a project is completed).
-    unlockEgg(0); // Unlock first egg (e.g., after project completion)
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={offerBackground}
-        style={styles.offerBackground}
-        resizeMode="cover"
-      >
+      <ImageBackground source={offerBackground} style={styles.offerBackground} resizeMode="cover">
+        <TouchableOpacity style={styles.unlockAllButton} onPress={unlockAllEggs}>
+          <Text style={styles.unlockAllButtonText}>Unlock All Eggs</Text>
+        </TouchableOpacity>
         <Image source={tree} style={styles.tree} />
         {eggStatus.map((status, index) => (
           <React.Fragment key={index}>
-            <Image source={nest} style={[styles[`nest${index + 1}`]]} />
-            <TouchableOpacity
-              style={[styles[`egg${index + 1}`], status && styles.activeEgg]}
-              onPress={() => handleEggClick(index)}
+            <Image source={nest} style={styles[`nest${index + 1}`]} />
+            <Animated.View
+              style={[
+                styles[`egg${index + 1}`], brokenEggs[index] && styles[`brokenEgg${index + 1}`], 
+                {
+                  transform: [
+                    {
+                      translateX: brokenEggs[index]
+                        ? 0
+                        : shakeAnimations[index].interpolate({
+                            inputRange: [-1, 1],
+                            outputRange: [-5, 5],
+                          }),
+                    },
+                  ],
+                },
+              ]}
             >
-              <Image source={egg} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleEggClick(index)}
+                disabled={brokenEggs[index]}
+              >
+                <Image
+                  source={brokenEggs[index] ? brEgg : egg}
+                  style={brokenEggs[index] ? styles.sizeB : styles.size}
+                />
+              </TouchableOpacity>
+            </Animated.View>
           </React.Fragment>
         ))}
       </ImageBackground>
@@ -113,6 +175,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
+  unlockAllButton: {
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    backgroundColor: "#4C0183",
+    padding: 15,
+    borderRadius: 10,
+  },
+  unlockAllButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+
   offerBackground: {
     flex: 1,
     width: "100%",
@@ -123,6 +201,14 @@ const styles = StyleSheet.create({
     left: 110,
     top: 200,
   },
+  size: {
+    width: 50,
+    resizeMode: "contain",
+  },
+  sizeB: {
+    width: 70,
+    resizeMode: "contain",
+  },
   nest1: {
     position: "absolute",
     bottom: 160,
@@ -130,8 +216,8 @@ const styles = StyleSheet.create({
   },
   egg1: {
     position: "absolute",
-    bottom: 267,
-    right: 100,
+    bottom: 221,
+    right: 98,
   },
   nest2: {
     position: "absolute",
@@ -140,8 +226,8 @@ const styles = StyleSheet.create({
   },
   egg2: {
     position: "absolute",
-    bottom: 357,
-    left: 110,
+    bottom: 311,
+    left: 105,
   },
   nest3: {
     position: "absolute",
@@ -150,8 +236,8 @@ const styles = StyleSheet.create({
   },
   egg3: {
     position: "absolute",
-    bottom: 447,
-    right: 100,
+    bottom: 401,
+    right: 98,
   },
   nest4: {
     position: "absolute",
@@ -160,8 +246,8 @@ const styles = StyleSheet.create({
   },
   egg4: {
     position: "absolute",
-    bottom: 537,
-    left: 110,
+    bottom: 491,
+    left: 106,
   },
   nest5: {
     position: "absolute",
@@ -170,8 +256,8 @@ const styles = StyleSheet.create({
   },
   egg5: {
     position: "absolute",
-    top: 148,
-    left: 180,
+    top: 126,
+    left: 175,
   },
   activeEgg: {
     opacity: 1,
@@ -205,5 +291,31 @@ const styles = StyleSheet.create({
   popupButtonText: {
     color: "#fff",
     fontSize: 16,
+  },
+
+  brokenEgg1: {
+    position: "absolute",
+    bottom: 170,
+    right: 89,
+  },
+  brokenEgg2: {
+    position: "absolute",
+    bottom: 260,
+    left: 94,
+  },
+  brokenEgg3: {
+    position: "absolute",
+    bottom: 350,
+    right: 89,
+  },
+  brokenEgg4: {
+    position: "absolute",
+    bottom: 440,
+    left: 94,
+  },
+  brokenEgg5: {
+    position: "absolute",
+    top: 90,
+    left: 164,
   },
 });

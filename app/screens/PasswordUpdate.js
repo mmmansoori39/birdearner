@@ -34,25 +34,25 @@ const PasswordUpdateScreen = ({ navigation }) => {
       // Update password in Appwrite
       await account.updatePassword(newPassword, oldPassword);
 
-      if (userData?.role === "client") {
-        await databases.updateDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.clientCollectionId,
-          userData.$id,
-          {
-            password: confirmPassword,
-          }
-        );
-      } else {
-        await databases.updateDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.freelancerCollectionId,
-          userData.$id,
-          {
-            password: confirmPassword,
-          }
-        );
-      }
+      // if (userData?.role === "client") {
+      //   await databases.updateDocument(
+      //     appwriteConfig.databaseId,
+      //     appwriteConfig.clientCollectionId,
+      //     userData.$id,
+      //     {
+      //       password: confirmPassword,
+      //     }
+      //   );
+      // } else {
+      //   await databases.updateDocument(
+      //     appwriteConfig.databaseId,
+      //     appwriteConfig.freelancerCollectionId,
+      //     userData.$id,
+      //     {
+      //       password: confirmPassword,
+      //     }
+      //   );
+      // }
 
       Alert.alert("Success", "Password updated successfully.");
       navigation.goBack();

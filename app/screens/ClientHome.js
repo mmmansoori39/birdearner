@@ -19,6 +19,7 @@ import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
 import { differenceInDays } from "date-fns";
+import gifAnimation from "../assets/loading.gif";
 
 const placeholderImageURL = "https://picsum.photos/seed/";
 
@@ -69,6 +70,7 @@ const RenderServiceItem = React.memo(({ item, onPress, borderRadius }) => (
 
 const ClientHomeScreen = () => {
   const [search, setSearch] = useState("");
+  const [showGif, setShowGif] = useState(false);
   const router = useRouter();
   const [filteredFreelanceServices, setFilteredFreelanceServices] = useState(
     []
@@ -306,6 +308,15 @@ const ClientHomeScreen = () => {
     }, 1000);
   };
 
+  const handlePress = () => {
+    setShowGif(true);
+
+    setTimeout(() => {
+      setShowGif(false);
+      navigation.navigate("Offers");
+    }, 1000);
+  };
+
   const renderFreelanceService = useCallback(
     ({ item }) => <RenderServiceItem item={item} onPress={sendTitle} borderRadius={45} />,
     []
@@ -339,7 +350,21 @@ const ClientHomeScreen = () => {
             <Text style={styles.welcome}>Welcome</Text>
             <Text style={styles.how}>How’s the day!</Text>
           </View>
-          <TouchableOpacity
+          {showGif ? (
+            <Image source={gifAnimation} style={styles.gifStyle} />
+          ) : (
+            <TouchableOpacity style={styles.notificationIcon} onPress={handlePress}>
+              <Image
+                source={
+                  userData?.profile_photo
+                    ? { uri: userData.profile_photo }
+                    : require("../assets/profile.png")
+                }
+                style={styles.proileImage}
+              />
+            </TouchableOpacity>
+          )}
+          {/* <TouchableOpacity
             style={styles.notificationIcon}
             onPress={() => {
               navigation.navigate("Offers");
@@ -353,7 +378,7 @@ const ClientHomeScreen = () => {
               }
               style={styles.proileImage}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <View style={styles.line}></View>
@@ -598,6 +623,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 140
   },
+  gifStyle: {
+    // width: 10,
+    // height: 50,
+    resizeMode: "contain",
+    marginBottom: -5,
+    marginTop: -18,
+  },
   welcome: {
     fontSize: 25,
     fontWeight: "600",
@@ -664,11 +696,11 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 45,
-    shadowColor: "#000000", // Shadow color
-    shadowOffset: { width: 2, height: 4 }, // Shadow position
-    shadowOpacity: 0.2, // Shadow transparency (iOS)
-    shadowRadius: 4, // Shadow blur (iOS)
-    elevation: 3,
+    // shadowColor: "#000000", // Shadow color
+    // shadowOffset: { width: 2, height: 4 }, // Shadow position
+    // shadowOpacity: 0.2, // Shadow transparency (iOS)
+    // shadowRadius: 4, // Shadow blur (iOS)
+    // elevation: 3,
   },
   serviceImage: {
     width: 90,

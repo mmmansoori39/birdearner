@@ -90,7 +90,6 @@ const PaymentScreen = ({ navigation }) => {
         alert(`₹${addedAmount} added successfully! Your new wallet balance is ₹${newWalletAmount}.`);
       }
     } catch (error) {
-      console.error('Error updating wallet amount:', error);
       alert('Failed to update wallet. Please contact support.');
     }
   };
