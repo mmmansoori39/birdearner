@@ -44,8 +44,8 @@ export default function ProfileScreen({ navigation }) {
       const fullName = userData?.full_name
       const email = userData?.email
       const role = roleType
-      
-      navigation.navigate("DescribeRoleCom", {fullName, email, role})
+
+      navigation.navigate("DescribeRoleCom", { fullName, email, role })
     } catch (error) {
       console.error("Error setting up role:", error.message);
     }
@@ -146,32 +146,23 @@ export default function ProfileScreen({ navigation }) {
       <Modal
         visible={modalVisible}
         transparent={true}
-        onRequestClose={() => setModalVisible(false)} // Close on back button
+        onRequestClose={() => setModalVisible(false)}
       >
         <ImageViewer
-          imageUrls={images} // Array of images
-          enableSwipeDown={true} // Swipe down to close
+          imageUrls={images}
+          enableSwipeDown={true}
           onSwipeDown={() => setModalVisible(false)}
           renderIndicator={() => null}
           renderHeader={() => (
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
-              style={{
-                position: "absolute",
-                top: 30,
-                left: 20,
-                zIndex: 10,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                borderRadius: 20,
-                padding: 10,
-              }}
+              style={styles.modalHeader}
             >
               <FontAwesome name="arrow-left" size={24} color="#fff" />
             </TouchableOpacity>
           )}
         />
       </Modal>
-
 
       <ScrollView style={styles.container}
         refreshControl={
@@ -326,48 +317,48 @@ export default function ProfileScreen({ navigation }) {
         <Text style={styles.locSubTitle}>{formattedDate}</Text>
 
         {userData ? (
-        <>
-          {roleOptions?.freelancerData && roleOptions?.clientData ? (
-            <>
-              <TouchableOpacity
-                style={styles.editProfileButton}
-                onPress={() =>
-                  handleRoleSelection(
-                    userData.role === "freelancer"
-                      ? roleOptions.clientData
-                      : roleOptions.freelancerData
-                  )
-                }
-              >
-                <Text style={styles.buttonText}>
-                  Switch to{" "}
-                  {userData.role === "freelancer" ? "Client" : "Freelancer"}
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              {roleOptions?.freelancerData ? (
+          <>
+            {roleOptions?.freelancerData && roleOptions?.clientData ? (
+              <>
                 <TouchableOpacity
                   style={styles.editProfileButton}
-                  onPress={() => handleSetupRole("client")}
+                  onPress={() =>
+                    handleRoleSelection(
+                      userData.role === "freelancer"
+                        ? roleOptions.clientData
+                        : roleOptions.freelancerData
+                    )
+                  }
                 >
-                  <Text style={styles.buttonText}>Setup Client Profile</Text>
+                  <Text style={styles.buttonText}>
+                    Switch to{" "}
+                    {userData.role === "freelancer" ? "Client" : "Freelancer"}
+                  </Text>
                 </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={styles.editProfileButton}
-                  onPress={() => handleSetupRole("freelancer")}
-                >
-                  <Text style={styles.buttonText}>Setup Freelancer Profile</Text>
-                </TouchableOpacity>
-              )}
-            </>
-          )}
-        </>
-      ) : (
-        <Text style={styles.infoText}>No user data available</Text>
-      )}
+              </>
+            ) : (
+              <>
+                {roleOptions?.freelancerData ? (
+                  <TouchableOpacity
+                    style={styles.editProfileButton}
+                    onPress={() => handleSetupRole("client")}
+                  >
+                    <Text style={styles.buttonText}>Setup Client Profile</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.editProfileButton}
+                    onPress={() => handleSetupRole("freelancer")}
+                  >
+                    <Text style={styles.buttonText}>Setup Freelancer Profile</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <Text style={styles.infoText}>No user data available</Text>
+        )}
 
 
         {/* <TouchableOpacity
