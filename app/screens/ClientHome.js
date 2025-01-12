@@ -404,6 +404,7 @@ const ClientHomeScreen = () => {
                     onPress={() =>
                       openChat(receiverId, full_name, profile_photo, projectId)
                     }
+                    disabled={!jobDetails}
                   >
                     <View
                       key={index}
@@ -411,15 +412,20 @@ const ClientHomeScreen = () => {
                         styles.onGoItem,
                         {
                           borderWidth: 4,
-                          borderColor: index % 2 === 0 ? "#F81919" : "#1DCE44",
+                          borderColor: color,
                           borderRadius: 50,
+                          opacity: jobDetails ? 1 : 0.5,
                         },
                       ]}
                     >
-                      <Image
-                        source={{ uri: item.profile_photo }}
-                        style={styles.ongoingImage}
-                      />
+                      {jobDetails ? (
+                        <Image
+                          source={{ uri: profile_photo }}
+                          style={styles.ongoingImage}
+                        />
+                      ) : (
+                        <Text style={styles.placeholderText}>?</Text>
+                      )}
                     </View>
                   </TouchableOpacity>
                 );
@@ -869,6 +875,15 @@ const styles = StyleSheet.create({
   storyImage: { width: 74, height: 74, borderRadius: 50 },
   notiImage: { width: 55, height: 55, borderRadius: 50 },
   ongoingImage: { width: 70, height: 70, borderRadius: 50 },
+  placeholderText: {
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+    textAlign: "center",
+    // alignContent: "center",
+    fontSize: 36,
+    paddingTop: 10
+  },
   onGoItem: {
     marginRight: 8,
     marginTop: 15

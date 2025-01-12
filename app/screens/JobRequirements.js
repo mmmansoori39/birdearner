@@ -29,7 +29,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [jobTitle, setJobTitle] = useState("");
   const [freelancerType, setFrelancerType] = useState("");
-  const [jobType, setJobType] = useState("");
+  const [jobType, setJobType] = useState("Remote");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [services, setServices] = useState([]);
@@ -220,7 +220,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
           Alert.alert("Validation Error", "Please enter a valid job location.");
         }
       } else {
-        setJobLocation("india");
+        setJobLocation("India");
         await fetchCoordinates();
         if (latitude && longitude) {
           navigation.navigate("JobDetails", { formData });

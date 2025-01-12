@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import ImageViewer from "react-native-image-zoom-viewer";
 
@@ -11,10 +11,10 @@ const JobDetailsScreen = ({ route, navigation }) => {
 
   const openImageModal = (imageUri) => {
 
-    setImages([{ url: imageUri }]); 
+    setImages([{ url: imageUri }]);
     setModalVisible(true);
-  };  
- 
+  };
+
   const handleSubmit = () => {
     navigation.navigate("JobSubmissionTimmer", { formData });
   };
@@ -115,7 +115,7 @@ const JobDetailsScreen = ({ route, navigation }) => {
           <TouchableOpacity style={styles.conColor} onPress={handleSubmit} >
             <Text style={styles.applyButtonText}>Confirm Job</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.repColor} onPress={handleSubmit} >
+          <TouchableOpacity style={styles.repColor} onPress={() => Alert.alert("Report Job", "You have reported this job")} >
             <Text style={styles.applyButtonText}>Report Job</Text>
           </TouchableOpacity>
         </View>
