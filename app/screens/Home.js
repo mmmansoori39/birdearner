@@ -256,7 +256,7 @@ useEffect(() => {
         </View>
       </ScrollView>
       <View style={styles.stickyButton}>
-        <TouchableOpacity style={styles.chatIcon} onPress={() => navigation.navigate("Inbox")}>
+        <TouchableOpacity style={styles.chatIcon} onPress={() => navigation.navigate("Chatlist")}>
           <FontAwesome name="comments" size={28} color="#fff" />
         </TouchableOpacity>
       </View>

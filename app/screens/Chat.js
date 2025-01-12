@@ -14,6 +14,7 @@ import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 import { Query } from "react-native-appwrite";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from 'react-native-toast-message';
 
 const Chat = ({ route, navigation }) => {
   const { full_name, profileImage, projectId, receiverId } = route.params;
@@ -31,6 +32,22 @@ const Chat = ({ route, navigation }) => {
 
   const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
 
+  const handleError = (message) => {
+    Toast.show({
+      type: 'error',
+      text1: 'Error',
+      text2: message,
+    });
+  };
+
+  const handleSuccess = (message) => {
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: message,
+    });
+  };
+
   useEffect(() => {
     const fetchProjectDetails = async () => {
       try {
@@ -41,7 +58,7 @@ const Chat = ({ route, navigation }) => {
         );
         setJob(response);
       } catch (err) {
-        console.error("Error fetching project details:", err);
+        handleError("Error fetching project details")
       } finally {
         setLoading(false);
       }
@@ -118,7 +135,7 @@ const Chat = ({ route, navigation }) => {
         );
         setMessages(sortedMessages);
       } catch (err) {
-        console.error("Error fetching messages:", err);
+        handleError("Please connect to the network")
       }
     };
 
@@ -224,17 +241,22 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
+  const dotMapData = job?.assigned_freelancer === null ?
+    ["Cancel this job", "Report this chat", "Block", "View Profile"] :
+    ["Job Details", "Mark Unread", "Star"]
+
+
   // Handle dropdown menu actions
   const handleMenuAction = (action) => {
     switch (action) {
       case "Job Details":
-        navigation.navigate("JobDetailsChat", {projectId})
+        navigation.navigate("JobDetailsChat", { projectId })
         break;
       case "Mark Unread":
         Alert.alert("Marked Unread", "The chat has been marked as unread.");
         break;
       case "Star":
-        navigation.navigate("ReviewGive", {receiverId})
+        navigation.navigate("ReviewGive", { receiverId })
         break;
       case "Delete":
         Alert.alert("Deleted", "The chat has been deleted.");
@@ -376,7 +398,7 @@ const Chat = ({ route, navigation }) => {
 
           // </Modal>
           <View style={styles.menuContainer}>
-            {["Job Details", "Mark Unread", "Star", "Delete", "Block"].map((action) => (
+            {dotMapData.map((action) => (
               <TouchableOpacity
                 key={action}
                 style={styles.menuItem}
@@ -443,12 +465,14 @@ const Chat = ({ route, navigation }) => {
 
       {/* Delete Confirmation Modal */}
       {renderDeleteConfirmation()}
+
+      <Toast />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" , paddingTop: 30},
+  container: { flex: 1, backgroundColor: "#fff", paddingTop: 30 },
   header: {
     padding: 15,
     // backgroundColor: "#f4f4f4",
@@ -553,9 +577,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  actionButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10, gap: 55, marginTop: 25 },
-  acceptButton: { backgroundColor: "#4C0183", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 20 },
-  rejectButton: { backgroundColor: "#A00B0B", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 20 },
+  actionButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10, gap: 10, marginTop: 25 },
+  acceptButton: { backgroundColor: "#4C0183", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
+  rejectButton: { backgroundColor: "#A00B0B", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
   buttonText: { color: "#fff", textAlign: "center", fontSize: 16, fontWeight: "600", },
 
   limit: {

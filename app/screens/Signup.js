@@ -56,7 +56,7 @@ const Signup = ({ navigation }) => {
       showToast("success", "Success", "User registered successfully!");
 
       // Navigate to the DescribeRole screen
-      navigation.navigate("DescribeRole", { fullName, email, password, role });
+      navigation.navigate("DescribeRole", { fullName, email, role });
     } catch (error) {
       // Detailed error handling
       if (error.code === 409) {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 44,
     backgroundColor: "#fff",
-    borderRadius: 25,
+    borderRadius: 10,
     paddingHorizontal: 20,
     marginBottom: 20,
     fontSize: 16,
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     // width: "100%",
     height: 50,
     backgroundColor: "#fff",
-    borderRadius: 25,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,

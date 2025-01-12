@@ -48,11 +48,14 @@ const categorizeJobs = (jobs) => {
   });
 };
 
-const RenderServiceItem = React.memo(({ item, onPress }) => (
+const RenderServiceItem = React.memo(({ item, onPress, borderRadius }) => (
   <TouchableOpacity onPress={() => onPress(item)}>
     <View style={styles.serviceCard}>
       <View style={styles.imageShadow}>
-        <Image source={{ uri: item.image }} style={styles.serviceImage} />
+        <Image
+          source={{ uri: item.image }}
+          style={[styles.serviceImage, { borderRadius }]}
+        />
       </View>
       <View style={styles.serviceTextlay}>
         <Text style={styles.serviceText} numberOfLines={2} ellipsizeMode="tail">
@@ -62,6 +65,7 @@ const RenderServiceItem = React.memo(({ item, onPress }) => (
     </View>
   </TouchableOpacity>
 ));
+
 
 const ClientHomeScreen = () => {
   const [search, setSearch] = useState("");
@@ -302,10 +306,16 @@ const ClientHomeScreen = () => {
     }, 1000);
   };
 
-  const renderService = useCallback(
-    ({ item }) => <RenderServiceItem item={item} onPress={sendTitle} />,
+  const renderFreelanceService = useCallback(
+    ({ item }) => <RenderServiceItem item={item} onPress={sendTitle} borderRadius={45} />,
     []
   );
+
+  const renderHouseholdService = useCallback(
+    ({ item }) => <RenderServiceItem item={item} onPress={sendTitle} borderRadius={7} />,
+    []
+  );
+
 
   return (
     <SafeAreaView
@@ -409,7 +419,7 @@ const ClientHomeScreen = () => {
           {/* Freelance Services */}
           <FlatList
             data={filteredFreelanceServices}
-            renderItem={renderService}
+            renderItem={renderFreelanceService}
             keyExtractor={(item) => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -432,7 +442,7 @@ const ClientHomeScreen = () => {
           {/* Household Services */}
           <FlatList
             data={filteredHouseholdServices}
-            renderItem={renderService}
+            renderItem={renderHouseholdService}
             keyExtractor={(item) => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -452,6 +462,7 @@ const ClientHomeScreen = () => {
             )}
           />
         </View>
+
 
         {/* Job Notifications */}
         <View style={styles.sectionContainer}>
@@ -584,7 +595,8 @@ const styles = StyleSheet.create({
     // backgroundColor: "red",
     padding: 4,
     paddingHorizontal: 20,
-    alignItems: "center"
+    alignItems: "center",
+    gap: 140
   },
   welcome: {
     fontSize: 25,
@@ -659,9 +671,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   serviceImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 45,
+    width: 90,
+    height: 90,
     shadowColor: "#000000", // Shadow color
     shadowOffset: { width: 2, height: 4 }, // Shadow position
     shadowOpacity: 0.2, // Shadow transparency (iOS)

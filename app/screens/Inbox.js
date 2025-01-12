@@ -151,31 +151,36 @@ const Inbox = () => {
     const projectData = item.projectData || {};
     const oppositeParticipantName = item.oppositeParticipantName || "Unknown";
     const lastMessage = item.lastMessage || "No messages yet";
-    const profileImage = item.profileImage || require("../assets/profile.png");
+    const profileImage =
+      item?.profileImage && typeof item.profileImage === "string"
+        ? { uri: item.profileImage }
+        : require("../assets/profile.png");
 
     return (
-      <TouchableOpacity
-        style={styles.jobContainer}
-        onPress={() =>
-          navigation.navigate("Chat", {
-            receiverId: item.oppositeParticipantId,
-            full_name: oppositeParticipantName,
-            profileImage,
-            projectId: item.projectId,
-          })
-        }
-      >
-        <Image source={profileImage} style={styles.avatar} />
-        <View style={styles.jobContent}>
-          <Text style={styles.jobTitle} numberOfLines={1}>
-            {projectData.title || "Untitled"}
-          </Text>
-          <Text style={styles.jobStatus}>
-            @{oppositeParticipantName}: {lastMessage}
-          </Text>
-        </View>
-        <View style={[styles.statusIndicator, { backgroundColor: "red" }]} />
-      </TouchableOpacity>
+      <View>
+        <TouchableOpacity
+          style={styles.jobContainer}
+          onPress={() =>
+            navigation.navigate("Chat", {
+              receiverId: item.oppositeParticipantId,
+              full_name: oppositeParticipantName,
+              profileImage,
+              projectId: item.projectId,
+            })
+          }
+        >
+          <Image source={profileImage} style={styles.avatar} />
+          <View style={styles.jobContent}>
+            <Text style={styles.jobTitle} numberOfLines={1}>
+              {projectData.title || "Untitled"}
+            </Text>
+            <Text style={styles.jobStatus}>
+              @{oppositeParticipantName}: {lastMessage}
+            </Text>
+          </View>
+          <View style={[styles.statusIndicator, { backgroundColor: "red" }]} />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -213,7 +218,7 @@ const Inbox = () => {
   return (
     <View style={styles.container}>
       <View style={styles.main}>
-        <TouchableOpacity onPress={() => navigation.goBack() } style={styles.backButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.header}>Inbox</Text>

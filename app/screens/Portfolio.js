@@ -18,11 +18,13 @@ import {
   account,
 } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useAuth } from "../context/AuthContext";
 
 const PortfolioScreen = ({ navigation, route }) => {
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeTnC, setAgreeTnC] = useState(false);
+  const {checkUserSession} = useAuth();
   const { role } = route.params;
 
   const showToast = (type, title, message) => {
@@ -155,13 +157,21 @@ const PortfolioScreen = ({ navigation, route }) => {
       );
 
       showToast("success", "Success", "Portfolio submitted successfully!");
+      await checkUserSession();
       navigation.navigate("Tabs", { screen: 'Home' })
     } catch (error) {
       showToast("error", "Error", `Failed to submit: ${error.message}`);
     }
   };
 
-  const skipScreen = () => navigation.navigate("Tabs", { screen: 'Home' });
+  const skipScreen = async () => {
+    try {
+      await checkUserSession();
+      navigation.navigate("Tabs", { screen: "Home" });
+    } catch (error) {
+      console.error("Error during session check:", error.message);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -327,7 +337,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingHorizontal: 8,
     paddingBottom: 15,
-    borderRadius: 12,
+    borderRadius: 10,
     marginBottom: 15,
   },
   boldText: {
@@ -352,7 +362,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff9800",
     paddingHorizontal: 10,
     paddingVertical: 14,
-    borderRadius: 30,
+    borderRadius: 10,
     alignItems: "center",
     marginTop: 25
   },
@@ -384,7 +394,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3b006b",
     paddingHorizontal: 9,
     paddingVertical: 5,
-    borderRadius: 15,
+    borderRadius: 8,
   },
   removeButtonText: {
     color: "#ffffff",
@@ -414,7 +424,7 @@ const styles = StyleSheet.create({
     width: "32%",
     height: 40,
     backgroundColor: "#fff",
-    borderRadius: 25,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },

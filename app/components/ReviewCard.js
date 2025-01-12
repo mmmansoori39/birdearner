@@ -4,7 +4,7 @@ import { FontAwesome } from "@expo/vector-icons";
 
 export default function ReviewCard({
   reviewerName,
-  reviewerState,
+  reviewerstate,
   reviewerCountry,
   starRating,
   reviewText,
@@ -65,15 +65,15 @@ export default function ReviewCard({
           <View style={styles.reviewerInfo}>
             <Text style={styles.reviewerName}>{reviewerName}</Text>
             <Text style={styles.reviewerLocation}>
-              {reviewerState}, {reviewerCountry}
+              {reviewerstate}, {reviewerCountry}
             </Text>
             <View style={styles.starRating}>{renderStars()}</View>
           </View>
         </View>
         <FontAwesome
-          name="flag"
+          name="warning"
           size={20}
-          color="black"
+          color="#FF3B30"
           style={styles.flagIcon}
         />
       </View>

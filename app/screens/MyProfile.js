@@ -20,7 +20,7 @@ import { appwriteConfig, databases } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
 
 export default function ProfileScreen({ navigation }) {
-  const { user, loading, userData, logout, setUserData } = useAuth();
+  const { user, loading, userData, logout, setUserData, roleOptions, handleRoleSelection } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -37,6 +37,19 @@ export default function ProfileScreen({ navigation }) {
     month: "long",
     day: "numeric",
   });
+
+  const handleSetupRole = async (roleType) => {
+    try {
+
+      const fullName = userData?.full_name
+      const email = userData?.email
+      const role = roleType
+      
+      navigation.navigate("DescribeRoleCom", {fullName, email, role})
+    } catch (error) {
+      console.error("Error setting up role:", error.message);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -312,15 +325,59 @@ export default function ProfileScreen({ navigation }) {
         <Text style={styles.locTitle}>Member Since</Text>
         <Text style={styles.locSubTitle}>{formattedDate}</Text>
 
-        {/* Edit Profile Button */}
-        <TouchableOpacity
+        {userData ? (
+        <>
+          {roleOptions?.freelancerData && roleOptions?.clientData ? (
+            <>
+              <TouchableOpacity
+                style={styles.editProfileButton}
+                onPress={() =>
+                  handleRoleSelection(
+                    userData.role === "freelancer"
+                      ? roleOptions.clientData
+                      : roleOptions.freelancerData
+                  )
+                }
+              >
+                <Text style={styles.buttonText}>
+                  Switch to{" "}
+                  {userData.role === "freelancer" ? "Client" : "Freelancer"}
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {roleOptions?.freelancerData ? (
+                <TouchableOpacity
+                  style={styles.editProfileButton}
+                  onPress={() => handleSetupRole("client")}
+                >
+                  <Text style={styles.buttonText}>Setup Client Profile</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.editProfileButton}
+                  onPress={() => handleSetupRole("freelancer")}
+                >
+                  <Text style={styles.buttonText}>Setup Freelancer Profile</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <Text style={styles.infoText}>No user data available</Text>
+      )}
+
+
+        {/* <TouchableOpacity
           style={styles.editProfileButton}
           onPress={() => {
             navigation.navigate("Settings");
           }}
         >
           <Text style={styles.buttonText}>Edit Your Profile</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Deactivate Account Link */}
         <TouchableOpacity
