@@ -28,6 +28,8 @@ const Chat = ({ route, navigation }) => {
   const [characterLimit, setCharacterLimit] = useState(0);
   const [projectStatus, setProjectStatus] = useState("pending");
   const [job, setJob] = useState(null);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState(null);
 
 
   const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
@@ -175,7 +177,7 @@ const Chat = ({ route, navigation }) => {
         setMessages((prev) => [...prev, newMessage]);
         setInput("");
       } catch (err) {
-        console.error("Error sending message:", err);
+        Alert.alert("Error sending message:", err)
       }
     }
   };
@@ -193,7 +195,7 @@ const Chat = ({ route, navigation }) => {
       );
       setSelectedMessage(null); // Close modal after deletion
     } catch (err) {
-      console.error("Error deleting message:", err);
+      Alert.alert("Error deleting message:", err)
     }
   };
 
@@ -243,7 +245,7 @@ const Chat = ({ route, navigation }) => {
 
   const dotMapData = job?.assigned_freelancer === null ?
     ["Cancel this job", "Report this chat", "Block", "View Profile"] :
-    ["Job Details", "Mark Unread", "Star"]
+    ["Job Details", "Mark Unread", "Star", "Review", "View Profile"]
 
 
   // Handle dropdown menu actions
@@ -255,7 +257,7 @@ const Chat = ({ route, navigation }) => {
       case "Mark Unread":
         Alert.alert("Marked Unread", "The chat has been marked as unread.");
         break;
-      case "Star":
+      case "Review":
         navigation.navigate("ReviewGive", { receiverId })
         break;
       case "Delete":
@@ -264,6 +266,12 @@ const Chat = ({ route, navigation }) => {
       case "Block":
         Alert.alert("Blocked", "The user has been blocked.");
         break;
+      case "View Profile":
+        navigation.navigate("ProfileScreen", { receiverId });
+        break;
+      case "Report this chat":
+        setReportModalVisible(true);
+        break;
       default:
         break;
     }
@@ -271,6 +279,11 @@ const Chat = ({ route, navigation }) => {
   };
 
 
+  const handleReportSelect = (reason) => {
+    setSelectedReportReason(reason);
+    Alert.alert("Reported", `This chat has been reported for: ${reason}`);
+    setReportModalVisible(false); // Close the modal after reporting
+  };
 
   // Render individual message
   const renderMessage = ({ item }) => {
@@ -283,7 +296,7 @@ const Chat = ({ route, navigation }) => {
 
     return (
       <TouchableOpacity
-        onLongPress={handleLongPress}
+        // onLongPress={handleLongPress}
         style={[
           styles.messageContainer,
           isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage,
@@ -329,6 +342,39 @@ const Chat = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+      <Modal
+        visible={reportModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setReportModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View style={{ width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10 }}>
+            <Text style={{ fontSize: 18, marginBottom: 10 }}>Select a reason for reporting</Text>
+            <TouchableOpacity onPress={() => handleReportSelect("Bullying")} style={{ paddingVertical: 10 }}>
+              <Text>Bullying</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleReportSelect("Unwanted Content")} style={{ paddingVertical: 10 }}>
+              <Text>Unwanted Content</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleReportSelect("Violence")} style={{ paddingVertical: 10 }}>
+              <Text>Violence</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleReportSelect("Scam")} style={{ paddingVertical: 10 }}>
+              <Text>Scam</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleReportSelect("Fraud")} style={{ paddingVertical: 10 }}>
+              <Text>Fraud</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setReportModalVisible(false)}
+              style={{ marginTop: 20, backgroundColor: 'red', paddingVertical: 10, alignItems: 'center', borderRadius: 5 }}
+            >
+              <Text style={{ color: 'white' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
