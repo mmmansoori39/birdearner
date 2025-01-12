@@ -7,7 +7,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -19,10 +20,6 @@ const AppliersScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const { title, freelancersId, color, item, projectId } = route.params;
   const [refreshing, setRefreshing] = useState(false);
-
-
-  console.log(freelancersId);
-
 
   useEffect(() => {
     if (freelancersId.length === 0) {
@@ -43,7 +40,7 @@ const AppliersScreen = ({ navigation, route }) => {
               );
               return response;
             } catch (error) {
-              console.error(`Failed to fetch freelancer with ID ${id}:`, error);
+              Alert.alert(`Failed to fetch freelancer with ID ${id}:`, error)
               return null;
             }
           })
@@ -55,7 +52,7 @@ const AppliersScreen = ({ navigation, route }) => {
         );
         setFreelancers(validProfiles);
       } catch (error) {
-        console.error("Failed to fetch freelancers:", error);
+        Alert.alert("Failed to fetch freelancers:", error)
       } finally {
         setLoading(false);
       }
@@ -87,9 +84,9 @@ const AppliersScreen = ({ navigation, route }) => {
           }}
         >
           <Image
-            source={{
-              uri: item.profile_photo || "https://via.placeholder.com/150",
-            }}
+            source={
+              item?.profile_photo ? { uri: item?.profile_photo } : require("../assets/profile.png")
+            }
             style={styles.avatar}
           />
           <View style={styles.jobContent}>
@@ -97,7 +94,7 @@ const AppliersScreen = ({ navigation, route }) => {
               {title}
             </Text>
             <Text style={styles.freelancerName}>
-              Name: {item.full_name || "N/A"}
+              Name: {item?.full_name || "N/A"}
             </Text>
           </View>
           <View style={[styles.statusIndicator, { backgroundColor: color }]} />
@@ -176,7 +173,7 @@ const styles = StyleSheet.create({
   noAppliersText: { fontSize: 18, color: "#6e6e6e", marginBottom: 20 },
   goBackText: { fontSize: 16, marginLeft: 8, color: "black" },
   main: {
-    marginTop: 25,
+    marginTop: 45,
     marginBottom: 20,
     display: "flex",
     flexDirection: "row",
