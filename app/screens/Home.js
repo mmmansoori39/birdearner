@@ -41,8 +41,8 @@ const HomeScreen = () => {
 
           const jobs = await Promise.all(jobPromises);
 
-          const completedCount = jobs.filter((job) => job.completed_status === true).length;
-          const activeCount = jobs.filter((job) => job.completed_status === false || job.completed_status === null).length;
+          const completedCount = jobs.filter((job) => job?.completed_status === true).length;
+          const activeCount = jobs.filter((job) => job?.completed_status === false || job?.completed_status === null).length;
 
           setCompletedOrders(completedCount);
           setActiveOrders(activeCount);
