@@ -10,20 +10,24 @@ import {
 } from "react-native";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { Query } from "react-native-appwrite";
 
 const Inbox = () => {
   const [chatThreads, setChatThreads] = useState([]);
+  const [unchatThreads, setunChatThreads] = useState([]);
+  const [starStatus, setStarStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const isDataFetched = useRef(false); // To track if data has been fetched already
+  const isDataFetched = useRef(false);
   const { userData } = useAuth();
   const navigation = useNavigation()
 
   // Load chat threads
+  // Load chat threads
   const fetchChatThreads = async () => {
-    if (isDataFetched.current) return; // Prevent re-fetching if data is already fetched
+    if (isDataFetched.current) return;
     setLoading(true);
     setError(false);
     try {
@@ -47,8 +51,7 @@ const Inbox = () => {
       const oppositeParticipants = await Promise.all(
         uniqueThreads.map(async (thread) => {
           const [projectId, sender, receiver] = thread.split("-");
-          const otherUserId =
-            sender === userData.$id ? receiver : sender;
+          const otherUserId = sender === userData.$id ? receiver : sender;
 
           try {
             const response = await databases.getDocument(
@@ -82,11 +85,15 @@ const Inbox = () => {
 
             return { projectId, title: projectData.title, projectData };
           } catch (error) {
-            console.error(`Failed to fetch project data for ${projectId}:`, error);
             return { projectId, title: "Untitled" };
           }
         })
       );
+
+      setunChatThreads(uniqueThreads)
+
+      // Fetch star data
+      const starredData = await fetchStarData(uniqueThreads, userData.$id);
 
       const chatThreads = uniqueThreads.map((thread) => {
         const [projectId, sender, receiver] = thread.split("-");
@@ -116,6 +123,8 @@ const Inbox = () => {
           (project) => project.projectId === projectId
         );
 
+        const starData = starredData.find((data) => data.thread === thread);
+
         return {
           projectId,
           ...latestMessage,
@@ -130,18 +139,75 @@ const Inbox = () => {
             ? oppositeParticipant.participant.profile_photo
             : null,
           projectData: projectTitle,
+          isStar: starData ? starData.isStar : false,
         };
       });
 
       setChatThreads(chatThreads);
-      isDataFetched.current = true; // Mark as data fetched
+      isDataFetched.current = true;
     } catch (err) {
-      console.error("Error fetching chat threads:", err);
       setError(true);
     } finally {
       setLoading(false);
     }
   };
+
+  // Function to fetch star data for chat threads
+  const fetchStarData = async (threads, currentUserId) => {
+    try {
+      const starData = await Promise.all(
+        threads.map(async (thread) => {
+          const [projectId, sender, receiver] = thread.split("-");
+          const oppositeUserId = sender === currentUserId ? receiver : sender;
+
+          const documents = await databases.listDocuments(
+            appwriteConfig.databaseId,
+            appwriteConfig.blockedAndStarDataCollectionId,
+            [
+              Query.equal("currentUserId", currentUserId),
+              Query.equal("oppositeUserId", oppositeUserId),
+              Query.equal("projectId", projectId),
+              Query.equal("statusValue", "star"),
+            ]
+          );
+
+          return { thread, isStar: documents.total > 0 };
+        })
+      );
+
+      return starData;
+    } catch (error) {
+      return threads.map((thread) => ({ thread, isStar: false }));
+    }
+  };
+
+  const fetchAndUpdateStarData = async () => {
+    const starData = await fetchStarData(unchatThreads, userData.$id);
+
+    const updatedStarStatus = starData.reduce((acc, { thread, isStar }) => {
+      acc[thread] = isStar;
+      return acc;
+    }, {});
+
+
+    setStarStatus((prevState) => {
+      const newState = { ...prevState, ...updatedStarStatus };
+      if (JSON.stringify(newState) !== JSON.stringify(prevState)) {
+        return newState;
+      }
+      return prevState;
+    });
+  };
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+    fetchAndUpdateStarData();
+    }, [navigation, userData?.$id])
+  )
+
+
+
 
   useEffect(() => {
     fetchChatThreads();
@@ -156,6 +222,10 @@ const Inbox = () => {
         ? { uri: item.profileImage }
         : require("../assets/profile.png");
 
+    const threadKey = `${item.projectId}-${item.sender}-${item.receiver}`;
+
+    const isStar = starStatus[threadKey] || false;
+    
     return (
       <View>
         <TouchableOpacity
@@ -178,11 +248,15 @@ const Inbox = () => {
               @{oppositeParticipantName}: {lastMessage}
             </Text>
           </View>
+          {item?.isStar && (
+            <MaterialIcons name="star" size={22} color={"#441752"} />
+          )}
           <View style={[styles.statusIndicator, { backgroundColor: "red" }]} />
         </TouchableOpacity>
       </View>
     );
   };
+
 
   if (loading) {
     return (
