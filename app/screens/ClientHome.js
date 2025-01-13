@@ -172,7 +172,7 @@ const ClientHomeScreen = () => {
         setOngoingJobs(jobsWithColor);
         setCombinedData(finalData);
       } catch (error) {
-        console.error("Error fetching ongoing jobs:", error.message);
+        Alert.alert("Error fetching ongoing jobs:", error.message)
       }
     };
 

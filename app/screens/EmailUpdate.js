@@ -62,7 +62,6 @@ const EmailUpdateScreen = ({ navigation }) => {
       Alert.alert("Success", "Email updated successfully");
       navigation.goBack();
     } catch (error) {
-      console.error("Error updating email:", error);
       Alert.alert("Error", "Failed to update email. Please try again.");
     }
   };

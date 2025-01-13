@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -33,7 +34,7 @@ const WalletScreen = ({ navigation, route }) => {
 
         setHistory(sortedDocuments);
       } catch (error) {
-        console.error("Failed to fetch reviews:", error.message || error);
+        Alert.alert("Failed to fetch reviews")
       }
     };
 

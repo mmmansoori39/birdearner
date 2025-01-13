@@ -34,7 +34,7 @@ export default function ReviewsScreen({ navigation }) {
     try {
       setData(userData)
     } catch (error) {
-      console.error("Failed to fetch freelancer data:", error);
+      Alert.alert("Failed to fetch freelancer data")
     } finally {
       setLoadingProfile(false);
     }
@@ -102,7 +102,7 @@ export default function ReviewsScreen({ navigation }) {
                 country: giverResponse.country,
               };
             } catch (giverError) {
-              console.error("Error fetching giver data:", giverError);
+              Alert.alert("Error fetching giver data")
               return review; // Return review without giver info if fetch fails
             }
           })
@@ -110,7 +110,7 @@ export default function ReviewsScreen({ navigation }) {
 
         setReviews(reviewsWithGiverData); // Update state with enriched reviews
       } catch (error) {
-        console.error("Failed to fetch reviews:", error.message || error);
+        Alert.alert("Failed to fetch reviews")
       }
     };
 

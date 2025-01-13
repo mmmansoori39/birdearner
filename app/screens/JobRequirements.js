@@ -99,7 +99,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
         const roles = response.documents.map((doc) => doc.role).flat();
         setServices(roles);
       } catch (error) {
-        console.error("Error fetching services:", error);
+        Alert.alert("Error fetching services:", error)
       }
     }
     fetchServices();
@@ -118,7 +118,6 @@ const JobRequirementsScreen = ({ navigation, route }) => {
         Alert.alert("Error", "Unable to fetch coordinates. Please try again.");
       }
     } catch (error) {
-      console.log(error.message);
       Alert.alert("Error", `Failed to fetch coordinates: ${error.message}`);
     }
   };

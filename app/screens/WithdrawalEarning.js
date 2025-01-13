@@ -32,8 +32,7 @@ const WithdrawalEarningScreen = ({ navigation }) => {
 
   const handleAmountChange = (value) => {
     const numericValue = parseFloat(value);
-    console.log(warning);
-
+  
     if (isNaN(numericValue) || numericValue < 0) {
       setWarning("Please enter a valid amount.");
       setAmount("");
@@ -89,7 +88,6 @@ const WithdrawalEarningScreen = ({ navigation }) => {
       navigation.navigate("Wallet");
 
     } catch (error) {
-      console.log(error)
       handleError("Failed to submit withdrawal request.");
     }
   };

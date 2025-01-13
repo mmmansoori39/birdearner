@@ -57,7 +57,6 @@ const JobSubmissionTimmerScreen = ({ route, navigation }) => {
       });
       setSubmitted(true);
     } catch (error) {
-      console.error("Error updating details:", error);
       Alert.alert("Error", `Failed to update details: ${error.message}`);
     }
   };

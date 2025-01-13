@@ -34,12 +34,10 @@ const PaymentScreen = ({ navigation }) => {
       };
 
       const paymentData = await RazorpayCheckout.open(options);
-      console.log(`Payment successful: ${paymentData.razorpay_payment_id}`);
 
       await updateWalletAmount(amount, paymentData.razorpay_payment_id);
       setPaymentSuccess(true);
     } catch (error) {
-      console.error('Payment error:', error);
       alert('Payment failed. Please try again.');
     }
   };

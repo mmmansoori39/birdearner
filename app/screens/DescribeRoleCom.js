@@ -187,8 +187,6 @@ const DescribeRoleCom = ({ navigation, route }) => {
       showToast("success", `${role} details saved successfully.`);
       navigation.navigate("TellUsAboutYouCom", { role });
     } catch (error) {
-        console.log(error);
-        
       showToast("error", `Error saving details: ${error.message}`);
     }
   };

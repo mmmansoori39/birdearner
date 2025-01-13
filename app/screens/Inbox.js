@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
@@ -63,10 +64,8 @@ const Inbox = () => {
             );
             return { projectId, otherUserId, participant: response };
           } catch (error) {
-            console.error(
-              `Failed to fetch participant with ID ${otherUserId}:`,
-              error
-            );
+            Alert.alert(`Failed to fetch participant with ID ${otherUserId}:`,
+              error)
             return null;
           }
         })
@@ -202,7 +201,7 @@ const Inbox = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-    fetchAndUpdateStarData();
+      fetchAndUpdateStarData();
     }, [navigation, userData?.$id])
   )
 
@@ -225,7 +224,7 @@ const Inbox = () => {
     const threadKey = `${item.projectId}-${item.sender}-${item.receiver}`;
 
     const isStar = starStatus[threadKey] || false;
-    
+
     return (
       <View>
         <TouchableOpacity

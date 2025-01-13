@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
@@ -29,7 +29,7 @@ const JobDetailsChatScreen = ({ route, navigation }) => {
         setJob(jobDoc)
 
       } catch (error) {
-        console.error("Error job status:", error);
+        Alert.alert("Error job status:", error)
       }
     };
 
@@ -47,7 +47,7 @@ const JobDetailsChatScreen = ({ route, navigation }) => {
         }
 
       } catch (error) {
-        console.error("Error checking flagged status:", error);
+        Alert.alert("Error checking flagged status:", error)
       }
     };
 
@@ -93,7 +93,7 @@ const JobDetailsChatScreen = ({ route, navigation }) => {
       );
 
     } catch (error) {
-      console.error("Error updating flags:", error);
+      Alert.alert("Error updating flags:", error)
     }
   };
 

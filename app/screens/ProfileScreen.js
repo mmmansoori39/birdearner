@@ -9,7 +9,8 @@ import {
     ImageBackground,
     ActivityIndicator,
     Modal,
-    RefreshControl
+    RefreshControl,
+    Alert
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -50,7 +51,7 @@ export default function ProfileScreen({ route, navigation }) {
             );
             setProfileData(profileDoc);
         } catch (error) {
-            console.error("Error fetching profile data:", error);
+            Alert.alert("Error fetching profile data")
         } finally {
             setLoadingProfile(false);
         }
@@ -77,7 +78,7 @@ export default function ProfileScreen({ route, navigation }) {
             setImages([{ url: imageUri }]);
             setModalVisible(true);
         } else {
-            console.log("No image URI provided");
+            Alert.alert("No image URI provided")
         }
     };
 

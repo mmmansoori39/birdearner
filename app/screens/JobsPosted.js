@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
@@ -65,7 +65,7 @@ const JobsPostedScreen = ({ navigation }) => {
         setJobs(categorizedJobs);
       }
     } catch (err) {
-      console.error('Failed to fetch jobs:', err);
+      Alert.alert('Failed to fetch jobs:', err)
       setError(true);
     } finally {
       setLoading(false);

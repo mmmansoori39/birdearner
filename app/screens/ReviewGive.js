@@ -78,7 +78,7 @@ const ReviewGive = ({ navigation, route }) => {
                 }
             );
         } catch (error) {
-            console.error("Error updating freelancer XP and level:", error);
+            Alert.alert("Error updating freelancer XP and level")
         }
     };
 
@@ -111,7 +111,6 @@ const ReviewGive = ({ navigation, route }) => {
             Alert.alert("Success", "Review submitted successfully!");
             navigation.goBack();
         } catch (error) {
-            console.error("Error submitting review:", error);
             Alert.alert("Error", "Failed to submit review. Please try again.");
         }
     };

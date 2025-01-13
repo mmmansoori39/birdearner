@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
@@ -42,7 +43,7 @@ const AvailabilityScreen = ({ navigation }) => {
       }
 
     } catch (error) {
-      console.error("Error updating availability:", error);
+      Alert.alert("Error updating availability:", error)
     }
   };
 

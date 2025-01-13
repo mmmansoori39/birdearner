@@ -10,7 +10,8 @@ import {
   ActivityIndicator,
   Share,
   Modal,
-  RefreshControl
+  RefreshControl,
+  Alert
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,7 +48,7 @@ export default function ProfileScreen({ navigation }) {
 
       navigation.navigate("DescribeRoleCom", { fullName, email, role })
     } catch (error) {
-      console.error("Error setting up role:", error.message);
+      Alert.alert("Error setting up role:", error.message)
     }
   };
 
@@ -55,7 +56,7 @@ export default function ProfileScreen({ navigation }) {
     try {
       setData(userData);
     } catch (error) {
-      console.error("Failed to fetch freelancer data:", error);
+      Alert.alert("Failed to fetch freelancer data:", error)
     } finally {
       setLoadingProfile(false);
     }

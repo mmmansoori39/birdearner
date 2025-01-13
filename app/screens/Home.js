@@ -23,10 +23,6 @@ const HomeScreen = () => {
   const [cancelledOrders, setCancelledOrdersOrders] = useState(0)
   const navigation = useNavigation()
 
-  // console.log(userData);
-  
-
-
   useEffect(() => {
     const fetchOrderRecords = async () => {
       try {

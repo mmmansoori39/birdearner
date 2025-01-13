@@ -162,7 +162,7 @@ const TellUsAboutYouScreen = ({ route }) => {
       await checkUserSession();
       navigation.goBack()
     } catch (error) {
-      console.error("Error during session check:", error.message);
+      Alert.alert("Error during session check")
     }
   };
 

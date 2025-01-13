@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
@@ -35,7 +35,7 @@ const JobDescriptionScreen = ({ route, navigation }) => {
           setAppliedStatus(true);
         }
       } catch (error) {
-        console.error("Error job status:", error);
+        Alert.alert("Error job status:", error);
       }
     };
 
@@ -54,13 +54,13 @@ const JobDescriptionScreen = ({ route, navigation }) => {
           setFlagged(true);
         }
       } catch (error) {
-        console.error("Error checking flagged status:", error);
+        Alert.alert("Error checking flagged status:", error)
       }
     };
 
     checkAppliedStatus();
     checkFlaggedStatus();
-  }, []);
+  }, [navigation]);
 
   const openImageModal = (imageUri) => {
 
@@ -97,7 +97,7 @@ const JobDescriptionScreen = ({ route, navigation }) => {
       setAppliedStatus(true)
 
     } catch (error) {
-      console.error("Error updating job document:", error);
+      Alert.alert("Error updating job document:", error)
     }
   };
 
@@ -138,7 +138,7 @@ const JobDescriptionScreen = ({ route, navigation }) => {
         );
       }
     } catch (error) {
-      console.error("Error updating flags:", error);
+      Alert.alert("Error updating flags:", error);
     }
   };
 

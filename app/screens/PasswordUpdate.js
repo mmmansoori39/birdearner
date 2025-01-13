@@ -34,30 +34,9 @@ const PasswordUpdateScreen = ({ navigation }) => {
       // Update password in Appwrite
       await account.updatePassword(newPassword, oldPassword);
 
-      // if (userData?.role === "client") {
-      //   await databases.updateDocument(
-      //     appwriteConfig.databaseId,
-      //     appwriteConfig.clientCollectionId,
-      //     userData.$id,
-      //     {
-      //       password: confirmPassword,
-      //     }
-      //   );
-      // } else {
-      //   await databases.updateDocument(
-      //     appwriteConfig.databaseId,
-      //     appwriteConfig.freelancerCollectionId,
-      //     userData.$id,
-      //     {
-      //       password: confirmPassword,
-      //     }
-      //   );
-      // }
-
       Alert.alert("Success", "Password updated successfully.");
       navigation.goBack();
     } catch (error) {
-      console.error("Error updating password:", error);
       Alert.alert("Error", "Failed to update password. Please check your current password and try again.");
     }
   };

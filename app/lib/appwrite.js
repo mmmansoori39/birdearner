@@ -54,7 +54,6 @@ export async function uploadFile(file, type = "application/octet-stream") {
 
     return fileUrl;
   } catch (error) {
-    console.error("Error uploading file:", error.message);
     throw new Error(error);
   }
 }
@@ -74,7 +73,6 @@ export async function getFileURL(fileId, mimeType) {
 
     return fileUrl;
   } catch (error) {
-    console.error("Error getting file URL:", error.message);
     throw new Error(error);
   }
 }

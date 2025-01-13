@@ -6,7 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  FlatList
+  FlatList,
+  Alert
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { PanResponder, Animated } from "react-native";
@@ -75,7 +76,7 @@ const JobPriority = ({ navigation, route }) => {
         [id]: profile.full_name,
       }));
     } catch (error) {
-      console.error("Error fetching client profile:", error);
+      Alert.alert("Error fetching client profile:", error)
     }
   };
 

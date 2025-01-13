@@ -5,6 +5,7 @@ import {
     StyleSheet,
     TouchableOpacity,
     FlatList,
+    Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -35,7 +36,7 @@ const WalletClientScreen = ({ navigation }) => {
             })
             setPaymentHistory(sortedDocuments || []);
         } catch (error) {
-            console.error("Error fetching payment history:", error);
+            Alert.alert("Error fetching payment history")
         }
     };
 
@@ -59,7 +60,7 @@ const WalletClientScreen = ({ navigation }) => {
                 fetchPaymentHistory(userId);
             }
         } catch (error) {
-            console.error("Error fetching wallet data:", error);
+            Alert.alert("Error fetching wallet data")
         }
     };
 
@@ -81,6 +82,8 @@ const WalletClientScreen = ({ navigation }) => {
             case 'Pending':
                 return '#FFCC00';
             case 'Failed':
+                return '#FF3B30';
+            case 'Paid':
                 return '#FF3B30';
             case 'Success':
                 return '#71C232';
@@ -130,7 +133,7 @@ const WalletClientScreen = ({ navigation }) => {
                             style={[
                                 styles.triangleIndicator,
                                 {
-                                    borderLeftColor: getStatusColor(item?.status), // Color based on status
+                                    borderLeftColor: getStatusColor(item?.status),
                                 },
                             ]}
                         />
@@ -154,21 +157,6 @@ const WalletClientScreen = ({ navigation }) => {
             </View>
         )
     };
-
-    const renderPaymentItem = ({ item }) => (
-        <View style={styles.paymentItem}>
-            <Text style={styles.paymentId}>Payment ID: {item.paymentId}</Text>
-            <Text style={styles.paymentAmount}>Amount: ₹{item.amount}</Text>
-            <View style={styles.paymentCon}>
-                <Text style={[styles.paymentStatus, getStatusStyle(item.status)]}>
-                    Status: {item.status}
-                </Text>
-                <Text style={styles.paymentDate}>
-                    {new Date(item.date).toLocaleString()}
-                </Text>
-            </View>
-        </View>
-    );
 
     return (
         <View style={styles.container}>
@@ -318,8 +306,8 @@ const styles = StyleSheet.create({
         shadowRadius: 1.5,
         paddingVertical: 5,
         paddingHorizontal: 10
-      },
-      triangleIndicator: {
+    },
+    triangleIndicator: {
         width: 0,
         height: 0,
         borderTopWidth: 8,
@@ -329,32 +317,32 @@ const styles = StyleSheet.create({
         borderTopColor: "transparent",
         borderBottomColor: "transparent",
         marginRight: 10, // Space between the triangle and the details
-      },
-      paymentDetails: {
+    },
+    paymentDetails: {
         flex: 1, // Ensure details take remaining space
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
         marginBottom: 5,
-      },
-      name: {
-        fontSize: 16,
+    },
+    name: {
+        fontSize: 15,
         fontWeight: "500",
         color: "#333",
-      },
-      amount: {
-        fontSize: 16,
+    },
+    amount: {
+        fontSize: 15,
         fontWeight: "500",
         color: "#71C232",
-      },
-      date: {
+    },
+    date: {
         fontSize: 12,
         color: "#666",
-      },
-      status: {
+    },
+    status: {
         fontSize: 12,
         fontWeight: "bold",
-      },
+    },
 });
 
 export default WalletClientScreen;
