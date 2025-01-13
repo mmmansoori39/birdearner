@@ -117,7 +117,7 @@ const ClientHomeScreen = () => {
         );
 
         const onGoingJobs = projectDocs.documents.filter(
-          (job) => job.completed_status === false || job.assigned_freelancer
+          (job) => job?.completed_status === false && job.assigned_freelancer
         );
 
         const freelancePromises = onGoingJobs.map((freelance) =>

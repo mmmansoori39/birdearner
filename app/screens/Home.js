@@ -113,6 +113,16 @@ useEffect(() => {
     flagsData()
   }, [refreshing])
 
+  const formatAmount = (xp) => {
+    if (xp >= 1000000) {
+      return (xp / 1000000).toFixed(1) + 'M'; // For millions
+    } else if (xp >= 1000) {
+      return (xp / 1000).toFixed(1) + 'K'; // For thousands
+    } else {
+      return xp; // For values less than 1000
+    }
+  };
+
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => {
@@ -181,20 +191,20 @@ useEffect(() => {
           <Text style={styles.sectionTitle}>Your Earnings</Text>
           <View style={styles.earningsContainer}>
             <View style={styles.earningItem}>
-              <Text style={styles.earningValue}>Rs. {userData?.totalEarnings || "0"} </Text>
+              <Text style={styles.earningValue}>Rs. {formatAmount(userData?.totalEarnings) || "0"} </Text>
               <Text style={styles.earningLabel}>Total Earnings</Text>
             </View>
             <View style={styles.earningItem}>
-              <Text style={styles.earningValue}>Rs. {userData?.monthlyEarnings || "0"}</Text>
+              <Text style={styles.earningValue}>Rs. {formatAmount(userData?.monthlyEarnings) || "0"}</Text>
               <Text style={styles.earningLabel}>Monthly</Text>
             </View>
             <View style={styles.earningItem}>
-              <Text style={styles.earningValue}>{userData?.outstandingAmount || "0"}</Text>
+              <Text style={styles.earningValue}>{formatAmount(userData?.outstandingAmount) || "0"}</Text>
               <Text style={styles.earningLabel}>Outstanding Amount</Text>
             </View>
             <View style={styles.earningItem}>
               <TouchableOpacity onPress={() => navigation.navigate("Profile", { screen: "Withdrawal Earning" })}>
-              <Text style={styles.earningValue}>Rs. {userData?.withdrawableAmount || "0"}</Text>
+              <Text style={styles.earningValue}>Rs. {formatAmount(userData?.withdrawableAmount) || "0"}</Text>
               </TouchableOpacity>
               <Text style={styles.earningLabel}>For Withdrawal</Text>
             </View>
