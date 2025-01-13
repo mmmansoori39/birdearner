@@ -30,6 +30,8 @@ const Chat = ({ route, navigation }) => {
   const [job, setJob] = useState(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedReportReason, setSelectedReportReason] = useState(null);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isStar, setIsStar] = useState(false)
 
 
   const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
@@ -153,6 +155,53 @@ const Chat = ({ route, navigation }) => {
     return () => clearInterval(interval);
   }, [receiverId, userData.$id]);
 
+  useEffect(() => {
+    const fetchBlockedData = async () => {
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "blocked"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          setIsBlocked(true);
+        }
+      } catch (error) {
+        handleError("Failed to unblock the user.");
+      }
+    }
+
+    const fetchStarUnstarData = async () => {
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "star"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          setIsStar(true);
+        }
+      } catch (error) {
+        handleError("Failed to unstar the chat.");
+      }
+    }
+
+    fetchBlockedData();
+    fetchStarUnstarData();
+  }, [receiverId, userData.$id])
+
   // Scroll to bottom whenever messages are updated
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
@@ -243,9 +292,126 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
-  const dotMapData = job?.assigned_freelancer === null ?
-    ["Cancel this job", "Report this chat", "Block", "View Profile"] :
-    ["Job Details", "Mark Unread", "Star", "Review", "View Profile"]
+  const handleBlockUnblockAction = async () => {
+    if (!isBlocked) {
+      // Block user
+      try {
+        const response = await databases.createDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          "unique()",
+          {
+            currentUserId: userData.$id,
+            oppositeUserId: receiverId,
+            projectId: projectId,
+            statusValue: "blocked",
+          }
+        );
+        handleSuccess("The user has been blocked.");
+        setIsBlocked(true);
+      } catch (error) {
+        handleError("Failed to block the user.");
+      }
+    } else {
+      // Unblock user
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "blocked"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          const documentId = documents.documents[0].$id;
+          await databases.deleteDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.blockedAndStarDataCollectionId,
+            documentId
+          );
+          handleSuccess("The user has been unblocked.");
+          setIsBlocked(false);
+        }
+      } catch (error) {
+        handleError("Failed to unblock the user.");
+      }
+    }
+  };
+
+  const handleStarUnstarAction = async () => {
+    if (!isStar) {
+      // star this chat
+      try {
+        const response = await databases.createDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          "unique()",
+          {
+            currentUserId: userData.$id,
+            oppositeUserId: receiverId,
+            projectId: projectId,
+            statusValue: "star",
+          }
+        );
+        handleSuccess("This chat has been star.");
+        setIsStar(true);
+      } catch (error) {
+        handleError("Failed to star the chat.");
+      }
+    } else {
+      // Unstar chat
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "star"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          const documentId = documents.documents[0].$id;
+          await databases.deleteDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.blockedAndStarDataCollectionId,
+            documentId
+          );
+          handleSuccess("This chat has been unstar");
+          setIsStar(false);
+        }
+      } catch (error) {
+        handleError("Failed to unstar the chat.");
+      }
+    }
+  };
+
+
+  const reportOptions = [
+    "Bullying or unwanted contact",
+    "Suicide, self-injury or eating disorders",
+    "Violence, hate or exploitation",
+    "Selling or promoting restricted items",
+    "Nudity or sexual activity",
+    "Scam, fraud or spam",
+    "False information"
+  ];
+
+  const dotMapData = job?.assigned_freelancer === null
+    ? ["Cancel this job", "Report this chat", isBlocked ? "Unblock" : "Block", "View Profile"]
+    : [
+      "Job Details",
+      "Mark Unread",
+      isStar ? "Unstar" : "Star",
+      "Review",
+      "View Profile",
+    ];
 
 
   // Handle dropdown menu actions
@@ -264,7 +430,12 @@ const Chat = ({ route, navigation }) => {
         Alert.alert("Deleted", "The chat has been deleted.");
         break;
       case "Block":
-        Alert.alert("Blocked", "The user has been blocked.");
+      case "Unblock":
+        handleBlockUnblockAction();
+        break;
+      case "Star":
+      case "Unstar":
+        handleStarUnstarAction();
         break;
       case "View Profile":
         navigation.navigate("ProfileScreen", { receiverId });
@@ -342,39 +513,42 @@ const Chat = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+
       <Modal
         visible={reportModalVisible}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setReportModalVisible(false)}
       >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View style={{ width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10 }}>
-            <Text style={{ fontSize: 18, marginBottom: 10 }}>Select a reason for reporting</Text>
-            <TouchableOpacity onPress={() => handleReportSelect("Bullying")} style={{ paddingVertical: 10 }}>
-              <Text>Bullying</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleReportSelect("Unwanted Content")} style={{ paddingVertical: 10 }}>
-              <Text>Unwanted Content</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleReportSelect("Violence")} style={{ paddingVertical: 10 }}>
-              <Text>Violence</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleReportSelect("Scam")} style={{ paddingVertical: 10 }}>
-              <Text>Scam</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleReportSelect("Fraud")} style={{ paddingVertical: 10 }}>
-              <Text>Fraud</Text>
-            </TouchableOpacity>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Report</Text>
+            <Text style={styles.modalSubtitle}>
+              Why are you reporting this post?
+            </Text>
+            <Text style={styles.modalDescription}>
+              Your report is anonymous. If someone is in immediate danger, call the local emergency services - don't wait.
+            </Text>
+            {reportOptions.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleReportSelect(option)}
+                style={styles.optionButton}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            ))}
             <TouchableOpacity
               onPress={() => setReportModalVisible(false)}
-              style={{ marginTop: 20, backgroundColor: 'red', paddingVertical: 10, alignItems: 'center', borderRadius: 5 }}
+              style={styles.cancelButton}
             >
-              <Text style={{ color: 'white' }}>Cancel</Text>
+              <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="black" />
@@ -493,6 +667,14 @@ const Chat = ({ route, navigation }) => {
         }}
       />
 
+      {
+        isBlocked && (
+          <View style={styles.limit}>
+            <Text style={styles.limitchar}>You have blocked this chat</Text>
+          </View>
+        )
+      }
+
       {/* Input Box */}
       <View style={styles.inputContainer}>
         <TextInput
@@ -501,13 +683,20 @@ const Chat = ({ route, navigation }) => {
           onChangeText={setInput}
           placeholder="Type your message..."
           maxLength={characterLimit || undefined}
-          editable={characterLimit > 0}
+          editable={!isBlocked && (characterLimit > 0)}
         />
-        {/* || job.assigned_freelancer !== null */}
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            isBlocked && styles.disabledButton
+          ]}
+          onPress={sendMessage}
+          disabled={isBlocked}
+        >
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
+
 
       {/* Delete Confirmation Modal */}
       {renderDeleteConfirmation()}
@@ -688,16 +877,61 @@ const styles = StyleSheet.create({
     color: "#FFFFFF", // White text
   },
 
-
-  // actionButtons: { flexDirection: "row", justifyContent: "space-around", marginBottom: 10 },
-  // acceptButton: { backgroundColor: "#4C0183", padding: 10, borderRadius: 5 },
-  // rejectButton: { backgroundColor: "#A00B0B", padding: 10, borderRadius: 5 },
-  // buttonText: { color: "#fff", textAlign: "center" },
-  // messageContainer: { padding: 10, backgroundColor: "#eaeaea", marginVertical: 5, borderRadius: 5 },
-  // messageText: { fontSize: 14 },
-  // input: { borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 10 },
-  // sendButton: { backgroundColor: "#007BFF", padding: 10, borderRadius: 5 },
-
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)"
+  },
+  modalContent: {
+    width: "100%",
+    height: "100%",
+    padding: 30,
+    backgroundColor: "#121212", // Dark background
+    borderRadius: 10,
+    alignItems: "center"
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+    marginBottom: 10
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#b0b0b0",
+    textAlign: "center",
+    marginBottom: 20
+  },
+  optionButton: {
+    width: "100%",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#303030"
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#fff",
+    textAlign: "left"
+  },
+  cancelButton: {
+    marginTop: 20,
+    backgroundColor: "red",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5
+  },
+  cancelText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold"
+  }
 
 });
 

@@ -13,7 +13,8 @@ export const appwriteConfig = {
   messageCollectionID: "674f23ba0019a93a384f",
   paymentHistoryCollectionId: "6769187c002cd44cc156",
   reviewCollectionId: "676922e0000cae8e2c3f",
-  withdrawalRequestsCollectionId: "677cd4020023da8571b7"
+  withdrawalRequestsCollectionId: "677cd4020023da8571b7",
+  blockedAndStarDataCollectionId: "6784d356001feaaed104"
 };
 export const client = new Client();
 
