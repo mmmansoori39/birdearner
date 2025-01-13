@@ -103,8 +103,10 @@ const MarketplaceScreen = ({ navigation }) => {
       );
       const allJobs = response.documents;
 
+      const remainingJobs = allJobs.filter((job) => job?.completed_status === false);
+
       if (filterByLocation && location) {
-        const filteredJobs = allJobs.filter((job) => {
+        const filteredJobs = remainingJobs.filter((job) => {
           const jobDistance = calculateDistance(
             location.latitude,
             location.longitude,
@@ -115,7 +117,7 @@ const MarketplaceScreen = ({ navigation }) => {
         });
         setJobs(categorizeJobs(filteredJobs));
       } else {
-        setJobs(categorizeJobs(allJobs));
+        setJobs(categorizeJobs(remainingJobs));
       }
     } catch (error) {
       Alert.alert(
@@ -235,7 +237,7 @@ const MarketplaceScreen = ({ navigation }) => {
               </Animated.View> */}
 
               <View style={styles.linesContainer}>
-              {renderLines()}
+                {renderLines()}
               </View>
 
               <View
