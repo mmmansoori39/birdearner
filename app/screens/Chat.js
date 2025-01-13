@@ -248,14 +248,41 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
-
-  // Handle Accept/Reject actions
   const handleAccept = async () => {
     try {
-      await databases.updateDocument(appwriteConfig.databaseId,
-        appwriteConfig.jobCollectionID, projectId, {
-        assigned_freelancer: receiverId,
-      });
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        projectId
+      );
+
+      const projectBudget = jobDoc?.budget;
+
+      const walletBalance = parseFloat(userData?.wallet || 0.0);
+
+      const requiredAmount = projectBudget + projectBudget * 0.10;
+
+      if (walletBalance < requiredAmount) {
+        const additionalAmount = projectBudget * 0.10;
+        Alert.alert(
+          "Balance is insufficient",
+          `Please add at least ₹${requiredAmount.toFixed(2)} to your wallet. This includes the project budget of ₹${projectBudget.toFixed(2)} and an additional 10% of ₹${additionalAmount.toFixed(2)}.`
+        );
+        navigation.navigate('Tabs', {
+          screen: 'Profile',
+          params: {
+            screen: 'Payment',
+          },
+        });
+        return;
+      }
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        projectId,
+        { assigned_freelancer: receiverId }
+      );
 
       const freelancer = await databases.getDocument(
         appwriteConfig.databaseId,
@@ -271,24 +298,71 @@ const Chat = ({ route, navigation }) => {
         appwriteConfig.databaseId,
         appwriteConfig.freelancerCollectionId,
         receiverId,
+        { assigned_jobs: updatedAssignedJobs }
+      );
+
+      const updatedWalletBalance = walletBalance - requiredAmount;
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.clientCollectionId,
+        userData?.$id,
+        { wallet: updatedWalletBalance }
+      );
+
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.paymentHistoryCollectionId,
+        'unique()',
         {
-          assigned_jobs: updatedAssignedJobs,
+          userId: userData?.$id,
+          paymentId: projectId,
+          amount: requiredAmount,
+          status: 'Paid',
+          date: new Date().toISOString(),
         }
       );
+
       setCharacterLimit(null);
     } catch (err) {
-      console.error("Error accepting project:", err);
+      Alert.alert("Error accepting project")
     }
   };
 
+
   const handleReject = async () => {
     try {
-      await databases.updateDocument("databaseId", "projectsCollectionId", projectId, {
-        status: "rejected",
-      });
-      navigation.goBack(); // Go back to the previous screen
-    } catch (err) {
-      console.error("Error rejecting project:", err);
+      const jobId = projectId;
+      const freelancerId = receiverId;
+
+      // Fetch the job document
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+
+
+
+      let updatedFreelancers = jobDoc.applied_freelancer;
+
+      updatedFreelancers = updatedFreelancers.filter(id => id !== freelancerId);
+
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId,
+        {
+          applied_freelancer: updatedFreelancers,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Job Rejected", "You have successfully rejected the application.");
+      navigation.goBack()
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while rejecting the job.");
     }
   };
 
@@ -392,6 +466,61 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
+  const handleCancelJob = async () => {
+    try {
+      const jobId = projectId;
+      const freelancerId = userData?.role === "freelancer" ? userData?.$id : receiverId;
+
+      // Fetch the job document
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+
+      const freelancerDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId
+      );
+
+      let updatedFreelancers = jobDoc.applied_freelancer;
+      let updatedCancelJob = freelancerDoc.cancelled_jobs || [];
+
+      updatedFreelancers = updatedFreelancers.filter(id => id !== freelancerId);
+
+      if (!updatedCancelJob.includes(jobId)) {
+        updatedCancelJob.push(jobId);
+      }
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId,
+        {
+          applied_freelancer: updatedFreelancers,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId,
+        {
+          cancelled_jobs: updatedCancelJob,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Job Cancelled", "You have successfully cancelled your application for this job.");
+      navigation.goBack()
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while cancelling the job.");
+    }
+  };
+
+
 
   const reportOptions = [
     "Bullying or unwanted contact",
@@ -403,15 +532,18 @@ const Chat = ({ route, navigation }) => {
     "False information"
   ];
 
-  const dotMapData = job?.assigned_freelancer === null
+  const dotMapData = userData?.role === "client" && job?.assigned_freelancer === null
     ? ["Cancel this job", "Report this chat", isBlocked ? "Unblock" : "Block", "View Profile"]
-    : [
-      "Job Details",
-      "Mark Unread",
-      isStar ? "Unstar" : "Star",
-      "Review",
-      "View Profile",
-    ];
+    : job?.assigned_freelancer === null
+      ? ["Cancel this job", "Report this chat", "View Profile"]
+      : [
+        "Job Details",
+        "Mark Unread",
+        isStar ? "Unstar" : "Star",
+        "Review",
+        "View Profile",
+      ];
+
 
 
   // Handle dropdown menu actions
@@ -442,6 +574,9 @@ const Chat = ({ route, navigation }) => {
         break;
       case "Report this chat":
         setReportModalVisible(true);
+        break;
+      case "Cancel this job":
+        handleCancelJob()
         break;
       default:
         break;
