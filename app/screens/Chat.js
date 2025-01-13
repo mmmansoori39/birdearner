@@ -298,7 +298,10 @@ const Chat = ({ route, navigation }) => {
         appwriteConfig.databaseId,
         appwriteConfig.freelancerCollectionId,
         receiverId,
-        { assigned_jobs: updatedAssignedJobs }
+        {
+          assigned_jobs: updatedAssignedJobs,
+          totalEarnings: projectBudget
+        }
       );
 
       const updatedWalletBalance = walletBalance - requiredAmount;
@@ -520,6 +523,54 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
+  const handleConfirmProjComp = async () => {
+    try {
+      const jobId = projectId;
+      const freelancerId = receiverId;
+
+      // Fetch the job document
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+
+      const freelancerDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId
+      );
+
+      let updatedwithdrawableAmount = freelancerDoc?.withdrawableAmount + jobDoc?.budget
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId,
+        {
+          completed_status: true,
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId,
+        {
+          withdrawableAmount: updatedwithdrawableAmount,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Job Status", "You have successfully complete this job.");
+      navigation.goBack()
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while confirming the job.");
+    }
+  };
+
 
 
   const reportOptions = [
@@ -693,7 +744,7 @@ const Chat = ({ route, navigation }) => {
           <Text style={styles.username}>@{full_name}</Text>
           <Text style={styles.profile}>Last online 3 hrs ago</Text>
 
-          {userData.role === "client" ? (
+          {userData?.role === "client" ? (
             job?.assigned_freelancer === null ? (
               <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
@@ -705,9 +756,85 @@ const Chat = ({ route, navigation }) => {
               </View>
             ) : (
               <View>
-                <Text style={styles.deadline}>Deadline Timer</Text>
+                <Text style={styles.deadline}> {job?.deadline && new Date(job.deadline) < new Date() ? "Deadline Over" : "Deadline Timer"}</Text>
                 <View style={styles.deadlineTimerContainer}>
-                  {timeLeft.split(" ").map((timePart, index) => {
+                  {job?.deadline && new Date(job.deadline) < new Date() ? (
+                    // Penalty logic if the deadline has passed
+                    (() => {
+                      const deadlineDate = new Date(job?.deadline);
+                      const currentDate = new Date();
+                      const daysPast = Math.floor((currentDate - deadlineDate) / (1000 * 60 * 60 * 24));
+                      const penalty = daysPast * 2; // ₹2 per day
+
+                      return (
+                        <View style={styles.timeBoxCon}>
+                          <Text style={styles.penaltyText}>Penalty: ₹{penalty}</Text>
+                          <TouchableOpacity style={styles.conColor} onPress={handleConfirmProjComp}>
+                            <Text style={styles.applyButtonText}>Confirm Project Completion</Text>
+                          </TouchableOpacity>
+                          {/* {timeLeft.split(" ").map((timePart, index) => {
+                            const unit = timePart.slice(-1);
+                            const value = timePart.slice(0, -1);
+
+                            return (
+                              <View key={index} style={styles.timeBox}>
+                                <Text style={styles.timeText}>{value}</Text>
+                                <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
+                              </View>
+                            );
+                          })} */}
+                        </View>
+                      );
+                    })()
+                  ) : (
+                    // Regular time display if the deadline is not passed
+                    timeLeft.split(" ").map((timePart, index) => {
+                      const unit = timePart.slice(-1);
+                      const value = timePart.slice(0, -1);
+
+                      return (
+                        <View key={index} style={styles.timeBox}>
+                          <Text style={styles.timeText}>{value}</Text>
+                          <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
+                        </View>
+                      );
+                    })
+                  )}
+                </View>
+              </View>
+            )
+          ) : (
+            <View>
+              <Text style={styles.deadline}> {job?.deadline && new Date(job.deadline) < new Date() ? "Deadline Over" : "Deadline Timer"}</Text>
+              <View style={styles.deadlineTimerContainer}>
+                {job?.deadline && new Date(job.deadline) < new Date() ? (
+                  // Penalty logic if the deadline has passed
+                  (() => {
+                    const deadlineDate = new Date(job?.deadline);
+                    const currentDate = new Date();
+                    const daysPast = Math.floor((currentDate - deadlineDate) / (1000 * 60 * 60 * 24));
+                    const penalty = daysPast * 2; // ₹2 per day
+
+                    return (
+                      <View style={styles.timeBoxCon}>
+                        <Text style={styles.penaltyText}>Penalty: ₹{penalty}</Text>
+                        {/* {timeLeft.split(" ").map((timePart, index) => {
+                          const unit = timePart.slice(-1);
+                          const value = timePart.slice(0, -1);
+
+                          return (
+                            <View key={index} style={styles.timeBox}>
+                              <Text style={styles.timeText}>{value}</Text>
+                              <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
+                            </View>
+                          );
+                        })} */}
+                      </View>
+                    );
+                  })()
+                ) : (
+                  // Regular time display if the deadline is not passed
+                  timeLeft.split(" ").map((timePart, index) => {
                     const unit = timePart.slice(-1);
                     const value = timePart.slice(0, -1);
 
@@ -717,28 +844,14 @@ const Chat = ({ route, navigation }) => {
                         <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
                       </View>
                     );
-                  })}
-                </View>
-              </View>
-            )
-          ) : (
-            <View>
-              <Text style={styles.deadline}>Deadline Timer</Text>
-              <View style={styles.deadlineTimerContainer}>
-                {timeLeft.split(" ").map((timePart, index) => {
-                  const unit = timePart.slice(-1);
-                  const value = timePart.slice(0, -1);
-
-                  return (
-                    <View key={index} style={styles.timeBox}>
-                      <Text style={styles.timeText}>{value}</Text>
-                      <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
-                    </View>
-                  );
-                })}
+                  })
+                )}
               </View>
             </View>
           )}
+
+
+
 
         </View>
         <TouchableOpacity onPress={() => setShowMenu(!showMenu)} >
@@ -971,7 +1084,7 @@ const styles = StyleSheet.create({
   menuButtonText: { fontSize: 24, color: "black" },
   menuContainer: {
     position: "absolute",
-    top: 100,
+    top: 115,
     right: 20,
     backgroundColor: "white",
     borderRadius: 5,
@@ -991,6 +1104,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 5,
   },
+  timeBoxCon: {
+    // paddingHorizontal: 8,
+    // paddingVertical: 5,
+    // backgroundColor: "#000000",
+    // marginHorizontal: 1,
+    alignItems: "center",
+    // justifyContent: "center",
+    flexDirection: "column",
+    gap: 12
+  },
+
+  applyButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  conColor: {
+    backgroundColor: '#00871E',
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 0,
+    paddingVertical: 10,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
+  },
+  penaltyText: {
+    backgroundColor: '#B64928',
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+    // marginBottom: 20,
+    paddingVertical: 3,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.17,
+    shadowRadius: 3.05,
+    elevation: 4
+  },
+
   timeBox: {
     paddingHorizontal: 8,
     paddingVertical: 5,
@@ -999,7 +1161,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    gap: 4
+    gap: 4,
   },
   timeText: {
     fontSize: 18,
