@@ -528,6 +528,11 @@ const Chat = ({ route, navigation }) => {
       const jobId = projectId;
       const freelancerId = receiverId;
 
+      const deadlineDate = new Date(job?.deadline);
+      const currentDate = new Date();
+      const daysPast = Math.floor((currentDate - deadlineDate) / (1000 * 60 * 60 * 24));
+      const penalty = daysPast * 2; // ₹2 per day
+
       // Fetch the job document
       const jobDoc = await databases.getDocument(
         appwriteConfig.databaseId,
@@ -541,7 +546,7 @@ const Chat = ({ route, navigation }) => {
         freelancerId
       );
 
-      let updatedwithdrawableAmount = freelancerDoc?.withdrawableAmount + jobDoc?.budget
+      let updatedwithdrawableAmount = (freelancerDoc?.withdrawableAmount + jobDoc?.budget) - penalty;
 
       await databases.updateDocument(
         appwriteConfig.databaseId,
@@ -769,9 +774,20 @@ const Chat = ({ route, navigation }) => {
                       return (
                         <View style={styles.timeBoxCon}>
                           <Text style={styles.penaltyText}>Penalty: ₹{penalty}</Text>
-                          <TouchableOpacity style={styles.conColor} onPress={handleConfirmProjComp}>
-                            <Text style={styles.applyButtonText}>Confirm Project Completion</Text>
-                          </TouchableOpacity>
+                          {
+                            !job?.completed_status && (
+                              <TouchableOpacity style={styles.conColor} onPress={handleConfirmProjComp}>
+                                <Text style={styles.applyButtonText}>Confirm Project Completion</Text>
+                              </TouchableOpacity>
+                            )
+                          }
+
+                          {
+                            job?.completed_status && (
+                              <Text style={styles.conColorc}>Project Completed</Text>
+                            )
+                          }
+
                           {/* {timeLeft.split(" ").map((timePart, index) => {
                             const unit = timePart.slice(-1);
                             const value = timePart.slice(0, -1);
@@ -818,6 +834,12 @@ const Chat = ({ route, navigation }) => {
                     return (
                       <View style={styles.timeBoxCon}>
                         <Text style={styles.penaltyText}>Penalty: ₹{penalty}</Text>
+
+                        {
+                          job?.completed_status && (
+                            <Text style={styles.conColorc}>Project Completed</Text>
+                          )
+                        }
                         {/* {timeLeft.split(" ").map((timePart, index) => {
                           const unit = timePart.slice(-1);
                           const value = timePart.slice(0, -1);
@@ -1135,6 +1157,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.17,
     shadowRadius: 3.05,
     elevation: 4
+  },
+  conColorc: {
+    paddingHorizontal: 15,
+    alignItems: 'center',
+    marginBottom: 0,
+    // paddingVertical: 10,
+    color: "#00871E"
   },
   penaltyText: {
     backgroundColor: '#B64928',
