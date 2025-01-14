@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { PanResponder, Animated } from "react-native";
 // import Sound from 'react-native-sound';
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const colors = {
   Immediate: ["#E22323", "#7C1313"],
@@ -36,6 +37,11 @@ const JobPriority = ({ navigation, route }) => {
 
   const currentColors = colors[priorities[currentIndex]] || ["#000", "#333"];
   const currentPriority = priorities[currentIndex];
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
 
   useEffect(() => {
@@ -212,10 +218,11 @@ const JobPriority = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (currentTheme) =>
+StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: currentTheme.background ||  "#fff",
     paddingTop: 45,
     paddingBottom: 70
   },
@@ -263,14 +270,14 @@ const styles = StyleSheet.create({
   jobCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: currentTheme.cardBackground || "#f5f5f5",
     // padding: 15,
     borderTopLeftRadius: 100,
     borderBottomLeftRadius: 100,
     borderBottomRightRadius: 10,
     borderTopRightRadius: 10,
     marginVertical: 10,
-    shadowColor: "#000",
+    shadowColor: currentTheme.shadow || "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
@@ -285,14 +292,15 @@ const styles = StyleSheet.create({
   jobTitle: {
     fontSize: 16,
     fontWeight: "bold",
+    color: currentTheme.text
   },
   jobDetails: {
     fontSize: 14,
-    color: "#666",
+    color: currentTheme.subText || "#666",
   },
   jobDescription: {
     fontSize: 12,
-    color: "#999",
+    color: currentTheme.subText || "#999",
     flexShrink: 1,
   },
   allJobsContainer: {

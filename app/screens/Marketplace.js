@@ -16,6 +16,7 @@ import MapView, { Marker } from "react-native-maps";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const colors = {
   Immediate: ["#E22323", "#7C1313"],
@@ -37,6 +38,11 @@ const MarketplaceScreen = ({ navigation }) => {
     Standard: [],
   });
   const [loading, setLoading] = useState(true);
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const updateDistance = (newDistance) => {
     const boundedDistance = Math.min(maxDist, Math.max(0, newDistance));
@@ -412,176 +418,180 @@ const MarketplaceScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 30,
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  sliderContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  distanceText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  customSliderWrapper: {
-    // flexDirection: "row",
-    alignItems: "center",
-    // justifyContent: "space-between",
-    width: 360,
-    height: 24,
-    // backgroundColor: "transparent",
-    margin: "auto",
-    position: "relative"
-  },
-  iconButtonContain: {
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    right: 14,
-    top: 1,
-    backgroundColor: "white",
-    width: 29,
-    height: 29,
-    borderRadius: 20
-  },
-  iconButtonContainminus: {
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    left: 15,
-    top: 1,
-    backgroundColor: "white",
-    width: 29,
-    height: 29,
-    borderRadius: 20,
-    padding: 0,
-    margin: 0
-  },
-  // iconButton: {
-  //   position: "absolute",
-  //   right: 14,
-  //   top: 1
-  // },
-  // iconButtonminus: {
-  //   position: "absolute",
-  //   left: 15,
-  //   top: 1
-  // },
-  sliderBackground: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: 332,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: "#232222",
-    position: "relative",
-    // overflow: "hidden"
-  },
-  linesContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    height: "100%",
-    paddingHorizontal: 5,
-    alignItems: "center"
-  },
-  line: {
-    width: 3,
-    height: "72%",
-    // backgroundColor: "#898686",
-  },
-  sliderIndicator: {
-    position: "absolute",
-    top: -10,
-    alignItems: "center",
-  },
-  sliderIndicatorText: {
-    fontSize: 12,
-    color: "#000",
-  },
-  sliderLabel: {
-    color: "#6f28d4",
-    marginTop: 10,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  map: {
-    width: "100%",
-    height: 220,
-    marginVertical: 20,
-  },
-  jobsAround: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginVertical: 10,
-  },
-  priorityContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  priorityBox: {
-    width: "100%",
-  },
-  priorityButton: {
-    width: "100%",
-    padding: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 12,
-    alignItems: "baseline",
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    gap: 7,
-  },
-  priorityText: {
-    color: "#fff",
-    fontWeight: "semibold",
-    fontSize: 20,
-  },
-  prioritySubText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  allJobsContainer: {
-    alignItems: "center",
-    width: 450,
-    height: 450,
-    borderRadius: 300,
-    position: "absolute",
-    bottom: -380,
-    right: -30,
-    padding: 10,
-  },
-  allJobsButton: {
-    paddingVertical: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "90%",
-  },
-  allJobsText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "semibold",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center"
-  }
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background || "#fff",
+      paddingTop: 30,
+    },
+    scrollContent: {
+      padding: 20,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginBottom: 20,
+      color: currentTheme.text
+    },
+    sliderContainer: {
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    distanceText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: currentTheme.subText
+    },
+    customSliderWrapper: {
+      // flexDirection: "row",
+      alignItems: "center",
+      // justifyContent: "space-between",
+      width: 360,
+      height: 24,
+      // backgroundColor: "transparent",
+      margin: "auto",
+      position: "relative"
+    },
+    iconButtonContain: {
+      justifyContent: "center",
+      alignItems: "center",
+      position: "absolute",
+      right: 14,
+      top: 1,
+      backgroundColor: "white",
+      width: 29,
+      height: 29,
+      borderRadius: 20
+    },
+    iconButtonContainminus: {
+      justifyContent: "center",
+      alignItems: "center",
+      position: "absolute",
+      left: 15,
+      top: 1,
+      backgroundColor: "white",
+      width: 29,
+      height: 29,
+      borderRadius: 20,
+      padding: 0,
+      margin: 0
+    },
+    // iconButton: {
+    //   position: "absolute",
+    //   right: 14,
+    //   top: 1
+    // },
+    // iconButtonminus: {
+    //   position: "absolute",
+    //   left: 15,
+    //   top: 1
+    // },
+    sliderBackground: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      width: 332,
+      height: 32,
+      borderRadius: 6,
+      backgroundColor: "#232222",
+      position: "relative",
+      // overflow: "hidden"
+    },
+    linesContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+      height: "100%",
+      paddingHorizontal: 5,
+      alignItems: "center"
+    },
+    line: {
+      width: 3,
+      height: "72%",
+      // backgroundColor: "#898686",
+    },
+    sliderIndicator: {
+      position: "absolute",
+      top: -10,
+      alignItems: "center",
+    },
+    sliderIndicatorText: {
+      fontSize: 12,
+      color: "#000",
+    },
+    sliderLabel: {
+      color: "#6f28d4",
+      marginTop: 10,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    map: {
+      width: "100%",
+      height: 220,
+      marginVertical: 20,
+    },
+    jobsAround: {
+      fontSize: 20,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginVertical: 10,
+      color: currentTheme.text
+    },
+    priorityContainer: {
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    priorityBox: {
+      width: "100%",
+    },
+    priorityButton: {
+      width: "100%",
+      padding: 10,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      marginBottom: 12,
+      alignItems: "baseline",
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      gap: 7,
+    },
+    priorityText: {
+      color: "#fff",
+      fontWeight: "semibold",
+      fontSize: 20,
+    },
+    prioritySubText: {
+      color: "#fff",
+      fontSize: 14,
+    },
+    allJobsContainer: {
+      alignItems: "center",
+      width: 450,
+      height: 450,
+      borderRadius: 300,
+      position: "absolute",
+      bottom: -380,
+      right: -30,
+      padding: 10,
+    },
+    allJobsButton: {
+      paddingVertical: 15,
+      alignItems: "center",
+      justifyContent: "center",
+      width: "90%",
+    },
+    allJobsText: {
+      color: "#fff",
+      fontSize: 20,
+      fontWeight: "semibold",
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center"
+    }
+  });
 
 export default MarketplaceScreen;
