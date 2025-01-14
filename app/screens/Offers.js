@@ -26,6 +26,7 @@ const OffersScreen = ({ navigation }) => {
   const [brokenEggs, setBrokenEggs] = useState([false, false, false, false, false]);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
+  const [showVideoPopup, setShowVideoPopup] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const { userData } = useAuth();
   const userId = userData?.$id;
@@ -230,11 +231,14 @@ const OffersScreen = ({ navigation }) => {
       } catch (error) {
         console.error("Error updating document:", error);
       }
+    } else {
+      setShowVideoPopup(true);
     }
   };
 
   const closePopup = () => {
     setShowOfferPopup(false);
+    setShowVideoPopup(false);
   };
 
   const closeRulesPopup = () => {
@@ -287,6 +291,19 @@ const OffersScreen = ({ navigation }) => {
             <Text style={styles.popupText}>You've earned a cashback of ₹{selectedOffer}!</Text>
             <TouchableOpacity style={styles.popupButton} onPress={closePopup}>
               <Text style={styles.popupButtonText}>Claim Cashback</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* No offer Popup */}
+      <Modal visible={showVideoPopup} transparent={true} animationType="fade">
+        <View style={styles.popupOverlay}>
+          <View style={styles.popupContent}>
+            <Text style={styles.popupTitle}>No Offer Available!</Text>
+            <Text style={styles.popupText}>Stay tuned for more offers!</Text>
+            <TouchableOpacity style={styles.popupButton} onPress={closePopup}>
+              <Text style={styles.popupButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
