@@ -72,6 +72,8 @@ const WalletClientScreen = ({ navigation }) => {
                 return { color: "red" };
             case "Pending":
                 return { color: "orange" };
+            case "Recieved":
+                return { color: "orange" };
             default:
                 return {};
         }
@@ -87,6 +89,8 @@ const WalletClientScreen = ({ navigation }) => {
                 return '#FF3B30';
             case 'Success':
                 return '#71C232';
+            case 'Recieved':
+                return '#FFCC00';
             default:
                 return '#808080';
         }
@@ -129,15 +133,17 @@ const WalletClientScreen = ({ navigation }) => {
                     {/* Payment Details */}
                     <View style={styles.paymentDetails}>
                         {/* Triangle Indicator */}
-                        <View
-                            style={[
-                                styles.triangleIndicator,
-                                {
-                                    borderLeftColor: getStatusColor(item?.status),
-                                },
-                            ]}
-                        />
-                        <Text style={styles.name}>ID: {item?.paymentId} </Text>
+                        <View style={styles.indicatorName}>
+                            <View
+                                style={[
+                                    styles.triangleIndicator,
+                                    {
+                                        borderLeftColor: getStatusColor(item?.status),
+                                    },
+                                ]}
+                            />
+                            <Text style={styles.name}>ID: {item?.paymentId} </Text>
+                        </View>
                         <Text style={styles.amount}>₹{item?.amount}</Text>
                     </View>
                 </View>
@@ -183,7 +189,7 @@ const WalletClientScreen = ({ navigation }) => {
                     <FlatList
                         data={paymentHistory}
                         renderItem={renderItem}
-                        keyExtractor={(item) => item.$id} // Use the unique document ID as the key
+                        keyExtractor={(item) => item.$id}
                         style={styles.historyList}
                     />
                 ) : (
@@ -316,19 +322,27 @@ const styles = StyleSheet.create({
         borderStyle: "solid",
         borderTopColor: "transparent",
         borderBottomColor: "transparent",
-        marginRight: 10, // Space between the triangle and the details
+        marginRight: 10,
     },
     paymentDetails: {
-        flex: 1, // Ensure details take remaining space
+        flex: 1,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
         marginBottom: 5,
     },
+    indicatorName: {
+        flex: 1,
+        flexDirection: "row",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        // gap: 2
+    },
     name: {
         fontSize: 15,
         fontWeight: "500",
         color: "#333",
+        // marginRight: 20
     },
     amount: {
         fontSize: 15,
