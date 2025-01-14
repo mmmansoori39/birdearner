@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { account, appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
@@ -25,7 +26,6 @@ export const AuthProvider = ({ children }) => {
   const [roleSelectionVisible, setRoleSelectionVisible] = useState(false);
   const [roleOptions, setRoleOptions] = useState({ freelancerData: null, clientData: null });
 
-  // Helper function to fetch user data
   const fetchUserData = async (email) => {
     try {
       const [freelancerResponse, clientResponse] = await Promise.all([
@@ -77,13 +77,16 @@ export const AuthProvider = ({ children }) => {
     checkUserSession();
   }, []);
 
+
+
   const login = async (email, password) => {
     try {
+
       await account.createEmailPasswordSession(email, password);
       const currentUser = await account.get();
+
       setUser(currentUser);
 
-      // Fetch user-specific data
       await fetchUserData(currentUser.email);
     } catch (error) {
       throw new Error("Invalid email or password. Please try again.");

@@ -431,7 +431,29 @@ const ClientHomeScreen = () => {
                 );
               })
             ) : (
-              <Text style={styles.noJobsText}>No ongoing jobs</Text>
+              [0, 1, 2].map((item, index) => {
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                  >
+                    <View
+                      key={index}
+                      style={[
+                        styles.onGoItem,
+                        {
+                          borderWidth: 4,
+                          borderColor: "#D3D3D3",
+                          borderRadius: 50,
+                          opacity: 0.5,
+                        },
+                      ]}
+                    >
+                      <Text style={styles.placeholderText}>?</Text>
+                    </View>
+                  </TouchableOpacity>
+                )
+              })
             )}
           </ScrollView>
         </View>
