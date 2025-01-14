@@ -12,6 +12,7 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useNavigation } from "expo-router";
+import { useTheme } from "../context/ThemeContext";
 
 const HomeScreen = () => {
   const { user, userData, setUserData } = useAuth();
@@ -23,6 +24,11 @@ const HomeScreen = () => {
   const [cancelledOrders, setCancelledOrdersOrders] = useState(0)
   const [successScore, setSuccessScore] = useState(0)
   const navigation = useNavigation()
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   useEffect(() => {
     const fetchOrderRecords = async () => {
@@ -278,284 +284,286 @@ const HomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeContainer: {
-    // flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingTop: 30,
-  },
-  header: {
-    flexDirection: "column",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    marginTop: 15
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#3b006b",
-  },
-  usernameText: {
-    fontSize: 18,
-    color: "#3b006b",
-  },
-  notificationIcon: {
-    backgroundColor: "#3b006b",
-    padding: 10,
-    borderRadius: 50,
-    position: "absolute",
-    right: 10,
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    safeContainer: {
+      // flex: 1,
+      backgroundColor: currentTheme.background || "#fff",
+      paddingHorizontal: 20,
+      paddingTop: 30,
+    },
+    header: {
+      flexDirection: "column",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20,
+      marginTop: 15
+    },
+    welcomeText: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: currentTheme.primary || "#5A4CAE",
+    },
+    usernameText: {
+      fontSize: 18,
+      color: currentTheme.primary || "#5A4CAE",
+    },
+    notificationIcon: {
+      backgroundColor: "#3b006b",
+      padding: 10,
+      borderRadius: 50,
+      position: "absolute",
+      right: 10,
 
-  },
-  sectionContainer: {
-    marginBottom: 20,
-  },
-  profileContainers: {
-    backgroundColor: "#ffffff",
-    padding: 10,
-    marginTop: 12,
-    // justifyContent: "space-between",
-    flexDirection: "column",
-    alignItems: "center",
-    borderBottomRightRadius: 20,
-    // marginHorizontal: 20,
-    gap: 5,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-  },
-  profileText: {
-    fontSize: 24,
-    fontWeight: "500",
-    textAlign: "center"
-  },
-  boxColor: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 5,
-    marginHorizontal: 20
-  },
-  pBoxColor: {
-    backgroundColor: "#CCD2CE",
-    height: 12,
-    width: 48,
-    borderRadius: 12
-  },
-  redBox: {
-    backgroundColor: "#FF3131",
-    height: 12,
-    width: 48,
-    borderRadius: 12
-  },
-  yellowBox: {
-    backgroundColor: "#CEBF1D",
-    height: 12,
-    width: 48,
-    borderRadius: 12
-  },
-  greenBox: {
-    backgroundColor: "#00871E",
-    height: 12,
-    width: 48,
-    borderRadius: 12
-  },
-  loginButton: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#4B0082",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 5,
-    marginTop: 12,
-  },
-  loginButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffffff",
-    backgroundColor: "#3b006b",
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-    textAlign: "center",
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    sectionContainer: {
+      marginBottom: 20,
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4
-  },
-  statsContainer: {
-    backgroundColor: "#ffffff",
-    padding: 10,
-    paddingVertical: 20,
-    gap: 12,
-    marginTop: 12,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignContent: "center",
-    alignItems: "center",
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    profileContainers: {
+      backgroundColor: currentTheme.background3 || "#ffffff",
+      padding: 10,
+      marginTop: 12,
+      // justifyContent: "space-between",
+      flexDirection: "column",
+      alignItems: "center",
+      borderBottomRightRadius: 20,
+      // marginHorizontal: 20,
+      gap: 5,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-  },
-  statsBox: {
-    flex: 1,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-    gap: 15
-  },
-  statItem: {
-    alignItems: "center",
-    // width: "1%",
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#3b006b",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#000",
-    textAlign: "center",
-  },
-  earningsContainer: {
-    backgroundColor: "#ffffff",
-    padding: 10,
-    marginTop: 12,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 5,
-    justifyContent: "space-between",
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    profileText: {
+      fontSize: 24,
+      fontWeight: "500",
+      textAlign: "center",
+      color: currentTheme.text
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-  },
-  earningItem: {
-    alignItems: "center",
-    width: "45%",
-  },
-  earningValue: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#3b006b",
-  },
-  earningLabel: {
-    fontSize: 12,
-    color: "#000",
-  },
-  ordersContainer: {
-    backgroundColor: "#ffffff",
-    padding: 10,
-    marginTop: 12,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-around",
-    gap: 20,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    boxColor: {
+      flex: 1,
+      flexDirection: "row",
+      gap: 5,
+      marginHorizontal: 20
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4
-  },
-  orderItem: {
-    alignItems: "center",
-    width: "30%",
-  },
-  orderValue: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#3b006b",
-  },
-  orderLabel: {
-    fontSize: 12,
-    color: "#000",
-    textAlign: "center",
-  },
-  whatsNewContainer: {
-    backgroundColor: "#ffffff",
-    padding: 10,
-    marginTop: 12,
-    marginBottom: 30,
-    justifyContent: "space-between",
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    pBoxColor: {
+      backgroundColor: currentTheme.text2 || "#CCD2CE",
+      height: 12,
+      width: 48,
+      borderRadius: 12
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4
-  },
-  whatsNewText: {
-    fontSize: 16,
-    color: "#000",
-  },
-  stickyButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 40,
-    backgroundColor: "#3b006b",
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    redBox: {
+      backgroundColor: "#FF3131",
+      height: 12,
+      width: 48,
+      borderRadius: 12
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4
-  },
-  chatIcon: {
-    flex: 1,
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center"
-  },
-});
+    yellowBox: {
+      backgroundColor: "#CEBF1D",
+      height: 12,
+      width: 48,
+      borderRadius: 12
+    },
+    greenBox: {
+      backgroundColor: "#00871E",
+      height: 12,
+      width: 48,
+      borderRadius: 12
+    },
+    loginButton: {
+      width: "100%",
+      height: 50,
+      backgroundColor: currentTheme.primary || "#4B0082",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 5,
+      marginTop: 12,
+    },
+    loginButtonText: {
+      color: "white",
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#ffffff",
+      backgroundColor: currentTheme.primary || "#3b006b",
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+      textAlign: "center",
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+    statsContainer: {
+      backgroundColor: currentTheme.cardBackground || "#ffffff",
+      padding: 10,
+      paddingVertical: 20,
+      gap: 12,
+      marginTop: 12,
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignContent: "center",
+      alignItems: "center",
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+    },
+    statsBox: {
+      flex: 1,
+      flexDirection: "column",
+      justifyContent: "center",
+      alignContent: "center",
+      alignItems: "center",
+      gap: 15
+    },
+    statItem: {
+      alignItems: "center",
+      // width: "1%",
+    },
+    statValue: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "#5A4CAE",
+    },
+    statLabel: {
+      fontSize: 12,
+      color: currentTheme.subText || "#000",
+      textAlign: "center",
+    },
+    earningsContainer: {
+      backgroundColor: currentTheme.cardBackground || "#ffffff",
+      padding: 10,
+      marginTop: 12,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 5,
+      justifyContent: "space-between",
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+    },
+    earningItem: {
+      alignItems: "center",
+      width: "45%",
+    },
+    earningValue: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "#5A4CAE",
+    },
+    earningLabel: {
+      fontSize: 12,
+      color: currentTheme.subText || "#000",
+    },
+    ordersContainer: {
+      backgroundColor: currentTheme.cardBackground || "#ffffff",
+      padding: 10,
+      marginTop: 12,
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-around",
+      gap: 20,
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+    orderItem: {
+      alignItems: "center",
+      width: "30%",
+    },
+    orderValue: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "#5A4CAE",
+    },
+    orderLabel: {
+      fontSize: 12,
+      color: currentTheme.subText || "#000",
+      textAlign: "center",
+    },
+    whatsNewContainer: {
+      backgroundColor: currentTheme.cardBackground || "#ffffff",
+      padding: 10,
+      marginTop: 12,
+      marginBottom: 30,
+      justifyContent: "space-between",
+      flexDirection: "row",
+      alignItems: "center",
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+    whatsNewText: {
+      fontSize: 16,
+      color: currentTheme.subText || "#000",
+    },
+    stickyButton: {
+      width: 60,
+      height: 60,
+      borderRadius: 40,
+      backgroundColor: "#3b006b",
+      position: "absolute",
+      bottom: 20,
+      right: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+    chatIcon: {
+      flex: 1,
+      justifyContent: "center",
+      alignContent: "center",
+      alignItems: "center"
+    },
+  });
 
 export default HomeScreen;
