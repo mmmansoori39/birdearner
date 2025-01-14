@@ -10,6 +10,7 @@ const PaymentScreen = ({ navigation }) => {
   const { userData } = useAuth();
   const pic = userData?.profile_photo || 'https://example.com/default-profile-pic.png';
   const name = userData?.full_name || 'Guest User';
+  const email = userData?.email || 'user@gmail.com';
   const [amount, setAmount] = useState('');
 
   const handleAmountChange = (value) => {
@@ -26,9 +27,9 @@ const PaymentScreen = ({ navigation }) => {
         amount: amount * 100,
         name: name,
         prefill: {
-          email: 'mmm@gmail.com',
-          phone: '9708283739',
-          name: 'Md Moinuddin Mansoori',
+          email: email,
+          phone: '4141414141',
+          name: name,
         },
         theme: { color: '#4B0082' },
       };
