@@ -180,7 +180,7 @@ export default function ProfileScreen({ navigation }) {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#3b006b"]}
-            progressBackgroundColor={currentTheme.background || "#fff"}
+            progressBackgroundColor={currentTheme.cardBackground || "#fff"}
           />
         }
       >

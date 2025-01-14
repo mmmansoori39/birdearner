@@ -519,8 +519,8 @@ const getStyles = (currentTheme) =>
       alignItems: "center",
     },
     sliderIndicatorText: {
-      fontSize: 12,
-      color: "#000",
+      fontSize: 14,
+      color: currentTheme.text || "#000",
     },
     sliderLabel: {
       color: "#6f28d4",

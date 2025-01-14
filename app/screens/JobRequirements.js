@@ -431,7 +431,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.nextButtonText}>Cancel</Text>
+            <Text style={styles.nextButtonTextc}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -594,13 +594,18 @@ const getStyles = (currentTheme) =>
     cancelButton: {
       width: "35%",
       height: 40,
-      backgroundColor: "#9a9a9a",
+      backgroundColor: currentTheme.background3 || "#9a9a9a",
       borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
     },
     nextButtonText: {
       color: "#fff",
+      fontWeight: "bold",
+      fontSize: 20,
+    },
+    nextButtonTextc: {
+      color: "#A39E9E",
       fontWeight: "bold",
       fontSize: 20,
     },

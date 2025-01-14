@@ -152,7 +152,7 @@ const HomeScreen = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#3b006b"]}
-            progressBackgroundColor="#fff"
+            progressBackgroundColor={currentTheme.cardBackground || "#fff"}
           />
         }
       >
@@ -320,7 +320,7 @@ const getStyles = (currentTheme) =>
       marginBottom: 20,
     },
     profileContainers: {
-      backgroundColor: currentTheme.background3 || "#ffffff",
+      backgroundColor: currentTheme.cardBackground || "#ffffff",
       padding: 10,
       marginTop: 12,
       // justifyContent: "space-between",

@@ -24,50 +24,6 @@ import { useTheme } from "../context/ThemeContext";
 
 const placeholderImageURL = "https://picsum.photos/seed/";
 
-const categorizeJobs = (jobs) => {
-  const today = new Date();
-
-  return jobs.map((job) => {
-    const deadline = new Date(job.deadline);
-    const daysRemaining = differenceInDays(deadline, today);
-
-    let color;
-
-    if (daysRemaining < 0) {
-      color = "#000";
-    } else if (daysRemaining <= 2) {
-      color = "#FF3B30";
-    } else if (daysRemaining <= 10) {
-      color = "#FFCC00";
-    } else {
-      color = "#34C759";
-    }
-
-    return {
-      ...job,
-      color,
-    };
-  });
-};
-
-const RenderServiceItem = React.memo(({ item, onPress, borderRadius }) => (
-  <TouchableOpacity onPress={() => onPress(item)}>
-    <View style={styles.serviceCard}>
-      <View style={styles.imageShadow}>
-        <Image
-          source={{ uri: item.image }}
-          style={[styles.serviceImage, { borderRadius }]}
-        />
-      </View>
-      <View style={styles.serviceTextlay}>
-        <Text style={styles.serviceText} numberOfLines={2} ellipsizeMode="tail">
-          {item.title}
-        </Text>
-      </View>
-    </View>
-  </TouchableOpacity>
-));
-
 
 const ClientHomeScreen = () => {
   const [search, setSearch] = useState("");
@@ -86,6 +42,55 @@ const ClientHomeScreen = () => {
   const [combinedData, setCombinedData] = useState([]);
   const { userData, setUserData } = useAuth();
   const navigation = useNavigation();
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
+
+  const categorizeJobs = (jobs) => {
+    const today = new Date();
+
+    return jobs.map((job) => {
+      const deadline = new Date(job.deadline);
+      const daysRemaining = differenceInDays(deadline, today);
+
+      let color;
+
+      if (daysRemaining < 0) {
+        color = "#000";
+      } else if (daysRemaining <= 2) {
+        color = "#FF3B30";
+      } else if (daysRemaining <= 10) {
+        color = "#FFCC00";
+      } else {
+        color = "#34C759";
+      }
+
+      return {
+        ...job,
+        color,
+      };
+    });
+  };
+
+  const RenderServiceItem = React.memo(({ item, onPress, borderRadius }) => (
+    <TouchableOpacity onPress={() => onPress(item)}>
+      <View style={styles.serviceCard}>
+        <View style={styles.imageShadow}>
+          <Image
+            source={{ uri: item.image }}
+            style={[styles.serviceImage, { borderRadius }]}
+          />
+        </View>
+        <View style={styles.serviceTextlay}>
+          <Text style={styles.serviceText} numberOfLines={2} ellipsizeMode="tail">
+            {item.title}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  ));
 
   useEffect(() => {
     let percentage = 0;
@@ -341,7 +346,7 @@ const ClientHomeScreen = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#3b006b"]}
-            progressBackgroundColor="#fff"
+            progressBackgroundColor= {currentTheme.cardBackground || "#fff"}
           />
         }
       >
@@ -619,359 +624,368 @@ const ClientHomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    // paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10,
-    marginTop: 30,
-    // backgroundColor: "red",
-    padding: 4,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    gap: 140
-  },
-  gifStyle: {
-    // width: 10,
-    // height: 50,
-    resizeMode: "contain",
-    marginBottom: -5,
-    marginTop: -18,
-  },
-  welcome: {
-    fontSize: 25,
-    fontWeight: "600",
-  },
-  how: {
-    fontSize: 14,
-    fontWeight: "300",
-  },
-  squareBox: {
-    backgroundColor: "#5DE895",
-    padding: 14,
-  },
-  searchContainer: {
-    marginHorizontal: 20,
-    shadowColor: "#000000",
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-    flex: 1,
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  searchInput: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginVertical: 12,
-    borderColor: "#ddd",
-    borderWidth: 1,
-    width: "100%",
-    height: "100%",
-  },
-  carousel: {
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  serviceCard: {
-    alignItems: "center",
-    marginHorizontal: 10,
-    marginVertical: 2,
-    // paddingHorizontal: 15,
-    flexDirection: "column",
-    borderRadius: 10,
-    backgroundColor: "#ffffff",
-    width: 100,
-    flexWrap: "wrap",
-    gap: 5,
-  },
-  serviceTextlay: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  serviceText: {
-    fontSize: 13,
-    fontWeight: "500",
-    textAlign: "center",
-    flexWrap: "wrap",
-  },
-  proileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 45,
-    // shadowColor: "#000000", // Shadow color
-    // shadowOffset: { width: 2, height: 4 }, // Shadow position
-    // shadowOpacity: 0.2, // Shadow transparency (iOS)
-    // shadowRadius: 4, // Shadow blur (iOS)
-    // elevation: 3,
-  },
-  serviceImage: {
-    width: 90,
-    height: 90,
-    shadowColor: "#000000", // Shadow color
-    shadowOffset: { width: 2, height: 4 }, // Shadow position
-    shadowOpacity: 0.2, // Shadow transparency (iOS)
-    shadowRadius: 4, // Shadow blur (iOS)
-    elevation: 3,
-  },
-  notificationsContainer: {
-    backgroundColor: "#fff",
-    padding: 6,
-    // borderRadius: 10,
-    marginTop: 12,
-    marginHorizontal: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    safeContainer: {
+      flex: 1,
+      backgroundColor: currentTheme.background || "#ffffff",
+      // paddingHorizontal: 20,
+      paddingTop: 10,
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-  },
-  notificationText: {
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  notificationsBox: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12,
-  },
-  notiText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#000000",
-    lineHeight: 25,
-  },
-  notiTextLay: {
-    flex: 1,
-  },
-  sectionContainer: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffffff",
-    backgroundColor: "#3b006b",
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-    textAlign: "center",
-    marginHorizontal: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginBottom: 10,
+      marginTop: 30,
+      // backgroundColor: "red",
+      padding: 4,
+      paddingHorizontal: 20,
+      alignItems: "center",
+      gap: 140
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-  },
-  whatsNewContainer: {
-    backgroundColor: "#ffffff",
-    padding: 10,
-    marginTop: 12,
-    justifyContent: "space-between",
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomRightRadius: 20,
-    marginHorizontal: 20,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    gifStyle: {
+      // width: 10,
+      // height: 50,
+      resizeMode: "contain",
+      marginBottom: -5,
+      marginTop: -18,
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-  },
-  profileContainers: {
-    backgroundColor: "#ffffff",
-    padding: 10,
-    marginTop: 12,
-    // justifyContent: "space-between",
-    flexDirection: "column",
-    alignItems: "center",
-    borderBottomRightRadius: 20,
-    marginHorizontal: 20,
-    gap: 5,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    welcome: {
+      fontSize: 25,
+      fontWeight: "600",
+      color: currentTheme.text
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-    borderBottomRightRadius: 20,
-    borderTopLeftRadius: 20,
-  },
-  whatsNewText: {
-    fontSize: 16,
-    color: "#000",
-  },
-  stickyButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 40,
-    backgroundColor: "#3b006b",
-    // position: "absolute",
-    // bottom: 20,
-    // right: 20,
-    marginLeft: 310,
-    marginBottom: 12,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    how: {
+      fontSize: 14,
+      fontWeight: "300",
+      color: currentTheme.subText
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-  },
-  chats: {
-    // backgroundColor: "#3b006b",
-    padding: 1,
-    flex: 1,
-    justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-  },
-  line: {
-    backgroundColor: "#5F5959",
-    width: "90%",
-    height: 1,
-    margin: "auto",
-  },
+    squareBox: {
+      backgroundColor: "#5DE895",
+      padding: 14,
+    },
+    searchContainer: {
+      marginHorizontal: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: { width: 2, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 5,
+      elevation: 5,
+      flex: 1,
+      justifyContent: "center",
+      alignContent: "center",
+      alignItems: "center",
+      borderRadius: 12,
+      marginBottom: 24,
+    },
+    searchInput: {
+      backgroundColor: currentTheme.background3 || "#ffffff",
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      marginVertical: 12,
+      borderColor: currentTheme.border || "#ddd",
+      borderWidth: 1,
+      width: "100%",
+      height: "100%",
+      color: currentTheme.subText
+    },
+    carousel: {
+      marginBottom: 20,
+      paddingHorizontal: 20,
+    },
+    serviceCard: {
+      alignItems: "center",
+      marginHorizontal: 10,
+      marginVertical: 2,
+      // paddingHorizontal: 15,
+      flexDirection: "column",
+      borderRadius: 10,
+      // backgroundColor: currentTheme.background || "#ffffff",
+      width: 100,
+      flexWrap: "wrap",
+      gap: 5,
+    },
+    serviceTextlay: {
+      flex: 1,
+      justifyContent: "center",
+    },
+    serviceText: {
+      fontSize: 13,
+      fontWeight: "500",
+      textAlign: "center",
+      flexWrap: "wrap",
+      color: "#555"
+    },
+    proileImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 45,
+      // shadowColor: "#000000", // Shadow color
+      // shadowOffset: { width: 2, height: 4 }, // Shadow position
+      // shadowOpacity: 0.2, // Shadow transparency (iOS)
+      // shadowRadius: 4, // Shadow blur (iOS)
+      // elevation: 3,
+    },
+    serviceImage: {
+      width: 90,
+      height: 90,
+      shadowColor: currentTheme.shadow || "#000000", // Shadow color
+      shadowOffset: { width: 2, height: 4 }, // Shadow position
+      shadowOpacity: 0.2, // Shadow transparency (iOS)
+      shadowRadius: 4, // Shadow blur (iOS)
+      elevation: 3,
+    },
+    notificationsContainer: {
+      backgroundColor: currentTheme.cardBackground || "#fff",
+      padding: 6,
+      // borderRadius: 10,
+      marginTop: 12,
+      marginHorizontal: 20,
+      shadowColor: currentTheme.shadow ||  "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+    },
+    notificationText: {
+      fontSize: 14,
+      marginBottom: 12,
+      // color: currentTheme.text
+    },
+    notificationsBox: {
+      flex: 1,
+      justifyContent: "flex-start",
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 12,
+    },
+    notiText: {
+      fontSize: 15,
+      fontWeight: "500",
+      color: currentTheme.text || "#000000",
+      lineHeight: 25,
+    },
+    notiTextLay: {
+      flex: 1,
+    },
+    sectionContainer: {
+      marginBottom: 20,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#ffffff",
+      backgroundColor: currentTheme.primary || "#3b006b",
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+      textAlign: "center",
+      marginHorizontal: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+    },
+    whatsNewContainer: {
+      backgroundColor: currentTheme.cardBackground || "#ffffff",
+      padding: 10,
+      marginTop: 12,
+      justifyContent: "space-between",
+      flexDirection: "row",
+      alignItems: "center",
+      borderBottomRightRadius: 20,
+      marginHorizontal: 20,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+    },
+    profileContainers: {
+      backgroundColor: currentTheme.cardBackground || "#ffffff",
+      padding: 10,
+      marginTop: 12,
+      // justifyContent: "space-between",
+      flexDirection: "column",
+      alignItems: "center",
+      borderBottomRightRadius: 20,
+      marginHorizontal: 20,
+      gap: 5,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+      borderBottomRightRadius: 20,
+      borderTopLeftRadius: 20,
+    },
+    whatsNewText: {
+      fontSize: 16,
+      color: currentTheme.subText || "#000",
+    },
+    stickyButton: {
+      width: 60,
+      height: 60,
+      borderRadius: 40,
+      backgroundColor: "#3b006b",
+      // position: "absolute",
+      // bottom: 20,
+      // right: 20,
+      marginLeft: 310,
+      marginBottom: 12,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+    },
+    chats: {
+      // backgroundColor: "#3b006b",
+      padding: 1,
+      flex: 1,
+      justifyContent: "center",
+      alignContent: "center",
+      alignItems: "center",
+    },
+    line: {
+      backgroundColor: "#5F5959",
+      width: "90%",
+      height: 1,
+      margin: "auto",
+    },
 
-  ongoingJobsContainer: {
-    marginVertical: 20,
-  },
-  ongoingTitle: {
-    fontSize: 16,
-    fontWeight: "480",
-    marginLeft: 44,
-  },
-  storyItem: {
-    marginRight: 10,
-    marginVertical: 12,
-  },
-  StoryContainer: {
-    paddingLeft: 35,
-    paddingRight: 20,
-  },
-  storyImage: { width: 74, height: 74, borderRadius: 50 },
-  notiImage: { width: 55, height: 55, borderRadius: 50 },
-  ongoingImage: { width: 70, height: 70, borderRadius: 50 },
-  placeholderText: {
-    width: 70,
-    height: 70,
-    borderRadius: 50,
-    textAlign: "center",
-    // alignContent: "center",
-    fontSize: 36,
-    paddingTop: 10
-  },
-  onGoItem: {
-    marginRight: 8,
-    marginTop: 15
-  },
-  addStory: {
-    width: 80,
-    height: 80,
-    borderRadius: 50,
-    backgroundColor: "#D9D9D9",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-    marginVertical: 12,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    ongoingJobsContainer: {
+      marginVertical: 20,
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4,
-    alignContent: "center",
-  },
-  addText: { fontSize: 60, color: "#A39E9E" },
-  profileContainer: {
-    padding: 15,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-  },
+    ongoingTitle: {
+      fontSize: 16,
+      fontWeight: "480",
+      marginLeft: 44,
+      color: currentTheme.text
+    },
+    storyItem: {
+      marginRight: 10,
+      marginVertical: 12,
+    },
+    StoryContainer: {
+      paddingLeft: 35,
+      paddingRight: 20,
+    },
+    storyImage: { width: 74, height: 74, borderRadius: 50 },
+    notiImage: { width: 55, height: 55, borderRadius: 50 },
+    ongoingImage: { width: 70, height: 70, borderRadius: 50 },
+    placeholderText: {
+      width: 70,
+      height: 70,
+      borderRadius: 50,
+      textAlign: "center",
+      // alignContent: "center",
+      fontSize: 36,
+      paddingTop: 10,
+      color: currentTheme.subText
+    },
+    onGoItem: {
+      marginRight: 8,
+      marginTop: 15
+    },
+    addStory: {
+      width: 80,
+      height: 80,
+      borderRadius: 50,
+      backgroundColor: currentTheme.background3 || "#D9D9D9",
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 10,
+      marginVertical: 12,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4,
+      alignContent: "center",
+    },
+    addText: { fontSize: 60, color: "#A39E9E" },
+    profileContainer: {
+      padding: 15,
+      backgroundColor: "#f9f9f9",
+      borderRadius: 10,
+    },
 
-  profileText: {
-    fontSize: 24,
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  boxColor: {
-    flex: 1,
-    flexDirection: "row",
-    gap: 5,
-    marginHorizontal: 20,
-  },
-  pBoxColor: {
-    backgroundColor: "#CCD2CE",
-    height: 12,
-    width: 48,
-    borderRadius: 12,
-  },
-  redBox: {
-    backgroundColor: "#FF3131",
-    height: 12,
-    width: 48,
-    borderRadius: 12,
-  },
-  yellowBox: {
-    backgroundColor: "#CEBF1D",
-    height: 12,
-    width: 48,
-    borderRadius: 12,
-  },
-  greenBox: {
-    backgroundColor: "#00871E",
-    height: 12,
-    width: 48,
-    borderRadius: 12,
-  },
-  loginButton: {
-    width: "100%",
-    height: 50,
-    backgroundColor: "#4B0082",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 5,
-    marginTop: 12,
-  },
-  loginButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
+    profileText: {
+      fontSize: 24,
+      fontWeight: "500",
+      textAlign: "center",
+      color: currentTheme.text
+    },
+    boxColor: {
+      flex: 1,
+      flexDirection: "row",
+      gap: 5,
+      marginHorizontal: 20,
+    },
+    pBoxColor: {
+      backgroundColor: currentTheme.text2 || "#CCD2CE",
+      height: 12,
+      width: 48,
+      borderRadius: 12,
+    },
+    redBox: {
+      backgroundColor: "#FF3131",
+      height: 12,
+      width: 48,
+      borderRadius: 12,
+    },
+    yellowBox: {
+      backgroundColor: "#CEBF1D",
+      height: 12,
+      width: 48,
+      borderRadius: 12,
+    },
+    greenBox: {
+      backgroundColor: "#00871E",
+      height: 12,
+      width: 48,
+      borderRadius: 12,
+    },
+    loginButton: {
+      width: "100%",
+      height: 50,
+      backgroundColor: currentTheme.primary || "#4B0082",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 5,
+      marginTop: 12,
+    },
+    loginButtonText: {
+      color: "white",
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+  });
 
 export default ClientHomeScreen;

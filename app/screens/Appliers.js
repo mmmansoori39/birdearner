@@ -156,7 +156,7 @@ const AppliersScreen = ({ navigation, route }) => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#3b006b"]}
-            progressBackgroundColor="#fff"
+            progressBackgroundColor={currentTheme.cardBackground || "#fff"}
           />
         }
       />

@@ -195,10 +195,12 @@ const JobDescriptionScreen = ({ route, navigation }) => {
       <ScrollView style={styles.scrollContent}>
         {/* Job Header */}
         <View style={styles.jobHeader}>
-          <Image
-            source={{ uri: clientProfileImage || "../assets/profile.png" }}
-            style={styles.avatar}
-          />
+          <TouchableOpacity onPress={() => openImageModal(clientProfileImage)}>
+            <Image
+              source={{ uri: clientProfileImage || "../assets/profile.png" }}
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
           <View style={styles.jobInfo}>
             <View style={styles.jobTitlebar}>
               <Text style={styles.jobTitle}>
