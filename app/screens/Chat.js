@@ -569,6 +569,37 @@ const Chat = ({ route, navigation }) => {
         }
       );
 
+
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.userEggsCollectionId,
+        [Query.equal('userId', userData.$id)]
+      );
+
+      if (response.documents.length > 0) {
+        const userEggData = response.documents[0];
+
+        const { eggStatus } = userEggData;
+
+        const updatedEggStatus = [...eggStatus];
+
+        for (let i = 0; i < updatedEggStatus.length; i++) {
+          if (!updatedEggStatus[i]) {
+            updatedEggStatus[i] = true;
+            break;
+          }
+        }
+
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.userEggsCollectionId,
+          userEggData.$id,
+          {
+            eggStatus: updatedEggStatus,
+          }
+        );
+      }
+
       Alert.alert("Job Status", "You have successfully complete this job.");
       navigation.goBack()
     } catch (error) {
