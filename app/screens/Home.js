@@ -21,13 +21,14 @@ const HomeScreen = () => {
   const [CompletedOrders, setCompletedOrders] = useState(0)
   const [activeOrders, setActiveOrders] = useState(0)
   const [cancelledOrders, setCancelledOrdersOrders] = useState(0)
+  const [successScore, setSuccessScore] = useState(0)
   const navigation = useNavigation()
 
   useEffect(() => {
     const fetchOrderRecords = async () => {
       try {
         const cancelledOrders = userData?.cancelled_jobs.length
-        const assignedJobs = userData?.assigned_jobs        
+        const assignedJobs = userData?.assigned_jobs
 
         setCancelledOrdersOrders(cancelledOrders)
 
@@ -46,6 +47,13 @@ const HomeScreen = () => {
 
           setCompletedOrders(completedCount);
           setActiveOrders(activeCount);
+
+          const totalOrders = completedCount + cancelledOrders;
+          const calSuccessScore = totalOrders
+            ? ((completedCount / totalOrders) * 100).toFixed(0)
+            : 0;
+
+          setSuccessScore(calSuccessScore)
         }
 
       } catch (error) {
@@ -80,25 +88,25 @@ const HomeScreen = () => {
     const role = userData.role
 
     if (profilePercentage < 20) {
-      navigation.navigate("DescribeRoleCom", {fullName, email, password, role})
+      navigation.navigate("DescribeRoleCom", { fullName, email, password, role })
     } else if (profilePercentage >= 20 && profilePercentage < 40) {
-      navigation.navigate("DescribeRoleCom", {fullName, email, password, role})
+      navigation.navigate("DescribeRoleCom", { fullName, email, password, role })
     } else if (profilePercentage >= 40 && profilePercentage < 70) {
-      navigation.navigate("TellUsAboutYouCom", {role})
+      navigation.navigate("TellUsAboutYouCom", { role })
     } else if (profilePercentage >= 70 && profilePercentage < 100) {
-      navigation.navigate("PortfolioCom", {role})
+      navigation.navigate("PortfolioCom", { role })
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     const flagsData = async () => {
-      if(userData){
+      if (userData) {
         try {
           const freelancerId = userData?.$id;
-  
+
           const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-  
-  
+
+
           const freelancerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             collectionId,
@@ -109,7 +117,7 @@ useEffect(() => {
           Alert.alert("Error updating flags:", error)
         }
       }
-      }
+    }
     flagsData()
   }, [refreshing])
 
@@ -154,14 +162,14 @@ useEffect(() => {
             {user ? `${userData?.full_name}` : "User"}
           </Text>
         </View>
-        
+
         {/* Your Statistics Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Your Statistics</Text>
           <View style={styles.statsContainer}>
             <View style={styles.statsBox}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>70%</Text>
+                <Text style={styles.statValue}>{successScore}%</Text>
                 <Text style={styles.statLabel}>Success Score</Text>
               </View>
               <View style={styles.statItem}>
@@ -204,9 +212,9 @@ useEffect(() => {
             </View>
             <View style={styles.earningItem}>
               <TouchableOpacity onPress={() => navigation.navigate("Profile", { screen: "Withdrawal Earning" })}>
-              <Text style={styles.earningValue}>Rs. {formatAmount(userData?.withdrawableAmount) || "0"}</Text>
+                <Text style={styles.earningValue}>Rs. {formatAmount(userData?.withdrawableAmount) || "0"}</Text>
               </TouchableOpacity>
-              <Text style={styles.earningLabel}>For Withdrawal</Text>
+              <Text style={styles.earningLabel}>Withdrawal</Text>
             </View>
           </View>
         </View>
