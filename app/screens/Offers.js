@@ -15,6 +15,9 @@ import egg from "../assets/egg.png";
 import nest from "../assets/nest.png";
 import tree from "../assets/tree.png";
 import brEgg from "../assets/brEgg.png";
+import { useAuth } from "../context/AuthContext";
+import { appwriteConfig, databases } from "../lib/appwrite";
+import { Query } from "react-native-appwrite";
 
 const offers = ["10rs", "50rs", "0", "25rs", "15rs"];
 
@@ -22,10 +25,13 @@ const OffersScreen = ({ navigation }) => {
   const [eggStatus, setEggStatus] = useState([false, false, false, false, false]);
   const [brokenEggs, setBrokenEggs] = useState([false, false, false, false, false]);
   const [showOfferPopup, setShowOfferPopup] = useState(false);
-  const [showVideoPopup, setShowVideoPopup] = useState(false);
+  const [showRulesPopup, setShowRulesPopup] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
+  const { userData } = useAuth();
+  const userId = userData?.$id;
 
-  // Create refs for the shake animations
+  const [slideAnimation] = useState(new Animated.Value(300));
+
   const shakeAnimations = useRef(
     Array(5)
       .fill()
@@ -33,13 +39,98 @@ const OffersScreen = ({ navigation }) => {
   ).current;
 
   useEffect(() => {
-    // Start shaking animations for all unbroken eggs
-    eggStatus.forEach((_, index) => {
-      if (!brokenEggs[index]) {
-        startShakeAnimation(index);
+    checkUserOfferStatus();
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(slideAnimation, {
+      toValue: 0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [showRulesPopup]);
+
+  const checkUserOfferStatus = async () => {
+    try {
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.userEggsCollectionId,
+        [
+          Query.equal('userId', userId),
+        ]);
+
+      if (response.documents.length === 0) {
+        const currentDate = new Date();
+        const eggStatusInitial = [false, false, false, false, false];
+        const brokenEggInitial = [false, false, false, false, false];
+        setShowRulesPopup(true);
+        await createOfferDocument(eggStatusInitial, brokenEggInitial, currentDate);
+
+      } else {
+        const userEggData = response.documents[0];
+        const { eggStatus, brokenEggs, lastRefreshDate } = userEggData;
+
+        eggStatus.forEach((status, index) => {
+          if (status) {
+            startShakeAnimation(index);
+          }
+        });
+
+        let lastRefreshMonth = -1;
+        if (lastRefreshDate) {
+          const lastDate = new Date(lastRefreshDate);
+          lastRefreshMonth = lastDate.getMonth();
+        }
+
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+
+
+        if (currentMonth !== lastRefreshMonth) {
+          const newEggStatus = [false, false, false, false, false];
+          const newBrokenEggs = [false, false, false, false, false];
+          setEggStatus(newEggStatus);
+          setBrokenEggs(newBrokenEggs);
+
+          await databases.updateDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.userEggsCollectionId,
+            userEggData?.$id,
+            {
+              eggStatus: newEggStatus,
+              brokenEggs: newBrokenEggs,
+              lastRefreshDate: currentDate.toISOString(),
+            }
+          );
+        } else {
+          setEggStatus(eggStatus || [false, false, false, false, false]);
+          setBrokenEggs(brokenEggs || [false, false, false, false, false]);
+        }
       }
-    });
-  }, [brokenEggs]);
+    } catch (error) {
+      console.error("Error checking user offer status:", error);
+    }
+  };
+
+  const createOfferDocument = async (eggStatusInitial, brokenEggInitial, currentDate) => {
+    try {
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.userEggsCollectionId,
+        'unique()',
+        {
+          userId,
+          eggStatus: eggStatusInitial,
+          brokenEggs: brokenEggInitial,
+          lastRefreshDate: currentDate.toISOString(),
+        }
+      );
+      setEggStatus(eggStatusInitial);
+      setBrokenEggs(brokenEggInitial)
+    } catch (error) {
+      console.error("Error creating offer document:", error);
+    }
+  };
 
   const startShakeAnimation = (index) => {
     Animated.loop(
@@ -67,7 +158,7 @@ const OffersScreen = ({ navigation }) => {
     shakeAnimations[index].stopAnimation();
   };
 
-  const handleEggClick = (index) => {
+  const handleEggClick = async (index) => {
     if (eggStatus[index]) {
       const randomOffer = offers[Math.floor(Math.random() * offers.length)];
       setSelectedOffer(randomOffer);
@@ -77,50 +168,60 @@ const OffersScreen = ({ navigation }) => {
       updatedBrokenEggs[index] = true;
       setBrokenEggs(updatedBrokenEggs);
 
-      // Stop shaking animation for the broken egg
-      stopShakeAnimation(index);
-    } else {
-      setShowVideoPopup(true);
+      try {
+        const response = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.userEggsCollectionId,
+          [Query.equal('userId', userId)]
+        );
+
+        if (response.documents.length > 0) {
+          const userEggData = response.documents[0];
+
+          await databases.updateDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.userEggsCollectionId,
+            userEggData.$id,
+            {
+              brokenEggs: updatedBrokenEggs,
+            }
+          );
+
+          stopShakeAnimation(index);
+        }
+      } catch (error) {
+        console.error("Error updating document:", error);
+      }
     }
   };
 
   const closePopup = () => {
     setShowOfferPopup(false);
-    setShowVideoPopup(false);
   };
 
-  const unlockEgg = (index) => {
-    const updatedEggStatus = [...eggStatus];
-    updatedEggStatus[index] = true;
-    setEggStatus(updatedEggStatus);
-  };
-
-  const unlockAllEggs = () => {
-    setEggStatus([true, true, true, true, true]);
+  const closeRulesPopup = () => {
+    setShowRulesPopup(false);
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground source={offerBackground} style={styles.offerBackground} resizeMode="cover">
-        <TouchableOpacity style={styles.unlockAllButton} onPress={unlockAllEggs}>
-          <Text style={styles.unlockAllButtonText}>Unlock All Eggs</Text>
-        </TouchableOpacity>
         <Image source={tree} style={styles.tree} />
         {eggStatus.map((status, index) => (
           <React.Fragment key={index}>
             <Image source={nest} style={styles[`nest${index + 1}`]} />
             <Animated.View
               style={[
-                styles[`egg${index + 1}`], brokenEggs[index] && styles[`brokenEgg${index + 1}`], 
+                styles[`egg${index + 1}`], brokenEggs[index] && styles[`brokenEgg${index + 1}`],
                 {
                   transform: [
                     {
                       translateX: brokenEggs[index]
                         ? 0
                         : shakeAnimations[index].interpolate({
-                            inputRange: [-1, 1],
-                            outputRange: [-5, 5],
-                          }),
+                          inputRange: [-1, 1],
+                          outputRange: [-5, 5],
+                        }),
                     },
                   ],
                 },
@@ -153,16 +254,24 @@ const OffersScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* Video Popup */}
-      <Modal visible={showVideoPopup} transparent={true} animationType="fade">
-        <View style={styles.popupOverlay}>
-          <View style={styles.popupContent}>
-            <Text style={styles.popupTitle}>No Offer Available!</Text>
-            <Text style={styles.popupText}>Stay tuned for more offers!</Text>
-            <TouchableOpacity style={styles.popupButton} onPress={closePopup}>
-              <Text style={styles.popupButtonText}>Close</Text>
+      {/* Rules Popup (First-time Visit) */}
+      <Modal visible={showRulesPopup} transparent={true} animationType="slide">
+        <View style={styles.popupOverlay1}>
+          <Animated.View style={[styles.popupContent1, { transform: [{ translateY: slideAnimation }] }]}>
+            <Text style={styles.popupTitle1}>How Offers Work</Text>
+            <Text style={styles.popupDetails1}>
+              Unlock eggs by completing orders. Each egg holds a surprise offer, ranging cashback money! 🎁
+            </Text>
+            <Text style={styles.popupDetails1}>
+              The eggs reset every month, so check back regularly to unlock new surprises. 🗓️
+            </Text>
+            <Text style={styles.popupDetails1}>
+              Tap on each egg to crack it open and reveal your reward! 🥚💰
+            </Text>
+            <TouchableOpacity style={styles.popupButton1} onPress={closeRulesPopup}>
+              <Text style={styles.popupButtonText1}>Got It!</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -175,7 +284,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
   unlockAllButton: {
     position: "absolute",
     bottom: 20,
@@ -317,5 +425,52 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 90,
     left: 164,
+  },
+
+  popupOverlay1: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+  },
+  popupContent1: {
+    backgroundColor: "#ffffff",
+    // padding: 30,
+    paddingVertical: 35,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    width: "80%",
+    // height: "80%",
+    // justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
+    borderColor: "#fff",
+    borderWidth: 2,
+  },
+  popupTitle1: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#4C0183",
+    textAlign: "center",
+  },
+  popupDetails1: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 15,
+    textAlign: "center",
+    lineHeight: 28,
+  },
+  popupButton1: {
+    backgroundColor: "#4C0183",
+    padding: 12,
+    borderRadius: 8,
+    width: "50%",
+    alignItems: "center",
+  },
+  popupButtonText1: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
