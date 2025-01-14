@@ -19,7 +19,7 @@ import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
 
-const offers = ["10rs", "50rs", "0", "25rs", "15rs"];
+const offers = [10, 50, 0, 25, 15];
 
 const OffersScreen = ({ navigation }) => {
   const [eggStatus, setEggStatus] = useState([false, false, false, false, false]);
@@ -169,6 +169,44 @@ const OffersScreen = ({ navigation }) => {
       setBrokenEggs(updatedBrokenEggs);
 
       try {
+
+        const clientCollectionId = appwriteConfig.clientCollectionId;
+        const paymentHistoryCollectionId = appwriteConfig.paymentHistoryCollectionId;
+
+        // Fetch user document to get the current wallet amount
+        const userDoc = await databases.getDocument(
+          appwriteConfig.databaseId,
+          clientCollectionId,
+          userId
+        );
+
+        const currentWallet = userDoc?.wallet || 0;
+        const newWalletAmount = currentWallet + parseFloat(randomOffer);
+
+        // Update wallet amount in the user's document
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          clientCollectionId,
+          userId,
+          {
+            wallet: newWalletAmount,
+          }
+        );
+
+        // Add a new payment history document
+        await databases.createDocument(
+          appwriteConfig.databaseId,
+          paymentHistoryCollectionId,
+          'unique()',
+          {
+            userId: userId,
+            paymentId: "Cashback Amount",
+            amount: parseFloat(randomOffer),
+            status: 'Recieved',
+            date: new Date().toISOString(),
+          }
+        );
+
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
           appwriteConfig.userEggsCollectionId,
@@ -246,7 +284,7 @@ const OffersScreen = ({ navigation }) => {
         <View style={styles.popupOverlay}>
           <View style={styles.popupContent}>
             <Text style={styles.popupTitle}>Congratulations!</Text>
-            <Text style={styles.popupText}>You've earned a cashback of {selectedOffer}!</Text>
+            <Text style={styles.popupText}>You've earned a cashback of ₹{selectedOffer}!</Text>
             <TouchableOpacity style={styles.popupButton} onPress={closePopup}>
               <Text style={styles.popupButtonText}>Claim Cashback</Text>
             </TouchableOpacity>
