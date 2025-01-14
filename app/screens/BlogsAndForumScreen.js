@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 const BlogsAndForumScreen = ({ navigation }) => {
     const blogs = [
@@ -24,6 +25,11 @@ const BlogsAndForumScreen = ({ navigation }) => {
         },
     ];
 
+    const { theme, themeStyles } = useTheme();
+    const currentTheme = themeStyles[theme];
+
+    const styles = getStyles(currentTheme);
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.main}>
@@ -31,7 +37,7 @@ const BlogsAndForumScreen = ({ navigation }) => {
                     onPress={() => navigation.goBack()}
                     style={styles.backButton}
                 >
-                    <Ionicons name="arrow-back" size={24} color="black" />
+                    <Ionicons name="arrow-back" size={24} color={currentTheme.text} />
                 </TouchableOpacity>
                 <Text style={styles.header}>Blogs & Forum</Text>
             </View>
@@ -65,104 +71,100 @@ const BlogsAndForumScreen = ({ navigation }) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: "#fff",
-    },
-    main: {
-        marginTop: 45,
-        marginBottom: 0,
-        display: "flex",
-        flexDirection: "row",
-        gap: 80,
-        alignItems: "center",
-    },
-    header: {
-        fontSize: 24,
-        fontWeight: "bold",
-        // marginBottom: 20,
-        textAlign: "center",
-    },
-    contentContainer: {
-        padding: 5,
-        backgroundColor: '#fff',
-        margin: 16,
-        borderRadius: 8,
-        // shadowColor: '#000',
-        // shadowOpacity: 0.1,
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowRadius: 4,
-        // elevation: 2,
-    },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 12,
-        marginTop: 20,
-    },
-    blogCard: {
-        flexDirection: 'row',
-        backgroundColor: '#f9f9f9',
-        borderRadius: 8,
-        marginBottom: 16,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    blogImage: {
-        width: 100,
-        height: 100,
-    },
-    blogContent: {
-        flex: 1,
-        padding: 12,
-        justifyContent: 'center',
-    },
-    blogTitle: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#6A0DAD',
-        marginBottom: 4,
-    },
-    blogSnippet: {
-        fontSize: 12,
-        color: '#555',
-    },
-    forumContainer: {
-        marginTop: 5,
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    forumText: {
-        fontSize: 14,
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    forumButton: {
-        backgroundColor: '#6A0DAD',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 5,
-    },
-    forumButtonText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-});
+const getStyles = (currentTheme) => 
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            padding: 20,
+            backgroundColor: currentTheme.background2,
+        },
+        main: {
+            marginTop: 45,
+            marginBottom: 0,
+            display: "flex",
+            flexDirection: "row",
+            gap: 80,
+            alignItems: "center",
+        },
+        header: {
+            fontSize: 24,
+            fontWeight: "bold",
+            textAlign: "center",
+            color: currentTheme.text,
+        },
+        contentContainer: {
+            padding: 5,
+            backgroundColor: currentTheme.background2,
+            margin: 16,
+            borderRadius: 8,
+        },
+        sectionTitle: {
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: currentTheme.text,
+            marginBottom: 12,
+            marginTop: 20,
+        },
+        blogCard: {
+            flexDirection: 'row',
+            backgroundColor: currentTheme.background || '#f9f9f9',
+            borderRadius: 8,
+            marginBottom: 16,
+            overflow: 'hidden',
+            shadowColor: currentTheme.shadow || '#000',
+            shadowOpacity: 0.1,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 4,
+            elevation: 2,
+        },
+        blogImage: {
+            width: 100,
+            height: 100,
+        },
+        blogContent: {
+            flex: 1,
+            padding: 12,
+            justifyContent: 'center',
+        },
+        blogTitle: {
+            fontSize: 14,
+            fontWeight: 'bold',
+            color:'#6A0DAD',
+            marginBottom: 4,
+        },
+        blogSnippet: {
+            fontSize: 12,
+            color: currentTheme.text || '#555',
+        },
+        forumContainer: {
+            marginTop: 5,
+            alignItems: 'center',
+            padding: 16,
+            backgroundColor: currentTheme.background || '#f0f0f0',
+            borderRadius: 8,
+            shadowColor: currentTheme.shadow || '#000',
+            shadowOpacity: 0.1,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 4,
+            elevation: 2,
+        },
+        forumText: {
+            fontSize: 14,
+            color: currentTheme.text,
+            textAlign: 'center',
+            marginBottom: 12,
+        },
+        forumButton: {
+            backgroundColor: currentTheme.primary || '#6A0DAD',
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            borderRadius: 5,
+        },
+        forumButtonText: {
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 'bold',
+        },
+    });
 
 export default BlogsAndForumScreen;

@@ -11,11 +11,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { Query } from "react-native-appwrite";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const WalletClientScreen = ({ navigation }) => {
     const { userData } = useAuth();
     const [walletAmount, setWalletAmount] = useState(userData?.wallet || 0);
     const [paymentHistory, setPaymentHistory] = useState([]);
+
+    const { theme, themeStyles } = useTheme();
+      const currentTheme = themeStyles[theme];
+    
+      const styles = getStyles(currentTheme);
 
     // Fetch updated wallet data when the screen is focused
     useEffect(() => {
@@ -171,7 +177,7 @@ const WalletClientScreen = ({ navigation }) => {
                     onPress={() => navigation.goBack()}
                     style={styles.backButton}
                 >
-                    <Ionicons name="arrow-back" size={24} color="black" />
+                    <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
                 </TouchableOpacity>
                 <Text style={styles.header}>Wallet</Text>
             </View>
@@ -200,163 +206,164 @@ const WalletClientScreen = ({ navigation }) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: "#FFF",
-        paddingHorizontal: 40,
-    },
-    main: {
-        marginTop: 45,
-        marginBottom: 50,
-        display: "flex",
-        flexDirection: "row",
-        gap: 100,
-        alignItems: "center",
-    },
-    addAmount: {
-        textAlign: "center",
-        textDecorationLine: "underline",
-        fontSize: 16,
-        color: "#4B0082",
-    },
-    header: {
-        fontSize: 24,
-        fontWeight: "bold",
-        textAlign: "center",
-    },
-    headerPay: {
-        fontSize: 22,
-        fontWeight: "600",
-        marginBottom: 20,
-        textAlign: "center",
-        marginTop: 25,
-        color: "#8F8F8F",
-    },
-    label: {
-        fontSize: 18,
-        color: "#000000",
-        marginBottom: 8,
-        fontWeight: "400",
-        textAlign: "center",
-    },
-    colorText: {
-        fontSize: 30,
-        fontWeight: "600",
-        color: "#4B0082",
-        textAlign: "center",
-        marginBottom: 20,
-    },
-    historyContainer: {
-        flex: 1,
-        marginTop: 20,
-    },
-    historyList: {
-        marginTop: 10,
-    },
-    paymentItem: {
-        backgroundColor: "#F9F9F9",
-        padding: 15,
-        marginVertical: 10,
-        borderRadius: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-    },
-    paymentCon: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        gap: 50,
-        marginLeft: 1,
-        alignItems: "center"
-    },
-    paymentId: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#333",
-    },
-    paymentAmount: {
-        fontSize: 14,
-        fontWeight: "500",
-        color: "#4B0082",
-    },
-    paymentStatus: {
-        fontSize: 14,
-        fontWeight: "600",
-        // marginTop: 5,
-    },
-    paymentDate: {
-        fontSize: 12,
-        color: "#888",
-        // marginTop: 5,
-    },
-    noHistory: {
-        fontSize: 16,
-        color: "#888",
-        textAlign: "center",
-        marginTop: 20,
-    },
-
-    paymentItem: {
-        backgroundColor: "#fff",
-        // padding: 12,
-        marginVertical: 5,
-        borderRadius: 8,
-        elevation: 3, // Add shadow for elevation (optional)
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 1.5,
-        paddingVertical: 5,
-        paddingHorizontal: 10
-    },
-    triangleIndicator: {
-        width: 0,
-        height: 0,
-        borderTopWidth: 8,
-        borderBottomWidth: 8,
-        borderLeftWidth: 16,
-        borderStyle: "solid",
-        borderTopColor: "transparent",
-        borderBottomColor: "transparent",
-        marginRight: 10,
-    },
-    paymentDetails: {
-        flex: 1,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 5,
-    },
-    indicatorName: {
-        flex: 1,
-        flexDirection: "row",
-        justifyContent: "flex-start",
-        alignItems: "center",
-        // gap: 2
-    },
-    name: {
-        fontSize: 15,
-        fontWeight: "500",
-        color: "#333",
-        // marginRight: 20
-    },
-    amount: {
-        fontSize: 15,
-        fontWeight: "500",
-        color: "#71C232",
-    },
-    date: {
-        fontSize: 12,
-        color: "#666",
-    },
-    status: {
-        fontSize: 12,
-        fontWeight: "bold",
-    },
-});
+const getStyles = (currentTheme) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            padding: 20,
+            backgroundColor: currentTheme.background || "#FFF",
+            paddingHorizontal: 40,
+        },
+        main: {
+            marginTop: 45,
+            marginBottom: 50,
+            display: "flex",
+            flexDirection: "row",
+            gap: 100,
+            alignItems: "center",
+        },
+        addAmount: {
+            textAlign: "center",
+            textDecorationLine: "underline",
+            fontSize: 16,
+            color: currentTheme.primary || "#4B0082",
+        },
+        header: {
+            fontSize: 24,
+            fontWeight: "bold",
+            textAlign: "center",
+            color: currentTheme.text
+        },
+        headerPay: {
+            fontSize: 22,
+            fontWeight: "600",
+            marginBottom: 20,
+            textAlign: "center",
+            marginTop: 25,
+            color: "#8F8F8F",
+        },
+        label: {
+            fontSize: 18,
+            color: currentTheme.text || "#000000",
+            marginBottom: 8,
+            fontWeight: "400",
+            textAlign: "center",
+        },
+        colorText: {
+            fontSize: 30,
+            fontWeight: "600",
+            color: "#4B0082",
+            textAlign: "center",
+            marginBottom: 20,
+        },
+        historyContainer: {
+            flex: 1,
+            marginTop: 20,
+        },
+        historyList: {
+            marginTop: 10,
+        },
+        paymentItem: {
+            backgroundColor:currentTheme.background || "#F9F9F9",
+            padding: 15,
+            marginVertical: 10,
+            borderRadius: 10,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 3,
+        },
+        paymentCon: {
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 50,
+            marginLeft: 1,
+            alignItems: "center"
+        },
+        paymentId: {
+            fontSize: 14,
+            fontWeight: "600",
+            color: "#333",
+        },
+        paymentAmount: {
+            fontSize: 14,
+            fontWeight: "500",
+            color: "#4B0082",
+        },
+        paymentStatus: {
+            fontSize: 14,
+            fontWeight: "600",
+            // marginTop: 5,
+        },
+        paymentDate: {
+            fontSize: 12,
+            color: "#888",
+            // marginTop: 5,
+        },
+        noHistory: {
+            fontSize: 16,
+            color: "#888",
+            textAlign: "center",
+            marginTop: 20,
+        },
+    
+        paymentItem: {
+            backgroundColor: currentTheme.cardBackground || "#fff",
+            // padding: 12,
+            marginVertical: 5,
+            borderRadius: 8,
+            elevation: 3, // Add shadow for elevation (optional)
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.2,
+            shadowRadius: 1.5,
+            paddingVertical: 5,
+            paddingHorizontal: 10
+        },
+        triangleIndicator: {
+            width: 0,
+            height: 0,
+            borderTopWidth: 8,
+            borderBottomWidth: 8,
+            borderLeftWidth: 16,
+            borderStyle: "solid",
+            borderTopColor: "transparent",
+            borderBottomColor: "transparent",
+            marginRight: 10,
+        },
+        paymentDetails: {
+            flex: 1,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 5,
+        },
+        indicatorName: {
+            flex: 1,
+            flexDirection: "row",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            // color: currentTheme.text
+        },
+        name: {
+            fontSize: 15,
+            fontWeight: "500",
+            color:currentTheme.subText || "#333",
+        },
+        amount: {
+            fontSize: 15,
+            fontWeight: "500",
+            color:  "#71C232",
+        },
+        date: {
+            fontSize: 12,
+            color:  "#666",
+        },
+        status: {
+            fontSize: 12,
+            fontWeight: "bold",
+        },
+    });
 
 export default WalletClientScreen;

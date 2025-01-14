@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 import Toast from "react-native-toast-message";
+import { useTheme } from "../context/ThemeContext";
 
 const BankAccountDetailsScreen = ({ navigation }) => {
   const [bankName, setBankName] = useState("");
@@ -21,6 +22,11 @@ const BankAccountDetailsScreen = ({ navigation }) => {
   const [ifscCode, setIfscCode] = useState("");
   const [isEditingIfscCode, setIsEditingIfscCode] = useState(false);
   const { userData } = useAuth();
+
+  const { theme, themeStyles } = useTheme();
+    const currentTheme = themeStyles[theme];
+  
+    const styles = getStyles(currentTheme);
 
   useEffect(() => {
     fetchBankDetails();
@@ -96,13 +102,13 @@ const BankAccountDetailsScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
-      <View>
+      <View style={styles.maincon}>
         <View style={styles.main}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color="black" />
+            <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
           </TouchableOpacity>
           <Text style={styles.header}>Bank Account details</Text>
         </View>
@@ -172,55 +178,61 @@ const BankAccountDetailsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#FFF",
-    paddingHorizontal: 30,
-  },
-  main: {
-    marginTop: 45,
-    marginBottom: 50,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 18,
-    color: "#000000",
-    marginBottom: 8,
-    fontWeight: "400",
-    textAlign: "center",
-  },
-  input: {
-    width: "100%",
-    height: 44,
-    backgroundColor: "#f4f0f0",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    fontSize: 14,
-    color: "#898686",
-  },
-  signupButton: {
-    width: "40%",
-    height: 50,
-    backgroundColor: "#6A0DAD",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-  signupButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: currentTheme.background || "#FFF",
+      paddingHorizontal: 30,
+    },
+    maincon: {
+      alignItems: "center"
+    },
+    main: {
+      marginTop: 45,
+      marginBottom: 50,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 42
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      color: currentTheme.text
+    },
+    label: {
+      fontSize: 18,
+      color: currentTheme.text || "#000000",
+      marginBottom: 8,
+      fontWeight: "400",
+      textAlign: "center",
+    },
+    input: {
+      width: "100%",
+      height: 44,
+      backgroundColor: currentTheme.background3 || "#f4f0f0",
+      borderRadius: 12,
+      paddingHorizontal: 20,
+      marginBottom: 20,
+      fontSize: 14,
+      color: currentTheme.subText || "#000000",
+    },
+    signupButton: {
+      width: "40%",
+      height: 50,
+      backgroundColor: currentTheme.primary || "#6A0DAD",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 20,
+    },
+    signupButtonText: {
+      color: "white",
+      fontSize: 18,
+      fontWeight: "700",
+    },
+  });
 
 export default BankAccountDetailsScreen;

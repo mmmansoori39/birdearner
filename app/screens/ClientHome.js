@@ -20,6 +20,7 @@ import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
 import { differenceInDays } from "date-fns";
 import gifAnimation from "../assets/loading.gif";
+import { useTheme } from "../context/ThemeContext";
 
 const placeholderImageURL = "https://picsum.photos/seed/";
 
@@ -364,21 +365,6 @@ const ClientHomeScreen = () => {
               />
             </TouchableOpacity>
           )}
-          {/* <TouchableOpacity
-            style={styles.notificationIcon}
-            onPress={() => {
-              navigation.navigate("Offers");
-            }}
-          >
-            <Image
-              source={
-                userData?.profile_photo
-                  ? { uri: userData.profile_photo }
-                  : require("../assets/profile.png")
-              }
-              style={styles.proileImage}
-            />
-          </TouchableOpacity> */}
         </View>
 
         <View style={styles.line}></View>

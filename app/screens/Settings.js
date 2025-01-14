@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const SettingsScreen = ({ navigation }) => {
   const { userData } = useAuth();
   const role = userData?.role;
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const settingsData = [
     {
@@ -108,64 +113,66 @@ const SettingsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-    paddingTop: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  searchContainer: {
-    marginBottom: 20,
-  },
-  searchInput: {
-    height: 45,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 16,
-    color: '#333',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  sectionContainer: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 10,
-  },
-  optionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  optionText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  arrowIcon: {
-    fontSize: 18,
-    color: '#888',
-  },
-  noResults: {
-    textAlign: 'center',
-    color: '#888',
-    fontSize: 16,
-    marginTop: 20,
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background || '#fff',
+      padding: 16,
+      paddingTop: 50,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: 16,
+      color: currentTheme.text || "white"
+    },
+    searchContainer: {
+      marginBottom: 20,
+    },
+    searchInput: {
+      height: 45,
+      borderRadius: 8,
+      backgroundColor: currentTheme.background3 || '#f0f0f0',
+      paddingHorizontal: 16,
+      color: currentTheme.subText || '#333',
+    },
+    scrollView: {
+      flex: 1,
+    },
+    sectionContainer: {
+      marginBottom: 20,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: currentTheme.text || '#555',
+      marginBottom: 10,
+    },
+    optionContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      paddingHorizontal: 10,
+      backgroundColor: currentTheme.background3 || '#f0f0f0',
+      borderRadius: 8,
+      marginBottom: 10,
+    },
+    optionText: {
+      fontSize: 14,
+      color: currentTheme.text || '#333',
+    },
+    arrowIcon: {
+      fontSize: 18,
+      color: currentTheme.text || '#888',
+    },
+    noResults: {
+      textAlign: 'center',
+      color: currentTheme.text || '#888',
+      fontSize: 16,
+      marginTop: 20,
+    },
+  });
 
 export default SettingsScreen;

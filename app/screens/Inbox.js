@@ -14,6 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Query } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const Inbox = () => {
   const [chatThreads, setChatThreads] = useState([]);
@@ -24,6 +25,11 @@ const Inbox = () => {
   const isDataFetched = useRef(false);
   const { userData } = useAuth();
   const navigation = useNavigation()
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   // Load chat threads
   // Load chat threads
@@ -261,7 +267,7 @@ const Inbox = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3b006b" />
-        <Text>Loading chats...</Text>
+        <Text style={{color: currentTheme.subText}}>Loading chats...</Text>
       </View>
     );
   }
@@ -292,7 +298,7 @@ const Inbox = () => {
     <View style={styles.container}>
       <View style={styles.main}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
         </TouchableOpacity>
         <Text style={styles.header}>Inbox</Text>
       </View>
@@ -308,143 +314,147 @@ const Inbox = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1, backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingTop: 40
-  },
-  main: {
-    marginTop: 25,
-    marginBottom: 20,
-    display: "flex",
-    flexDirection: "row",
-    gap: 100,
-    alignItems: "center"
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    // marginBottom: 20,
-    textAlign: 'center',
-  },
-  loadingText: { textAlign: "center", marginTop: 20, color: "#888" },
-  chatListContainer: { padding: 10 },
-  chatThread: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderColor: "#ddd",
-    justifyContent: "space-between",
-  },
-  profileSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
-    backgroundColor: "#e0e0e0", // Fallback background for images
-  },
-  textSection: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  receiverName: { fontSize: 16, fontWeight: "bold", color: "#000" },
-  lastMessage: { fontSize: 14, color: "#666", marginTop: 1, marginBottom: 5 },
-  timestamp: {
-    fontSize: 12,
-    color: "#aaa",
-    alignSelf: "flex-start",
-  },
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1, backgroundColor: currentTheme.background || "#fff",
+      paddingHorizontal: 20,
+      paddingTop: 40
+    },
+    main: {
+      marginTop: 25,
+      marginBottom: 20,
+      display: "flex",
+      flexDirection: "row",
+      gap: 100,
+      alignItems: "center"
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      // marginBottom: 20,
+      textAlign: 'center',
+      color: currentTheme.text
+    },
+    loadingText: { textAlign: "center", marginTop: 20, color: currentTheme.subText || "#888" },
+    chatListContainer: { padding: 10 },
+    chatThread: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 15,
+      borderBottomWidth: 1,
+      borderColor: currentTheme.border || "#ddd",
+      justifyContent: "space-between",
+    },
+    profileSection: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    profileImage: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      marginRight: 10,
+      backgroundColor: "#e0e0e0", // Fallback background for images
+    },
+    textSection: {
+      flex: 1,
+      justifyContent: "center",
+    },
+    receiverName: { fontSize: 16, fontWeight: "bold", color: "#000" },
+    lastMessage: { fontSize: 14, color: currentTheme.subText || "#666", marginTop: 1, marginBottom: 5 },
+    timestamp: {
+      fontSize: 12,
+      color: "#aaa",
+      alignSelf: "flex-start",
+    },
 
-  jobContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    // padding: 10,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    borderTopLeftRadius: 40,
-    borderBottomLeftRadius: 40,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 2,
-    height: 70
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 15,
-  },
-  jobContent: {
-    flex: 1,
-    paddingRight: 6
-  },
-  jobTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#5A4CAE',
-  },
-  jobStatus: {
-    fontSize: 14,
-    color: '#6D6D6D',
-  },
-  statusIndicator: {
-    width: 10,
-    height: '100%',
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: '#FF3B30',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#3b006b',
-    padding: 10,
-    borderRadius: 5,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: "#fff"
-  },
-  emptyMessage: {
-    fontSize: 16,
-    color: '#6D6D6D',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  backButtonText: {
-    color: '#3b006b',
-    fontSize: 16,
-  },
-});
+    jobContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: currentTheme.cardBackground || '#F5F5F5',
+      // padding: 10,
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+      borderTopLeftRadius: 40,
+      borderBottomLeftRadius: 40,
+      marginTop: 20,
+      shadowColor: currentTheme.shadow || '#000',
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 5,
+      elevation: 2,
+      height: 70
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      marginRight: 15,
+    },
+    jobContent: {
+      flex: 1,
+      paddingRight: 6
+    },
+    jobTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#5A4CAE',
+    },
+    jobStatus: {
+      fontSize: 14,
+      color: currentTheme.subText || '#6D6D6D',
+    },
+    statusIndicator: {
+      width: 10,
+      height: '100%',
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: currentTheme.background
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: currentTheme.background
+    },
+    errorMessage: {
+      fontSize: 16,
+      color: '#FF3B30',
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    retryButton: {
+      backgroundColor: '#3b006b',
+      padding: 10,
+      borderRadius: 5,
+    },
+    retryButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: currentTheme.background || "#fff"
+    },
+    emptyMessage: {
+      fontSize: 16,
+      color: currentTheme.subText || '#6D6D6D',
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    backButtonText: {
+      color: '#3b006b',
+      fontSize: 16,
+    },
+  });
 
 export default Inbox;

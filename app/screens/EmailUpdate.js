@@ -10,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { account, appwriteConfig, databases } from "../lib/appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const EmailUpdateScreen = ({ navigation }) => {
   const [newEmail, setNewEmail] = useState("");
@@ -17,6 +18,11 @@ const EmailUpdateScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
 
   const { userData, setUser } = useAuth();
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const handleEmailUpdate = async () => {
     if (!newEmail || !confirmEmail || !password) {
@@ -73,7 +79,7 @@ const EmailUpdateScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
         </TouchableOpacity>
         <Text style={styles.header}>Change your email</Text>
       </View>
@@ -83,7 +89,7 @@ const EmailUpdateScreen = ({ navigation }) => {
       <Text style={styles.label}>Enter your new email address</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
+        placeholder="new email address"
         value={newEmail}
         onChangeText={setNewEmail}
         keyboardType="email-address"
@@ -93,7 +99,7 @@ const EmailUpdateScreen = ({ navigation }) => {
       <Text style={styles.label}>Confirm your new email address</Text>
       <TextInput
         style={styles.input}
-        placeholder=""
+        placeholder="confirm new email address"
         value={confirmEmail}
         onChangeText={setConfirmEmail}
         keyboardType="email-address"
@@ -115,59 +121,62 @@ const EmailUpdateScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#FFF",
-    paddingHorizontal: 30,
-  },
-  main: {
-    marginTop: 45,
-    marginBottom: 50,
-    display: "flex",
-    flexDirection: "row",
-    gap: 60,
-    alignItems: "center",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    // marginBottom: 20,
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 18,
-    color: "#000000",
-    marginBottom: 8,
-    // marginLeft: 8,
-    fontWeight: "400",
-    textAlign: "center",
-  },
-  input: {
-    width: "100%",
-    height: 44,
-    backgroundColor: "#f4f0f0",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    fontSize: 16,
-  },
-  signupButton: {
-    width: "40%",
-    height: 50,
-    backgroundColor: "#6A0DAD",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-    margin: "auto",
-  },
-  signupButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: currentTheme.background || "#FFF",
+      paddingHorizontal: 30,
+    },
+    main: {
+      marginTop: 45,
+      marginBottom: 50,
+      display: "flex",
+      flexDirection: "row",
+      gap: 60,
+      alignItems: "center",
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      // marginBottom: 20,
+      textAlign: "center",
+      color: currentTheme.text
+    },
+    label: {
+      fontSize: 18,
+      color: currentTheme.text || "#000000",
+      marginBottom: 8,
+      // marginLeft: 8,
+      fontWeight: "400",
+      textAlign: "center",
+    },
+    input: {
+      width: "100%",
+      height: 44,
+      backgroundColor:currentTheme.background3 || "#f4f0f0",
+      borderRadius: 12,
+      paddingHorizontal: 20,
+      marginBottom: 20,
+      fontSize: 16,
+      color: currentTheme.subText || "#000000",
+    },
+    signupButton: {
+      width: "40%",
+      height: 50,
+      backgroundColor: currentTheme.primary || "#6A0DAD",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 20,
+      margin: "auto",
+    },
+    signupButtonText: {
+      color: "white",
+      fontSize: 18,
+      fontWeight: "700",
+    },
+  });
 
 export default EmailUpdateScreen;

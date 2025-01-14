@@ -9,15 +9,16 @@ import {
   ActivityIndicator,
   Share,
   RefreshControl,
-  Alert
+  Alert,
+  SafeAreaView
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
 import ReviewCard from "../components/ReviewCard";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ReviewsScreen({ navigation }) {
   const { user, loading, userData, setUserData } = useAuth();
@@ -26,6 +27,10 @@ export default function ReviewsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [reviews, setReviews] = useState([]);
 
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const role = userData?.role
 
@@ -165,7 +170,7 @@ export default function ReviewsScreen({ navigation }) {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#3b006b"]}
-            progressBackgroundColor="#fff"
+            progressBackgroundColor={currentTheme.background || "#fff"}
           />
         }
       >
@@ -248,106 +253,112 @@ export default function ReviewsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-  },
-  tab: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 2,
-  },
-  tabButtonL: {
-    backgroundColor: "#DADADA",
-    width: "50%",
-    height: 40,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopRightRadius: 80,
-  },
-  tabButtonR: {
-    backgroundColor: "#4C0183",
-    width: "50%",
-    height: 40,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopLeftRadius: 80,
-  },
-  tabTextL: {
-    color: "#000",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  tabTextR: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: currentTheme.background || "#fff",
+      paddingTop: 35,
+      paddingBottom: 500,
+    },
+    tab: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 2,
+    },
+    tabButtonL: {
+      backgroundColor: currentTheme.background3 || "#DADADA",
+      width: "50%",
+      height: 40,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderTopRightRadius: 80,
+    },
+    tabButtonR: {
+      backgroundColor: "#4C0183",
+      width: "50%",
+      height: 40,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderTopLeftRadius: 80,
+    },
+    tabTextL: {
+      color: currentTheme.text || "#000",
+      fontSize: 20,
+      fontWeight: "bold",
+    },
+    tabTextR: {
+      color: "#fff",
+      fontSize: 20,
+      fontWeight: "bold",
+    },
 
-  backgroundImg: {
-    width: "100%",
-    height: 150,
-    position: "relative",
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    position: "absolute",
-    bottom: -20,
-    left: "38%",
-  },
-  share: {
-    position: "absolute",
-    bottom: 5,
-    right: 80,
-    backgroundColor: "#fff",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  settings: {
-    position: "absolute",
-    bottom: 5,
-    right: 20,
-    backgroundColor: "#fff",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  userDetails: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 30,
-  },
-  nameText: {
-    fontSize: 28,
-    fontWeight: "600",
-  },
-  roleWrap: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  roleText: {
-    fontSize: 14,
-    fontWeight: "400",
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  reviewSection: {
-    padding: 20,
-  },
-});
+    backgroundImg: {
+      width: "100%",
+      height: 150,
+      position: "relative",
+    },
+    profileImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      position: "absolute",
+      bottom: -20,
+      left: "38%",
+    },
+    share: {
+      position: "absolute",
+      bottom: 5,
+      right: 80,
+      backgroundColor: "#fff",
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    settings: {
+      position: "absolute",
+      bottom: 5,
+      right: 20,
+      backgroundColor: "#fff",
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    userDetails: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingTop: 30,
+    },
+    nameText: {
+      fontSize: 28,
+      fontWeight: "600",
+      color: currentTheme.text
+    },
+    roleWrap: {
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+    },
+    roleText: {
+      fontSize: 14,
+      fontWeight: "400",
+      color: currentTheme.text
+    },
+    statusText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: currentTheme.text
+    },
+    reviewSection: {
+      padding: 20,
+    },
+  }); 

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
 import { Query } from 'react-native-appwrite';
 import { differenceInDays } from 'date-fns';
+import { useTheme } from '../context/ThemeContext';
 
 const categorizeJobs = (jobs) => {
   const today = new Date();
@@ -44,6 +45,11 @@ const JobsPostedScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const cachedJobs = useRef([]);
   const profilePic = userData?.profile_photo
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -119,7 +125,7 @@ const JobsPostedScreen = ({ navigation }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3b006b" />
-        <Text>Loading jobs...</Text>
+        <Text style={{color: currentTheme.subText}} >Loading jobs...</Text>
       </View>
     );
   }
@@ -150,7 +156,7 @@ const JobsPostedScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.main}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text || "black"} />
         </TouchableOpacity>
         <Text style={styles.header}>Jobs Posted</Text>
       </View>
@@ -165,7 +171,7 @@ const JobsPostedScreen = ({ navigation }) => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={['#3b006b']}
-            progressBackgroundColor="#fff"
+            progressBackgroundColor={currentTheme.background || "#fff"}
           />
         }
       />
@@ -173,112 +179,119 @@ const JobsPostedScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 30,
-  },
-  backButton: {},
-  main: {
-    marginTop: 25,
-    marginBottom: 10,
-    display: 'flex',
-    flexDirection: 'row',
-    gap: 100,
-    alignItems: 'center',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  listContainer: {
-    paddingBottom: 20,
-  },
-  jobContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    borderTopLeftRadius: 40,
-    borderBottomLeftRadius: 40,
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
-    elevation: 2,
-    height: 70,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 15,
-  },
-  jobContent: {
-    flex: 1,
-    paddingRight: 6,
-  },
-  jobTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#5A4CAE',
-  },
-  jobStatus: {
-    fontSize: 14,
-    color: '#6D6D6D',
-  },
-  statusIndicator: {
-    width: 10,
-    height: '100%',
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: '#FF3B30',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#3b006b',
-    padding: 10,
-    borderRadius: 5,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: "#fff"
-  },
-  emptyMessage: {
-    fontSize: 16,
-    color: '#6D6D6D',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  backButtonText: {
-    color: '#3b006b',
-    fontSize: 16,
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background || '#FFFFFF',
+      paddingHorizontal: 20,
+      paddingTop: 30,
+    },
+    backButton: {
+      // color: currentTheme.primary || "#4B0082",
+    },
+    main: {
+      marginTop: 25,
+      marginBottom: 10,
+      display: 'flex',
+      flexDirection: 'row',
+      gap: 100,
+      alignItems: 'center',
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: currentTheme.text || "black"
+    },
+    listContainer: {
+      paddingBottom: 20,
+    },
+    jobContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: currentTheme.cardBackground || '#F5F5F5',
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+      borderTopLeftRadius: 40,
+      borderBottomLeftRadius: 40,
+      marginTop: 20,
+      shadowColor: currentTheme.shadow || "#000",
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 5,
+      elevation: 2,
+      height: 70,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      marginRight: 15,
+    },
+    jobContent: {
+      flex: 1,
+      paddingRight: 6,
+    },
+    jobTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#5A4CAE',
+    },
+    jobStatus: {
+      fontSize: 14,
+      color: currentTheme.text2 || '#6D6D6D',
+    },
+    statusIndicator: {
+      width: 10,
+      height: '100%',
+      borderTopRightRadius: 10,
+      borderBottomRightRadius: 10,
+      backgroundColor: currentTheme.accent || "#FF4500",
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: currentTheme.background || "#fff"
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: currentTheme.background || "#fff"
+    },
+    errorMessage: {
+      fontSize: 16,
+      color: '#FF3B30',
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    retryButton: {
+      backgroundColor: '#3b006b',
+      padding: 10,
+      borderRadius: 5,
+    },
+    retryButtonText: {
+      color: currentTheme.text || '#FFFFFF',
+      fontSize: 16,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: currentTheme.background || "#fff"
+    },
+    emptyMessage: {
+      fontSize: 16,
+      color:  currentTheme.subText || '#6D6D6D',
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    backButtonText: {
+      color: currentTheme.subText || '#3b006b',
+      fontSize: 16,
+    },
+  });
 
 export default JobsPostedScreen;
