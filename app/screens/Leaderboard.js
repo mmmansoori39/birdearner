@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
+import { useTheme } from '../context/ThemeContext';
 
 const LeaderboardScreen = () => {
   const [selectedTab, setSelectedTab] = useState('india');
@@ -16,6 +17,11 @@ const LeaderboardScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { userData } = useAuth();
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const user = {
     id: userData?.$id,
@@ -125,8 +131,8 @@ const LeaderboardScreen = () => {
               user.isCurrentUser
                 ? styles.currentUserRow
                 : user.rank === 1 || user.rank === 2
-                ? styles.topRankRow
-                : styles.otherUserRow,
+                  ? styles.topRankRow
+                  : styles.otherUserRow,
             ]}
           >
             <Text style={[styles.tableText, styles.nameColumn]} numberOfLines={1}>
@@ -194,152 +200,155 @@ const LeaderboardScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#ffffff',
-    paddingTop: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  tableContainer: {
-    marginBottom: 16,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    // backgroundColor: '#f0f0f0',
-    padding: 12,
-    borderRadius: 10,
-  },
-  headerText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#726B6B',
-    flex: 1,
-    textAlign: 'center',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    // padding: 12,
-    marginVertical: 4,
-    borderRadius: 12,
-  },
-  fadedRow: {
-    opacity: 0.5,
-  },
-  topRankRow: {
-    backgroundColor: '#71C232',
-  },
-  otherUserRow: {
-    backgroundColor: '#C9D63E',
-  },
-  currentUserRow: {
-    backgroundColor: '#E8E8E8',
-  },
-  tableText: {
-    fontSize: 16,
-    flex: 1,
-    textAlign: 'center',
-    padding: 12,
-  },
-  nameColumn: {
-    flex: 2, // Increased width for Name column
-    textAlign: 'center', // Align text to the left
-  },
-  xpColumn: {
-    flex: 1, // Default width
-    textAlign: 'center',
-  },
-  ordersColumn: {
-    flex: 1, // Default width
-    textAlign: 'center',
-  },
-  rankColumn: {
-    flex: 1, // Default width
-    textAlign: 'center',
-  },
-  blueBackground: {
-    backgroundColor: '#762BAD',
-    // borderRadius: 5,
-    paddingVertical: 12,
-    flex: 1,
-    alignItems: 'center',
-  },
-  blueBackgroundd: {
-    backgroundColor: '#762BAD',
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-    paddingVertical: 12,
-    flex: 1,
-    alignItems: 'center',
-  },
-  currentredBackground: {
-    backgroundColor: '#DC3737',
-    // borderRadius: 5,
-    paddingVertical: 12,
-    flex: 1,
-    alignItems: 'center',
-  },
-  currentredBackgroundd: {
-    backgroundColor: '#DC3737',
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-    paddingVertical: 12,
-    flex: 1,
-    alignItems: 'center',
-  },
-  blueText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  footerText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#555',
-    marginVertical: 20,
-    paddingHorizontal: 50,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 15,
-  },
-  tab: {
-    paddingHorizontal: 30,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: '#ccc',
-  },
-  activeTab: {
-    backgroundColor: '#6A1B9A',
-  },
-  tabText: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  activeTabText: {
-    color: '#fff',
-  },
-  tabShadow: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: currentTheme.background || '#ffffff',
+      paddingTop: 50,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: 4,
+      color: currentTheme.text
+    },
+    subtitle: {
+      fontSize: 16,
+      textAlign: 'center',
+      marginBottom: 16,
+      color: currentTheme.subText
+    },
+    tableContainer: {
+      marginBottom: 16,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      // backgroundColor: '#f0f0f0',
+      padding: 12,
+      borderRadius: 10,
+    },
+    headerText: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      color: '#726B6B',
+      flex: 1,
+      textAlign: 'center',
+    },
+    tableRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      // padding: 12,
+      marginVertical: 4,
+      borderRadius: 12,
+    },
+    fadedRow: {
+      opacity: 0.5,
+    },
+    topRankRow: {
+      backgroundColor: '#71C232',
+    },
+    otherUserRow: {
+      backgroundColor: '#C9D63E',
+    },
+    currentUserRow: {
+      backgroundColor: '#E8E8E8',
+    },
+    tableText: {
+      fontSize: 16,
+      flex: 1,
+      textAlign: 'center',
+      padding: 12,
+    },
+    nameColumn: {
+      flex: 2, // Increased width for Name column
+      textAlign: 'center', // Align text to the left
+    },
+    xpColumn: {
+      flex: 1, // Default width
+      textAlign: 'center',
+    },
+    ordersColumn: {
+      flex: 1, // Default width
+      textAlign: 'center',
+    },
+    rankColumn: {
+      flex: 1, // Default width
+      textAlign: 'center',
+    },
+    blueBackground: {
+      backgroundColor: currentTheme.primary || '#762BAD',
+      // borderRadius: 5,
+      paddingVertical: 12,
+      flex: 1,
+      alignItems: 'center',
+    },
+    blueBackgroundd: {
+      backgroundColor: currentTheme.primary || '#762BAD',
+      borderTopRightRadius: 12,
+      borderBottomRightRadius: 12,
+      paddingVertical: 12,
+      flex: 1,
+      alignItems: 'center',
+    },
+    currentredBackground: {
+      backgroundColor: '#DC3737',
+      // borderRadius: 5,
+      paddingVertical: 12,
+      flex: 1,
+      alignItems: 'center',
+    },
+    currentredBackgroundd: {
+      backgroundColor: '#DC3737',
+      borderTopRightRadius: 12,
+      borderBottomRightRadius: 12,
+      paddingVertical: 12,
+      flex: 1,
+      alignItems: 'center',
+    },
+    blueText: {
+      color: 'white',
+      fontSize: 16,
+    },
+    footerText: {
+      textAlign: 'center',
+      fontSize: 16,
+      color: currentTheme.subText || '#555',
+      marginVertical: 20,
+      paddingHorizontal: 50,
+    },
+    tabContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 15,
+    },
+    tab: {
+      paddingHorizontal: 30,
+      paddingVertical: 8,
+      borderRadius: 10,
+      backgroundColor: currentTheme.cardBackground || '#ccc',
+    },
+    activeTab: {
+      backgroundColor: '#6A1B9A',
+    },
+    tabText: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: currentTheme.subText || '#fff',
+    },
+    activeTabText: {
+      color: '#fff',
+    },
+    tabShadow: {
+      shadowColor: currentTheme.shadow || '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+  });
 
 export default LeaderboardScreen;
