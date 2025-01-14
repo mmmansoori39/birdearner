@@ -18,6 +18,7 @@ import brEgg from "../assets/brEgg.png";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const offers = [10, 50, 0, 25, 15];
 
@@ -30,6 +31,11 @@ const OffersScreen = ({ navigation }) => {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const { userData } = useAuth();
   const userId = userData?.$id;
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const [slideAnimation] = useState(new Animated.Value(300));
 
@@ -335,197 +341,203 @@ const OffersScreen = ({ navigation }) => {
 
 export default OffersScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  unlockAllButton: {
-    position: "absolute",
-    bottom: 20,
-    alignSelf: "center",
-    backgroundColor: "#4C0183",
-    padding: 15,
-    borderRadius: 10,
-  },
-  unlockAllButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    unlockAllButton: {
+      position: "absolute",
+      bottom: 20,
+      alignSelf: "center",
+      backgroundColor: "#4C0183",
+      padding: 15,
+      borderRadius: 10,
+    },
+    unlockAllButtonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "bold",
+    },
 
 
-  offerBackground: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  tree: {
-    position: "absolute",
-    left: 110,
-    top: 200,
-  },
-  size: {
-    width: 50,
-    resizeMode: "contain",
-  },
-  sizeB: {
-    width: 70,
-    resizeMode: "contain",
-  },
-  nest1: {
-    position: "absolute",
-    bottom: 160,
-    left: 170,
-  },
-  egg1: {
-    position: "absolute",
-    bottom: 221,
-    right: 98,
-  },
-  nest2: {
-    position: "absolute",
-    bottom: 250,
-    left: 30,
-  },
-  egg2: {
-    position: "absolute",
-    bottom: 311,
-    left: 105,
-  },
-  nest3: {
-    position: "absolute",
-    bottom: 340,
-    left: 170,
-  },
-  egg3: {
-    position: "absolute",
-    bottom: 401,
-    right: 98,
-  },
-  nest4: {
-    position: "absolute",
-    bottom: 430,
-    left: 30,
-  },
-  egg4: {
-    position: "absolute",
-    bottom: 491,
-    left: 106,
-  },
-  nest5: {
-    position: "absolute",
-    top: 105,
-    left: 100,
-  },
-  egg5: {
-    position: "absolute",
-    top: 126,
-    left: 175,
-  },
-  activeEgg: {
-    opacity: 1,
-  },
-  popupOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  popupContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  popupTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  popupText: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  popupButton: {
-    backgroundColor: "#4C0183",
-    padding: 10,
-    borderRadius: 5,
-  },
-  popupButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
+    offerBackground: {
+      flex: 1,
+      width: "100%",
+      height: "100%",
+    },
+    tree: {
+      position: "absolute",
+      left: 110,
+      top: 200,
+    },
+    size: {
+      width: 50,
+      resizeMode: "contain",
+    },
+    sizeB: {
+      width: 70,
+      resizeMode: "contain",
+    },
+    nest1: {
+      position: "absolute",
+      bottom: 160,
+      left: 170,
+    },
+    egg1: {
+      position: "absolute",
+      bottom: 221,
+      right: 98,
+    },
+    nest2: {
+      position: "absolute",
+      bottom: 250,
+      left: 30,
+    },
+    egg2: {
+      position: "absolute",
+      bottom: 311,
+      left: 105,
+    },
+    nest3: {
+      position: "absolute",
+      bottom: 340,
+      left: 170,
+    },
+    egg3: {
+      position: "absolute",
+      bottom: 401,
+      right: 98,
+    },
+    nest4: {
+      position: "absolute",
+      bottom: 430,
+      left: 30,
+    },
+    egg4: {
+      position: "absolute",
+      bottom: 491,
+      left: 106,
+    },
+    nest5: {
+      position: "absolute",
+      top: 105,
+      left: 100,
+    },
+    egg5: {
+      position: "absolute",
+      top: 126,
+      left: 175,
+    },
+    activeEgg: {
+      opacity: 1,
+    },
+    popupOverlay: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+    },
+    popupContent: {
+      backgroundColor: currentTheme.background || "#fff",
+      padding: 20,
+      borderRadius: 10,
+      alignItems: "center",
+      elevation: 5,
+      borderColor: currentTheme.border || "#fff",
+      borderWidth: 2
+    },
+    popupTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: currentTheme.text
+    },
+    popupText: {
+      fontSize: 16,
+      marginBottom: 20,
+      color: currentTheme.subText
+    },
+    popupButton: {
+      backgroundColor: "#4C0183",
+      padding: 10,
+      borderRadius: 5,
+    },
+    popupButtonText: {
+      color: "#fff",
+      fontSize: 16,
+    },
 
-  brokenEgg1: {
-    position: "absolute",
-    bottom: 170,
-    right: 89,
-  },
-  brokenEgg2: {
-    position: "absolute",
-    bottom: 260,
-    left: 94,
-  },
-  brokenEgg3: {
-    position: "absolute",
-    bottom: 350,
-    right: 89,
-  },
-  brokenEgg4: {
-    position: "absolute",
-    bottom: 440,
-    left: 94,
-  },
-  brokenEgg5: {
-    position: "absolute",
-    top: 90,
-    left: 164,
-  },
+    brokenEgg1: {
+      position: "absolute",
+      bottom: 170,
+      right: 89,
+    },
+    brokenEgg2: {
+      position: "absolute",
+      bottom: 260,
+      left: 94,
+    },
+    brokenEgg3: {
+      position: "absolute",
+      bottom: 350,
+      right: 89,
+    },
+    brokenEgg4: {
+      position: "absolute",
+      bottom: 440,
+      left: 94,
+    },
+    brokenEgg5: {
+      position: "absolute",
+      top: 90,
+      left: 164,
+    },
 
-  popupOverlay1: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-  },
-  popupContent1: {
-    backgroundColor: "#ffffff",
-    // padding: 30,
-    paddingVertical: 35,
-    paddingHorizontal: 25,
-    borderRadius: 15,
-    width: "80%",
-    // height: "80%",
-    // justifyContent: "center",
-    alignItems: "center",
-    elevation: 5,
-    borderColor: "#fff",
-    borderWidth: 2,
-  },
-  popupTitle1: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 15,
-    color: "#4C0183",
-    textAlign: "center",
-  },
-  popupDetails1: {
-    fontSize: 16,
-    color: "#333",
-    marginBottom: 15,
-    textAlign: "center",
-    lineHeight: 28,
-  },
-  popupButton1: {
-    backgroundColor: "#4C0183",
-    padding: 12,
-    borderRadius: 8,
-    width: "50%",
-    alignItems: "center",
-  },
-  popupButtonText1: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
+    popupOverlay1: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+    },
+    popupContent1: {
+      backgroundColor: currentTheme.background || "#ffffff",
+      // padding: 30,
+      paddingVertical: 35,
+      paddingHorizontal: 25,
+      borderRadius: 15,
+      width: "80%",
+      // height: "80%",
+      // justifyContent: "center",
+      alignItems: "center",
+      elevation: 5,
+      borderColor: currentTheme.border || "#fff",
+      borderWidth: 2,
+    },
+    popupTitle1: {
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 15,
+      color: currentTheme.text || "#4C0183",
+      textAlign: "center",
+    },
+    popupDetails1: {
+      fontSize: 16,
+      color: currentTheme.subText || "#333",
+      marginBottom: 15,
+      textAlign: "center",
+      lineHeight: 28,
+    },
+    popupButton1: {
+      backgroundColor: "#4C0183",
+      padding: 12,
+      borderRadius: 8,
+      width: "50%",
+      alignItems: "center",
+    },
+    popupButtonText1: {
+      color: "#fff",
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+  });

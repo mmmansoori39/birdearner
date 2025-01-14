@@ -11,11 +11,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const WalletScreen = ({ navigation, route }) => {
 
   const { userData } = useAuth();
   const [history, setHistory] = useState()
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   useEffect(() => {
     const fetchHistry = async () => {
@@ -92,15 +98,17 @@ const WalletScreen = ({ navigation, route }) => {
           {/* Payment Details */}
           <View style={styles.paymentDetails}>
             {/* Triangle Indicator */}
-            <View
-              style={[
-                styles.triangleIndicator,
-                {
-                  borderLeftColor: getStatusColor(item?.status), // Color based on status
-                },
-              ]}
-            />
-            <Text style={styles.name}>{getStatusText(item?.status)} </Text>
+            <View style={styles.indicatorName}>
+              <View
+                style={[
+                  styles.triangleIndicator,
+                  {
+                    borderLeftColor: getStatusColor(item?.status), // Color based on status
+                  },
+                ]}
+              />
+              <Text style={styles.name}>{getStatusText(item?.status)} </Text>
+            </View>
             <Text style={styles.amount}>₹{item?.requestedAmount}</Text>
           </View>
         </View>
@@ -128,7 +136,7 @@ const WalletScreen = ({ navigation, route }) => {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
         </TouchableOpacity>
         <Text style={styles.header}>Wallet</Text>
       </View>
@@ -158,153 +166,162 @@ const WalletScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#FFF",
-    paddingHorizontal: 20,
-  },
-  main: {
-    marginTop: 45,
-    marginBottom: 50,
-    display: "flex",
-    flexDirection: "row",
-    gap: 80,
-    alignItems: "center",
-    paddingHorizontal: 40
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    // marginBottom: 20,
-    textAlign: "center",
-  },
-  headerHis: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#8F8F8F"
-  },
-  label: {
-    fontSize: 18,
-    color: "#000000",
-    marginBottom: 8,
-    // marginLeft: 8,
-    fontWeight: "400",
-    textAlign: "center",
-  },
-  addAmount: {
-    textAlign: "center",
-    textDecorationLine: "underline",
-    fontSize: 16,
-    color: "#4B0082",
-    marginBottom: 30,
-  },
-  colorText: {
-    fontSize: 30,
-    fontWeight: "600",
-    color: "#4B0082",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  withdrwal: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10
-  },
-  withdrwalText: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "600",
-    textAlign: "center",
-    backgroundColor: "#4B0082",
-    width: 100,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 12
-  }
-  ,
-  input: {
-    width: "25%",
-    height: 44,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    marginBottom: 40,
-    fontSize: 16,
-    borderColor: "#4B0082",
-    borderWidth: 2,
-    margin: "auto",
-    marginVertical: 10,
-  },
-  signupButton: {
-    width: "50%",
-    height: 50,
-    backgroundColor: "#6A0DAD",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 50,
-    margin: "auto",
-  },
-  signupButtonText: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "700",
-  },
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: currentTheme.background || "#FFF",
+      paddingHorizontal: 20,
+    },
+    main: {
+      marginTop: 45,
+      marginBottom: 50,
+      display: "flex",
+      flexDirection: "row",
+      gap: 120,
+      alignItems: "center",
+      // paddingHorizontal: 20
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      // marginBottom: 20,
+      textAlign: "center",
+      color: currentTheme.text
+    },
+    headerHis: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 20,
+      textAlign: "center",
+      color: "#8F8F8F"
+    },
+    label: {
+      fontSize: 18,
+      color: currentTheme.text || "#000000",
+      marginBottom: 8,
+      // marginLeft: 8,
+      fontWeight: "400",
+      textAlign: "center",
+    },
+    addAmount: {
+      textAlign: "center",
+      textDecorationLine: "underline",
+      fontSize: 16,
+      color: "#4B0082",
+      marginBottom: 30,
+    },
+    colorText: {
+      fontSize: 30,
+      fontWeight: "600",
+      color: currentTheme.primary || "#4B0082",
+      textAlign: "center",
+      marginBottom: 10,
+    },
+    withdrwal: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 10
+    },
+    withdrwalText: {
+      color: "#fff",
+      fontSize: 24,
+      fontWeight: "600",
+      textAlign: "center",
+      backgroundColor: "#4B0082",
+      width: 100,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 12
+    }
+    ,
+    input: {
+      width: "25%",
+      height: 44,
+      backgroundColor: "#fff",
+      borderRadius: 12,
+      paddingHorizontal: 20,
+      marginBottom: 40,
+      fontSize: 16,
+      borderColor: "#4B0082",
+      borderWidth: 2,
+      margin: "auto",
+      marginVertical: 10,
+    },
+    signupButton: {
+      width: "50%",
+      height: 50,
+      backgroundColor: "#6A0DAD",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 50,
+      margin: "auto",
+    },
+    signupButtonText: {
+      color: "white",
+      fontSize: 24,
+      fontWeight: "700",
+    },
 
-  paymentItem: {
-    backgroundColor: "#fff",
-    // padding: 12,
-    marginVertical: 5,
-    borderRadius: 8,
-    elevation: 3, // Add shadow for elevation (optional)
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.5,
-    paddingVertical: 5,
-    paddingHorizontal: 10
-  },
-  triangleIndicator: {
-    width: 0,
-    height: 0,
-    borderTopWidth: 8,
-    borderBottomWidth: 8,
-    borderLeftWidth: 16,
-    borderStyle: "solid",
-    borderTopColor: "transparent",
-    borderBottomColor: "transparent",
-    marginRight: 10, // Space between the triangle and the details
-  },
-  paymentDetails: {
-    flex: 1, // Ensure details take remaining space
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#71C232",
-  },
-  date: {
-    fontSize: 12,
-    color: "#666",
-  },
-  status: {
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-});
+    paymentItem: {
+      backgroundColor: currentTheme.cardBackground || "#fff",
+      // padding: 12,
+      marginVertical: 5,
+      borderRadius: 8,
+      elevation: 3, // Add shadow for elevation (optional)
+      shadowColor: currentTheme.shadow || "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 1.5,
+      paddingVertical: 5,
+      paddingHorizontal: 10
+    },
+    triangleIndicator: {
+      width: 0,
+      height: 0,
+      borderTopWidth: 8,
+      borderBottomWidth: 8,
+      borderLeftWidth: 16,
+      borderStyle: "solid",
+      borderTopColor: "transparent",
+      borderBottomColor: "transparent",
+      marginRight: 10, // Space between the triangle and the details
+    },
+    paymentDetails: {
+      flex: 1, // Ensure details take remaining space
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 5,
+    },
+    indicatorName: {
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      alignItems: "center",
+      // color: currentTheme.text
+    },
+    name: {
+      fontSize: 15,
+      fontWeight: "500",
+      color: currentTheme.subText || "#333",
+    },
+    amount: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: "#71C232",
+    },
+    date: {
+      fontSize: 12,
+      color: "#666",
+    },
+    status: {
+      fontSize: 12,
+      fontWeight: "bold",
+    },
+  });
 
 export default WalletScreen;

@@ -24,9 +24,9 @@ const BankAccountDetailsScreen = ({ navigation }) => {
   const { userData } = useAuth();
 
   const { theme, themeStyles } = useTheme();
-    const currentTheme = themeStyles[theme];
-  
-    const styles = getStyles(currentTheme);
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   useEffect(() => {
     fetchBankDetails();
@@ -194,13 +194,14 @@ const getStyles = (currentTheme) =>
       marginBottom: 50,
       flexDirection: "row",
       alignItems: "center",
-      gap: 42
+      gap: 60
     },
     header: {
       fontSize: 24,
       fontWeight: "bold",
       textAlign: "center",
-      color: currentTheme.text
+      color: currentTheme.text,
+      marginRight: 40
     },
     label: {
       fontSize: 18,

@@ -4,6 +4,7 @@ import RazorpayCheckout from 'react-native-razorpay';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { appwriteConfig, databases } from '../lib/appwrite';
+import { useTheme } from '../context/ThemeContext';
 
 const PaymentScreen = ({ navigation }) => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -12,6 +13,11 @@ const PaymentScreen = ({ navigation }) => {
   const name = userData?.full_name || 'Guest User';
   const email = userData?.email || 'user@gmail.com';
   const [amount, setAmount] = useState('');
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const handleAmountChange = (value) => {
     setAmount(value);
@@ -100,7 +106,7 @@ const PaymentScreen = ({ navigation }) => {
         !paymentSuccess && (
           <View style={styles.main}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color="black" />
+              <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
             </TouchableOpacity>
             <Text style={styles.header}>Add Amount to Wallet</Text>
           </View>
@@ -129,8 +135,8 @@ const PaymentScreen = ({ navigation }) => {
           <Text style={styles.description}>Thank you, {name}!</Text>
           <Text style={styles.amount}>Added Amount: ₹{amount}</Text>
           <TouchableOpacity style={styles.goBackk} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={20} color="black" />
-            <Text>Go Back</Text>
+            <Ionicons name="arrow-back" size={20} color={currentTheme.subText || black} />
+            <Text style={{color: currentTheme.subText}}>Go Back</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -142,96 +148,102 @@ const PaymentScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#FFF",
-    paddingHorizontal: 40,
-    // justifyContent: "center",
-    alignContent: "center",
-    alignItems: "center",
-  },
-  main: {
-    marginTop: 45,
-    marginBottom: 50,
-    display: "flex",
-    flexDirection: "row",
-    gap: 30,
-    alignItems: "center",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 18,
-    color: "#000000",
-    marginBottom: 8,
-    fontWeight: "400",
-    textAlign: "center",
-  },
-  input: {
-    width: "80%",
-    height: 44,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    marginBottom: 40,
-    fontSize: 16,
-    borderColor: "#4B0082",
-    borderWidth: 2,
-    marginVertical: 10,
-  },
-  paymentContainer: {
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    alignContent: "center",
-    justifyContent: "center",
-    marginVertical: 160
-  },
-  image: {
-    width: 150,
-    height: 100,
-    resizeMode: "cover",
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  description: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  amount: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  signupButton: {
-    width: "50%",
-    height: 50,
-    backgroundColor: "#4B0082",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 50,
-  },
-  signupButtonText: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  goBackk: {
-    display: "flex",
-    flexDirection: "row",
-    gap: 8
-  }
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: currentTheme.background || "#FFF",
+      paddingHorizontal: 40,
+      // justifyContent: "center",
+      alignContent: "center",
+      alignItems: "center",
+    },
+    main: {
+      marginTop: 45,
+      marginBottom: 50,
+      display: "flex",
+      flexDirection: "row",
+      gap: 50,
+      alignItems: "center",
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      color: currentTheme.text,
+      marginRight: 50
+    },
+    label: {
+      fontSize: 18,
+      color: currentTheme.text || "#000000",
+      marginBottom: 8,
+      fontWeight: "400",
+      textAlign: "center",
+    },
+    input: {
+      width: "80%",
+      height: 44,
+      backgroundColor: currentTheme.background3 || "#fff",
+      borderRadius: 12,
+      paddingHorizontal: 20,
+      marginBottom: 40,
+      fontSize: 16,
+      borderColor: "#4B0082",
+      borderWidth: 2,
+      marginVertical: 10,
+      color: currentTheme.subText || "#000000",
+    },
+    paymentContainer: {
+      alignItems: "center",
+      backgroundColor: currentTheme.cardBackground || "#fff",
+      padding: 20,
+      borderRadius: 10,
+      shadowColor: currentTheme.shadow || "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      alignContent: "center",
+      justifyContent: "center",
+      marginVertical: 160
+    },
+    image: {
+      width: 150,
+      height: 100,
+      resizeMode: "cover",
+      borderRadius: 10,
+      marginBottom: 10,
+    },
+    description: {
+      fontSize: 18,
+      marginBottom: 10,
+      color: currentTheme.text
+    },
+    amount: {
+      fontSize: 16,
+      marginBottom: 20,
+      color: currentTheme.text
+    },
+    signupButton: {
+      width: "50%",
+      height: 50,
+      backgroundColor: "#4B0082",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 50,
+    },
+    signupButtonText: {
+      color: "white",
+      fontSize: 24,
+      fontWeight: "700",
+    },
+    goBackk: {
+      display: "flex",
+      flexDirection: "row",
+      gap: 8,
+    }
+  });
 
 export default PaymentScreen;

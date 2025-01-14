@@ -5,13 +5,19 @@ import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import Toast from 'react-native-toast-message';
 import { ID } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 
 const WithdrawalEarningScreen = ({ navigation }) => {
   const [amount, setAmount] = useState(0);
   const [warning, setWarning] = useState("");
   const { userData } = useAuth()
-  const totalAmountInWallet = userData?.withdrawableAmount || 0
+  const totalAmountInWallet = userData?.withdrawableAmount || 0;
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const handleError = (message) => {
     Toast.show({
@@ -32,7 +38,7 @@ const WithdrawalEarningScreen = ({ navigation }) => {
 
   const handleAmountChange = (value) => {
     const numericValue = parseFloat(value);
-  
+
     if (isNaN(numericValue) || numericValue < 0) {
       setWarning("Please enter a valid amount.");
       setAmount("");
@@ -96,7 +102,7 @@ const WithdrawalEarningScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={styles.main}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
         </TouchableOpacity>
         <Text style={styles.header}>Withdrawal Earning</Text>
       </View>
@@ -134,91 +140,94 @@ const WithdrawalEarningScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#FFF",
-    paddingHorizontal: 40,
-  },
-  main: {
-    marginTop: 45,
-    marginBottom: 50,
-    display: "flex",
-    flexDirection: "row",
-    gap: 50,
-    alignItems: "center",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 18,
-    color: "#000000",
-    marginBottom: 8,
-    fontWeight: "400",
-    textAlign: "center",
-  },
-  colorText: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#4B0082",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  withdrawal: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  withdrawalText: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "600",
-    textAlign: "center",
-    backgroundColor: "#4B0082",
-    // width: 100,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  input: {
-    // width: "100%",
-    height: 44,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    // marginBottom: 40,
-    fontSize: 16,
-    borderColor: "#4B0082",
-    borderWidth: 2,
-    marginVertical: 10,
-    margin: "auto"
-  },
-  warning: {
-    color: "red",
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 40,
-  },
-  signupButton: {
-    width: "50%",
-    height: 50,
-    backgroundColor: "#6A0DAD",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 50,
-    margin: "auto",
-  },
-  signupButtonText: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "700",
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: currentTheme.background || "#FFF",
+      paddingHorizontal: 40,
+    },
+    main: {
+      marginTop: 45,
+      marginBottom: 50,
+      display: "flex",
+      flexDirection: "row",
+      gap: 50,
+      alignItems: "center",
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      color: currentTheme.text
+    },
+    label: {
+      fontSize: 18,
+      color: currentTheme.text || "#000000",
+      marginBottom: 8,
+      fontWeight: "400",
+      textAlign: "center",
+    },
+    colorText: {
+      fontSize: 24,
+      fontWeight: "600",
+      color: currentTheme.primary || "#4B0082",
+      textAlign: "center",
+      marginBottom: 30,
+    },
+    withdrawal: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 10,
+    },
+    withdrawalText: {
+      color: "#fff",
+      fontSize: 24,
+      fontWeight: "600",
+      textAlign: "center",
+      backgroundColor: currentTheme.primary || "#4B0082",
+      // width: 100,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 12,
+    },
+    input: {
+      // width: "100%",
+      height: 44,
+      backgroundColor: currentTheme.background3 || "#fff",
+      borderRadius: 12,
+      paddingHorizontal: 20,
+      // marginBottom: 40,
+      fontSize: 16,
+      borderColor: "#4B0082",
+      borderWidth: 2,
+      marginVertical: 10,
+      margin: "auto",
+      color: currentTheme.subText
+    },
+    warning: {
+      color: "red",
+      fontSize: 14,
+      textAlign: "center",
+      marginBottom: 40,
+    },
+    signupButton: {
+      width: "50%",
+      height: 50,
+      backgroundColor: currentTheme.primary || "#6A0DAD",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 50,
+      margin: "auto",
+    },
+    signupButtonText: {
+      color: "white",
+      fontSize: 24,
+      fontWeight: "700",
+    },
+  });
 
 export default WithdrawalEarningScreen;
