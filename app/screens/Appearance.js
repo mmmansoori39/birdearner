@@ -1,52 +1,54 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
+import { useTheme } from "../context/ThemeContext";
 
 const AppearanceScreen = ({ navigation }) => {
-  const [selectedStatus, setSelectedStatus] = useState("light");
+  const { theme, toggleTheme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
 
-  // Function to handle the selected option (Online/Offline)
-  const handleStatusChange = (status) => {
-    setSelectedStatus(status);
+  const handleThemeChange = (newTheme) => {
+    toggleTheme(newTheme);
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: currentTheme.background }]}>
       <View style={styles.main}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text} />
         </TouchableOpacity>
-        <Text style={styles.header}>Appearance</Text>
+        <Text style={[styles.header, { color: currentTheme.text }]}>
+          Appearance
+        </Text>
       </View>
 
       <View style={styles.radioContainer}>
         <TouchableOpacity
           style={[
             styles.radioButton,
-            selectedStatus === "light" && styles.radioSelected,
+            theme === "light" && { backgroundColor: currentTheme.primary },
           ]}
-          onPress={() => handleStatusChange("light")}
+          onPress={() => handleThemeChange("light")}
         >
-          {selectedStatus === "light" && <View style={styles.radioInner} />}
+          {theme === "light" && <View style={styles.radioInner} />}
         </TouchableOpacity>
-        <Text style={styles.radioText}>Light Theme</Text>
+        <Text style={[styles.radioText, { color: currentTheme.text }]}>Light Theme</Text>
       </View>
 
       <View style={styles.radioContainer}>
         <TouchableOpacity
           style={[
             styles.radioButton,
-            selectedStatus === "dark" && styles.radioSelected,
+            theme === "dark" && { backgroundColor: currentTheme.primary },
           ]}
-          onPress={() => handleStatusChange("dark")}
+          onPress={() => handleThemeChange("dark")}
         >
-          {selectedStatus === "dark" && <View style={styles.radioInner} />}
+          {theme === "dark" && <View style={styles.radioInner} />}
         </TouchableOpacity>
-        <Text style={styles.radioText}>Dark Theme</Text>
+        <Text style={[styles.radioText, { color: currentTheme.text }]}>Dark Theme</Text>
       </View>
     </View>
   );
@@ -56,7 +58,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#FFF",
   },
   main: {
     marginTop: 45,
@@ -69,7 +70,6 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: "bold",
-    // marginBottom: 20,
     textAlign: "center",
   },
   radioContainer: {
@@ -88,9 +88,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
-  radioSelected: {
-    backgroundColor: "#4B0082",
-  },
   radioInner: {
     height: 10,
     width: 10,
@@ -99,20 +96,7 @@ const styles = StyleSheet.create({
   },
   radioText: {
     fontSize: 16,
-    color: "#333",
     marginRight: 10,
-  },
-  picker: {
-    flex: 1,
-    marginLeft: 10,
-    marginRight: 40,
-  },
-  selectedText: {
-    fontSize: 16,
-    color: "#333",
-    marginTop: 20,
-    fontStyle: "italic",
-    paddingHorizontal: 20,
   },
 });
 
