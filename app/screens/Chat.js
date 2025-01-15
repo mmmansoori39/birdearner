@@ -938,7 +938,7 @@ const Chat = ({ route, navigation }) => {
         )}
       </View>
 
-      {job?.assigned_freelancer !== null && (
+      {job?.assigned_freelancer === null && (
         <View style={styles.limit}>
           <Text style={styles.limitchar}>Characters Limit: {characterLimit}/200</Text>
           <Text style={styles.limitvar}>Please accept this lead to remove the characters limit.</Text>
