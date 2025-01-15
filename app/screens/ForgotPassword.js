@@ -1,124 +1,100 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator, Alert, StyleSheet } from 'react-native';
-import { account } from '../lib/appwrite'; // Import the AppWrite account
-import { useRouter } from 'expo-router'; // Import useRouter to get the router object
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { useAuth } from "../context/AuthContext";
+import Toast from "react-native-toast-message";
 
-const ForgetPassowrdScreen = () => {
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
+const ForgetPassowrdScreen = ({ navigation }) => {
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const { login } = useAuth();
 
-  const router = useRouter();
-
-  // Function to send OTP using AppWrite
-  const sendOtp = async () => {
-    setLoading(true);
-    try {
-      // Initiate the password recovery process with AppWrite (no recovery URL needed in your case)
-      await account.createRecovery(email, ''); // Passing empty string, we don't need recovery URL.
-      Alert.alert('OTP Sent', `An OTP has been sent to ${email}.`);
-      setIsOtpSent(true);
-    } catch (error) {
-      console.error('Error sending OTP:', error.message);
-      Alert.alert('Error', 'Failed to send OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleInputChange = (field, value) => {
+    setCredentials({ ...credentials, [field]: value });
   };
 
-  // Function to verify OTP (Manual verification)
-  const verifyOtp = async () => {
+  const validateInputs = () => {
+    const { email, password } = credentials;
+
+    if (!email || !password) {
+      showToast("info", "Warning", "All fields are required.");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showToast("info", "Warning", "Please enter a valid email address.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const showToast = (type, title, message) => {
+    Toast.show({
+      type,
+      text1: title,
+      text2: message,
+      position: "top",
+    });
+  };
+
+  const handleLogin = async () => {
+    if (!validateInputs()) return;
+
     try {
-      setLoading(true);
-      // Use your actual logic to verify the OTP; for example, if AppWrite automatically validates OTP
-      const response = await account.updateRecovery(email, otp, password, confirmPassword);
-      if (response) {
-        Alert.alert('OTP Verified', 'You can now reset your password.');
-        setOtpVerified(true);
+      await login(credentials.email, credentials.password);
+      showToast("success", "Login Successful!", "Redirecting to Home...");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Tabs" }],
+      });
+    } catch (error) {
+      let errorMessage = "An unexpected error occurred.";
+
+      if (error.message.includes("Invalid email or password")) {
+        errorMessage = "Incorrect email or password. Please try again.";
+      } else if (error.message.includes("Invalid `password` param")) {
+        errorMessage = "Password must be between 8 and 256 characters long.";
       }
-    } catch (error) {
-      Alert.alert('Invalid OTP', 'The OTP you entered is incorrect. Please try again.');
-      console.error('OTP verification failed:', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Function to reset the password after OTP is verified
-  const resetPassword = async () => {
-    if (password !== confirmPassword) {
-      Alert.alert('Password Mismatch', 'Passwords do not match. Please try again.');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      // Assuming OTP has been verified successfully
-      await account.updatePassword(password); // Reset password with new one
-      Alert.alert('Success', 'Your password has been reset.');
-      router.push('/screens/Login'); // Redirect to login screen
-    } catch (error) {
-      console.error('Password reset failed:', error.message);
-      Alert.alert('Error', 'Failed to reset password. Please try again.');
-    } finally {
-      setLoading(false);
+      showToast("error", "Login Failed", errorMessage);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Reset Your Password</Text>
+      <Text style={styles.title}>Forget Password</Text>
 
-      {!isOtpSent ? (
-        <View>
-          {/* Email Input */}
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <Button title="Send OTP" onPress={sendOtp} />
-        </View>
-      ) : otpVerified ? (
-        <View>
-          {/* Password Reset */}
-          <TextInput
-            style={styles.input}
-            placeholder="New Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm New Password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-          <Button title="Reset Password" onPress={resetPassword} />
-        </View>
-      ) : (
-        <View>
-          {/* OTP Input */}
-          <TextInput
-            style={styles.input}
-            placeholder="Enter OTP"
-            keyboardType="numeric"
-            value={otp}
-            onChangeText={setOtp}
-          />
-          <Button title="Verify OTP" onPress={verifyOtp} />
-        </View>
-      )}
+      <Text style={styles.subtitle}>Enter Your Email or Mobile Number</Text>
 
-      {loading && <ActivityIndicator size="large" color="#ff9800" />}
+      {/* Inputs */}
+      {["email"].map((field, index) => (
+        <TextInput
+          key={index}
+          style={styles.input}
+          placeholder={field === "email" ? "yourname@gmail.com" : "********"}
+          placeholderTextColor="#999"
+          keyboardType={field === "email" ? "email-address" : "default"}
+          secureTextEntry={field === "password"}
+          value={credentials[field]}
+          onChangeText={(value) => handleInputChange(field, value)}
+        />
+      ))}
+
+      {/* Login Button */}
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <Text style={styles.loginButtonText}>Next</Text>
+      </TouchableOpacity>
+
+      {/* Toast container */}
+      <Toast />
     </View>
   );
 };
@@ -126,25 +102,78 @@ const ForgetPassowrdScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: "#4B0082", // Purple background
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
-    backgroundColor: '#020d19',
+  },
+  logo: {
+    width: 100,
+    height: 100,
   },
   title: {
-    fontSize: 24,
-    color: '#f0f0f0',
-    marginBottom: 20,
-    textAlign: 'center',
+    fontSize: 34,
+    fontWeight: "bold",
+    color: "white",
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "white",
+    marginTop: 80,
+    marginBottom: 15
   },
   input: {
+    width: "100%",
+    height: 44,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    marginBottom: 50,
+    fontSize: 16,
+  },
+  loginButton: {
+    width: "100%",
     height: 50,
-    borderColor: '#f0f0f0',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    color: '#f0f0f0',
+    backgroundColor: "#6A0DAD",
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  loginButtonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  linkText: {
+    color: "white",
+    marginVertical: 10,
+    fontSize: 14,
+    textDecorationLine: "underline",
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    width: "100%",
+    height: 50,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  googleButtonText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#000",
+  },
+  socialContainer: {
+    flexDirection: "row",
+    marginTop: 40,
+  },
+  socialIcon: {
+    marginHorizontal: 10,
   },
 });
 
 export default ForgetPassowrdScreen;
+

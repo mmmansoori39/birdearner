@@ -12,7 +12,7 @@ import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
 
-const DescribeRole = ({ navigation, route }) => {
+const DescribeRoleCom = ({ navigation, route }) => {
   const { fullName, email, role } = route.params;
   const [formData, setFormData] = useState({
     qualification: "",
@@ -185,7 +185,7 @@ const DescribeRole = ({ navigation, route }) => {
       );
 
       showToast("success", `${role} details saved successfully.`);
-      navigation.navigate("TellUsAboutYou", { role });
+      navigation.navigate("TellUsAboutYouCom", { role });
     } catch (error) {
       showToast("error", `Error saving details: ${error.message}`);
     }
@@ -485,4 +485,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DescribeRole;
+export default DescribeRoleCom;

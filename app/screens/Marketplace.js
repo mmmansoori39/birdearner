@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   View,
@@ -8,12 +8,15 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Animated,
+  PanResponder
 } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import MapView, { Marker } from "react-native-maps";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const colors = {
   Immediate: ["#E22323", "#7C1313"],
@@ -27,12 +30,37 @@ const MarketplaceScreen = ({ navigation }) => {
   const [distance, setDistance] = useState(600);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const step = 5;
+  const animatedValue = useRef(new Animated.Value(0)).current;
   const [jobs, setJobs] = useState({
     Immediate: [],
     High: [],
     Standard: [],
   });
   const [loading, setLoading] = useState(true);
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
+
+  const updateDistance = (newDistance) => {
+    const boundedDistance = Math.min(maxDist, Math.max(0, newDistance));
+    const snappedDistance = Math.round(boundedDistance / step) * step; // Snap to nearest 5km
+    setDistance(snappedDistance);
+
+    Animated.timing(animatedValue, {
+      toValue: (snappedDistance / maxDist) * 100, // Convert distance to percentage
+      duration: 300, // Animation duration
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleSlide = (locationX) => {
+    const percentage = (locationX / 307) * 100;
+    const newDistance = (percentage / 100) * maxDist;
+    updateDistance(newDistance);
+  };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
@@ -43,9 +71,9 @@ const MarketplaceScreen = ({ navigation }) => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in kilometers
   };
@@ -73,7 +101,7 @@ const MarketplaceScreen = ({ navigation }) => {
     return categorizedJobs;
   };
 
-  const fetchJobs = async (filterByLocation = true) => {
+  const fetchJobs = async (filterByLocation = false) => {
     try {
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
@@ -81,22 +109,23 @@ const MarketplaceScreen = ({ navigation }) => {
       );
       const allJobs = response.documents;
 
+      const remainingJobs = allJobs.filter((job) => job?.completed_status === false);
+
       if (filterByLocation && location) {
-        const filteredJobs = allJobs.filter((job) => {
+        const filteredJobs = remainingJobs.filter((job) => {
           const jobDistance = calculateDistance(
             location.latitude,
             location.longitude,
             job.latitude,
-            job.longitude 
+            job.longitude
           );
           return jobDistance <= distance;
         });
         setJobs(categorizeJobs(filteredJobs));
       } else {
-        setJobs(categorizeJobs(allJobs));
+        setJobs(categorizeJobs(remainingJobs));
       }
     } catch (error) {
-      throw error
       Alert.alert(
         "Error",
         "Failed to fetch jobs. Please try again later.",
@@ -122,17 +151,20 @@ const MarketplaceScreen = ({ navigation }) => {
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
+
       setLocation(currentLocation.coords);
       fetchJobs(true); // Fetch jobs filtered by location
     } catch (error) {
-      console.error("Error fetching location:", error);
       setErrorMsg("Failed to fetch location. Please try again.");
+      Alert.alert("Error fetching location:", error);
     }
   };
 
   useEffect(() => {
+    getLocation()
     fetchJobs();
   }, []);
+
 
   useEffect(() => {
     if (location) {
@@ -146,8 +178,16 @@ const MarketplaceScreen = ({ navigation }) => {
 
   const renderLines = () => {
     const lines = [];
-    for (let i = 0; i < 70; i++) {
-      lines.push(<View key={i} style={styles.line}></View>);
+    for (let i = 0; i < 50; i++) {
+      lines.push(
+        <LinearGradient
+          key={i}
+          colors={["#232222", "#898686"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 0 }}
+          style={styles.line}
+        />
+      );
     }
     return lines;
   };
@@ -168,47 +208,70 @@ const MarketplaceScreen = ({ navigation }) => {
           <Text style={styles.distanceText}>{distance} km</Text>
 
           <View style={styles.customSliderWrapper}>
-            <TouchableOpacity
-              onPress={() => setDistance(Math.max(0, distance - 1))}
-              style={styles.iconButton}
-            >
-              <Entypo name="circle-with-minus" size={24} color="black" />
-            </TouchableOpacity>
-
             <LinearGradient
-              colors={["#898686", "#232222"]}
-              start={{ x: 0, y: 0 }}
+              colors={["#232222", "#898686"]}
+              start={{ x: 0, y: 1 }}
               end={{ x: 1, y: 0 }}
               style={styles.sliderBackground}
               onStartShouldSetResponder={(e) => {
                 const { locationX } = e.nativeEvent;
-                const percentage = (locationX / 307) * 100;
-                const newDistance = Math.min(
-                  maxDist,
-                  Math.max(0, (percentage / 100) * maxDist)
-                );
-                setDistance(parseInt(newDistance));
+                handleSlide(locationX);
                 return true;
               }}
+              onMoveShouldSetResponder={() => true}
+              onResponderMove={(e) => {
+                const { locationX } = e.nativeEvent;
+                handleSlide(locationX);
+              }}
             >
-              <View style={styles.linesContainer}>{renderLines()}</View>
+              {/* <Animated.View
+                style={[
+                  styles.linesContainer,
+                  {
+                    transform: [
+                      {
+                        translateX: animatedValue.interpolate({
+                          inputRange: [0, 100],
+                          outputRange: [0, -200], // Move lines left when sliding right
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                {renderLines()}
+              </Animated.View> */}
+
+              <View style={styles.linesContainer}>
+                {renderLines()}
+              </View>
 
               <View
                 style={[
                   styles.sliderIndicator,
-                  { left: `${(distance / 100) * 100}%` },
+                  { left: `${(distance / maxDist) * 100}%` },
                 ]}
               >
                 <Text style={styles.sliderIndicatorText}>▼</Text>
               </View>
             </LinearGradient>
 
-            <TouchableOpacity
-              onPress={() => setDistance(Math.min(maxDist, distance + 1))}
-              style={styles.iconButton}
-            >
-              <Entypo name="circle-with-plus" size={24} color="black" />
-            </TouchableOpacity>
+            <View style={styles.iconButtonContain}>
+              <TouchableOpacity
+                onPress={() => updateDistance(distance + step)}
+                style={styles.iconButtonminus}
+              >
+                <Entypo name="circle-with-plus" size={29} color="black" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.iconButtonContainminus}>
+              <TouchableOpacity
+                onPress={() => updateDistance(distance - step)}
+                style={styles.iconButton}
+              >
+                <Entypo name="circle-with-minus" size={29} color="black" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Text style={styles.sliderLabel}>
@@ -216,26 +279,23 @@ const MarketplaceScreen = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* <MapView style={styles.map}>
-
-        </MapView> */}
 
         {/* <MapView
           style={styles.map}
           region={
             location
               ? {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  latitudeDelta: 0.05,
-                  longitudeDelta: 0.05,
-                }
+                latitude: location.latitude,
+                longitude: location.longitude,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              }
               : {
-                  latitude: 37.7749,
-                  longitude: -122.4194,
-                  latitudeDelta: 1.0,
-                  longitudeDelta: 1.0,
-                }
+                latitude: 37.7749,
+                longitude: -122.4194,
+                latitudeDelta: 1.0,
+                longitudeDelta: 1.0,
+              }
           }
         >
           {location && (
@@ -250,46 +310,52 @@ const MarketplaceScreen = ({ navigation }) => {
             />
           )}
 
-          {jobs.Immediate.map((job, index) => (
-            <Marker
-              key={`immediate-${index}`}
-              coordinate={{
-                latitude: job.latitude,
-                longitude: job.longitude,
-              }}
-              title={job.title}
-              description={job.description}
-              pinColor="red"
-            />
-          ))}
+          {jobs.Immediate.map((job, index) =>
+            job.latitude && job.longitude ? (
+              <Marker
+                key={`immediate-${index}`}
+                coordinate={{
+                  latitude: job.latitude,
+                  longitude: job.longitude,
+                }}
+                title={job.title}
+                description={job.description}
+                pinColor="red"
+              />
+            ) : null
+          )}
 
-          {jobs.High.map((job, index) => (
-            <Marker
-              key={`high-${index}`}
-              coordinate={{
-                latitude: job.latitude,
-                longitude: job.longitude,
-              }}
-              title={job.title}
-              description={job.description}
-              pinColor="orange"
-            />
-          ))}
+          {jobs.High.map((job, index) =>
+            job.latitude && job.longitude ? (
+              <Marker
+                key={`high-${index}`}
+                coordinate={{
+                  latitude: job.latitude,
+                  longitude: job.longitude,
+                }}
+                title={job.title}
+                description={job.description}
+                pinColor="orange"
+              />
+            ) : null
+          )}
 
-
-          {jobs.Standard.map((job, index) => (
-            <Marker
-              key={`standard-${index}`}
-              coordinate={{
-                latitude: job.latitude,
-                longitude: job.longitude,
-              }}
-              title={job.title}
-              description={job.description}
-              pinColor="green"
-            />
-          ))}
+          {jobs.Standard.map((job, index) =>
+            job.latitude && job.longitude ? (
+              <Marker
+                key={`standard-${index}`}
+                coordinate={{
+                  latitude: job.latitude,
+                  longitude: job.longitude,
+                }}
+                title={job.title}
+                description={job.description}
+                pinColor="green"
+              />
+            ) : null
+          )}
         </MapView> */}
+
 
         <Text style={styles.jobsAround}>Jobs around...</Text>
 
@@ -352,139 +418,180 @@ const MarketplaceScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 30,
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  sliderContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  distanceText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  customSliderWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: 370,
-    height: 24,
-    backgroundColor: "transparent",
-  },
-  iconButton: {},
-  sliderBackground: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    width: 307,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#232222",
-    position: "relative",
-  },
-  linesContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    height: "100%",
-    paddingHorizontal: 10,
-  },
-  line: {
-    width: 1,
-    height: "100%",
-    backgroundColor: "#898686",
-  },
-  sliderIndicator: {
-    position: "absolute",
-    top: -10,
-    alignItems: "center",
-  },
-  sliderIndicatorText: {
-    fontSize: 12,
-    color: "#000",
-  },
-  sliderLabel: {
-    color: "#6f28d4",
-    marginTop: 10,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  map: {
-    width: "100%",
-    height: 220,
-    marginVertical: 20,
-  },
-  jobsAround: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginVertical: 10,
-  },
-  priorityContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  priorityBox: {
-    width: "100%",
-  },
-  priorityButton: {
-    width: "100%",
-    padding: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 12,
-    alignItems: "baseline",
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    gap: 7,
-  },
-  priorityText: {
-    color: "#fff",
-    fontWeight: "semibold",
-    fontSize: 20,
-  },
-  prioritySubText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  allJobsContainer: {
-    alignItems: "center",
-    width: 450,
-    height: 450,
-    borderRadius: 300,
-    position: "absolute",
-    bottom: -380,
-    right: -30,
-    padding: 10,
-  },
-  allJobsButton: {
-    paddingVertical: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "90%",
-  },
-  allJobsText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "semibold",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center"
-  }
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background || "#fff",
+      paddingTop: 30,
+    },
+    scrollContent: {
+      padding: 20,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginBottom: 20,
+      color: currentTheme.text
+    },
+    sliderContainer: {
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    distanceText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 10,
+      color: currentTheme.subText
+    },
+    customSliderWrapper: {
+      // flexDirection: "row",
+      alignItems: "center",
+      // justifyContent: "space-between",
+      width: 360,
+      height: 24,
+      // backgroundColor: "transparent",
+      margin: "auto",
+      position: "relative"
+    },
+    iconButtonContain: {
+      justifyContent: "center",
+      alignItems: "center",
+      position: "absolute",
+      right: 14,
+      top: 1,
+      backgroundColor: "white",
+      width: 29,
+      height: 29,
+      borderRadius: 20
+    },
+    iconButtonContainminus: {
+      justifyContent: "center",
+      alignItems: "center",
+      position: "absolute",
+      left: 15,
+      top: 1,
+      backgroundColor: "white",
+      width: 29,
+      height: 29,
+      borderRadius: 20,
+      padding: 0,
+      margin: 0
+    },
+    // iconButton: {
+    //   position: "absolute",
+    //   right: 14,
+    //   top: 1
+    // },
+    // iconButtonminus: {
+    //   position: "absolute",
+    //   left: 15,
+    //   top: 1
+    // },
+    sliderBackground: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      width: 332,
+      height: 32,
+      borderRadius: 6,
+      backgroundColor: "#232222",
+      position: "relative",
+      // overflow: "hidden"
+    },
+    linesContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+      height: "100%",
+      paddingHorizontal: 5,
+      alignItems: "center"
+    },
+    line: {
+      width: 3,
+      height: "72%",
+      // backgroundColor: "#898686",
+    },
+    sliderIndicator: {
+      position: "absolute",
+      top: -10,
+      alignItems: "center",
+    },
+    sliderIndicatorText: {
+      fontSize: 14,
+      color: currentTheme.text || "#000",
+    },
+    sliderLabel: {
+      color: "#6f28d4",
+      marginTop: 10,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    map: {
+      width: "100%",
+      height: 220,
+      marginVertical: 20,
+    },
+    jobsAround: {
+      fontSize: 20,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginVertical: 10,
+      color: currentTheme.text
+    },
+    priorityContainer: {
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    priorityBox: {
+      width: "100%",
+    },
+    priorityButton: {
+      width: "100%",
+      padding: 10,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      marginBottom: 12,
+      alignItems: "baseline",
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      gap: 7,
+    },
+    priorityText: {
+      color: "#fff",
+      fontWeight: "semibold",
+      fontSize: 20,
+    },
+    prioritySubText: {
+      color: "#fff",
+      fontSize: 14,
+    },
+    allJobsContainer: {
+      alignItems: "center",
+      width: 450,
+      height: 450,
+      borderRadius: 300,
+      position: "absolute",
+      bottom: -380,
+      right: -30,
+      padding: 10,
+    },
+    allJobsButton: {
+      paddingVertical: 15,
+      alignItems: "center",
+      justifyContent: "center",
+      width: "90%",
+    },
+    allJobsText: {
+      color: "#fff",
+      fontSize: 20,
+      fontWeight: "semibold",
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center"
+    }
+  });
 
 export default MarketplaceScreen;

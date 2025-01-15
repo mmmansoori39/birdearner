@@ -18,6 +18,7 @@ import { Picker } from "@react-native-picker/picker";
 import * as Location from "expo-location";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const JobRequirementsScreen = ({ navigation, route }) => {
   const [jobLocation, setJobLocation] = useState("");
@@ -29,16 +30,21 @@ const JobRequirementsScreen = ({ navigation, route }) => {
   const [portfolioImages, setPortfolioImages] = useState([]);
   const [jobTitle, setJobTitle] = useState("");
   const [freelancerType, setFrelancerType] = useState("");
-  const [jobType, setJobType] = useState("");
+  const [jobType, setJobType] = useState("Remote");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [services, setServices] = useState([]);
   const [isOnSite, setIsOnSite] = useState(true); // Default state
   const toggleAnim = new Animated.Value(isOnSite ? 0 : 1); // Animation value
 
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
+
   useEffect(() => {
     if (route.params?.freelancerType) {
-      
+
       setFrelancerType(route.params.freelancerType);
     }
   }, [route.params?.freelancerType]);
@@ -99,7 +105,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
         const roles = response.documents.map((doc) => doc.role).flat();
         setServices(roles);
       } catch (error) {
-        console.error("Error fetching services:", error);
+        Alert.alert("Error fetching services:", error)
       }
     }
     fetchServices();
@@ -118,7 +124,6 @@ const JobRequirementsScreen = ({ navigation, route }) => {
         Alert.alert("Error", "Unable to fetch coordinates. Please try again.");
       }
     } catch (error) {
-      console.log(error.message);
       Alert.alert("Error", `Failed to fetch coordinates: ${error.message}`);
     }
   };
@@ -220,7 +225,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
           Alert.alert("Validation Error", "Please enter a valid job location.");
         }
       } else {
-        setJobLocation("india");
+        setJobLocation("India");
         await fetchCoordinates();
         if (latitude && longitude) {
           navigation.navigate("JobDetails", { formData });
@@ -243,7 +248,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color="black" />
+            <Ionicons name="arrow-back" size={24} color={currentTheme.text || black} />
           </TouchableOpacity>
           <Text style={styles.header}>Job Requirements</Text>
         </View>
@@ -308,10 +313,13 @@ const JobRequirementsScreen = ({ navigation, route }) => {
           <Picker
             selectedValue={freelancerType}
             onValueChange={(itemValue) => setFrelancerType(itemValue)}
+            style={[styles.picker, { color: currentTheme.text }]}
+            dropdownIconColor={currentTheme.text}
+            mode="dropdown"
           >
-            <Picker.Item label="Select Freelancer Type" value="" />
+            <Picker.Item label="Select Freelancer Type" value="" style={styles.pickerItem} />
             {services.map((service, id) => (
-              <Picker.Item key={id} label={service} value={service} />
+              <Picker.Item key={id} label={service} value={service} style={styles.pickerItem} />
             ))}
           </Picker>
         </View>
@@ -423,7 +431,7 @@ const JobRequirementsScreen = ({ navigation, route }) => {
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.nextButtonText}>Cancel</Text>
+            <Text style={styles.nextButtonTextc}>Cancel</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -431,198 +439,217 @@ const JobRequirementsScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    padding: 20,
-    paddingHorizontal: 30,
-    paddingVertical: 20,
-    flexGrow: 1,
-  },
-  main: {
-    marginBottom: 30,
-    display: "flex",
-    flexDirection: "row",
-    gap: 50,
-    alignItems: "center",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  dropdown: {
-    backgroundColor: "#ededed",
-    borderRadius: 12,
-    marginBottom: 20,
-    height: 44,
-  },
-  label: {
-    color: "000",
-    marginVertical: 8,
-    fontWeight: "600",
-    fontSize: 16,
-    marginLeft: 12,
-  },
-  input: {
-    backgroundColor: "#ededed",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    height: 44,
-  },
-  bulletPoint: {
-    color: "#000000",
-    fontSize: 14,
-    fontWeight: "400",
-    lineHeight: 25,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 0,
-    gap: 20,
-  },
-  inputContainer: {
-    flex: 1,
-    marginRight: 10,
-  },
-  dropdownContainer: {
-    flex: 1,
-  },
-  dob: {
-    width: "100%",
-    height: 44,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    backgroundColor: "#ededed",
-    justifyContent: "center",
-  },
-  addMore: {
-    color: "#000",
-    marginBottom: 10,
-    marginLeft: 12,
-  },
-  textArea: {
-    height: 180,
-    borderColor: "#fff",
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 10,
-    backgroundColor: "#ededed",
-    color: "#000",
-    textAlignVertical: "top",
-  },
-  imageUploadButton: {
-    backgroundColor: "#4c0183",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  imageUploadButtonText: {
-    color: "#ffffff",
-    fontWeight: "bold",
-  },
-  uploadedImages: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 20,
-  },
-  imagePreviewContainer: {
-    position: "relative",
-    width: 100,
-    height: 100,
-    margin: 5,
-  },
-  uploadedImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 8,
-  },
-  removeButton: {
-    position: "absolute",
-    top: 5,
-    right: 5,
-    backgroundColor: "#3b006b",
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  removeButtonText: {
-    color: "#ffffff",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 30,
-    alignItems: "center",
-  },
-  nextButton: {
-    width: "35%",
-    height: 40,
-    backgroundColor: "#6A0DAD",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButton: {
-    width: "35%",
-    height: 40,
-    backgroundColor: "#9a9a9a",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  nextButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 20,
-  },
-  toggleContainer: {
-    width: 200, // Total width
-    height: 50,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#fff",
-    backgroundColor: "#ededed",
-    flexDirection: "row",
-    position: "relative",
-    overflow: "hidden",
-  },
-  toggle: {
-    position: "absolute",
-    width: "50%",
-    height: "100%",
-    borderRadius: 12,
-    zIndex: 1,
-  },
-  side: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 2, // Keep text above toggle
-  },
-  text: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#343434",
-    textAlign: "center",
-  },
-  activeText: {
-    color: "#FFFFFF",
-  },
-  leftSide: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  rightSide: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: currentTheme.background || "#fff",
+      padding: 20,
+      paddingHorizontal: 30,
+      paddingVertical: 20,
+      flexGrow: 1,
+    },
+    main: {
+      marginBottom: 30,
+      display: "flex",
+      flexDirection: "row",
+      gap: 50,
+      alignItems: "center",
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+      color: currentTheme.text
+    },
+    dropdown: {
+      backgroundColor: currentTheme.background3 || "#ededed",
+      borderRadius: 12,
+      marginBottom: 20,
+      height: 53,
+    },
+    // picker: {
+    //   // flex: 1,
+    //   // marginLeft: 10,
+    //   // marginRight: 40,
+    //   backgroundColor: currentTheme.background3,
+    //   // borderRadius: 12
+    // },
+    pickerItem: {
+      color: currentTheme.text,
+      backgroundColor: currentTheme.background3,
+    },
+    label: {
+      color: currentTheme.text || "000",
+      marginVertical: 8,
+      fontWeight: "600",
+      fontSize: 16,
+      marginLeft: 12,
+    },
+    input: {
+      backgroundColor: currentTheme.background3 || "#ededed",
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      marginBottom: 15,
+      height: 44,
+      color: currentTheme.subText
+    },
+    bulletPoint: {
+      color: currentTheme.subText || "#000000",
+      fontSize: 14,
+      fontWeight: "400",
+      lineHeight: 25,
+    },
+    row: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 0,
+      gap: 20,
+    },
+    inputContainer: {
+      flex: 1,
+      marginRight: 10,
+    },
+    dropdownContainer: {
+      flex: 1,
+    },
+    dob: {
+      width: "100%",
+      height: 44,
+      borderColor: currentTheme.border || "#ccc",
+      borderWidth: 1,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      backgroundColor: currentTheme.background3 || "#ededed",
+      justifyContent: "center",
+    },
+    addMore: {
+      color: currentTheme.text || "#000",
+      marginBottom: 10,
+      marginLeft: 12,
+    },
+    textArea: {
+      height: 180,
+      borderColor: currentTheme.border || "#fff",
+      borderWidth: 1,
+      borderRadius: 5,
+      padding: 10,
+      backgroundColor: currentTheme.background3 || "#ededed",
+      color: currentTheme.subText || "#000",
+      textAlignVertical: "top",
+    },
+    imageUploadButton: {
+      backgroundColor: "#4c0183",
+      padding: 15,
+      borderRadius: 8,
+      alignItems: "center",
+    },
+    imageUploadButtonText: {
+      color: "#ffffff",
+      fontWeight: "bold",
+    },
+    uploadedImages: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginTop: 20,
+    },
+    imagePreviewContainer: {
+      position: "relative",
+      width: 100,
+      height: 100,
+      margin: 5,
+    },
+    uploadedImage: {
+      width: "100%",
+      height: "100%",
+      borderRadius: 8,
+    },
+    removeButton: {
+      position: "absolute",
+      top: 5,
+      right: 5,
+      backgroundColor: "#3b006b",
+      paddingHorizontal: 9,
+      paddingVertical: 5,
+      borderRadius: 12,
+    },
+    removeButtonText: {
+      color: "#ffffff",
+      fontSize: 10,
+      fontWeight: "600",
+    },
+    buttonRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginTop: 30,
+      alignItems: "center",
+    },
+    nextButton: {
+      width: "35%",
+      height: 40,
+      backgroundColor: "#6A0DAD",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cancelButton: {
+      width: "35%",
+      height: 40,
+      backgroundColor: currentTheme.background3 || "#9a9a9a",
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    nextButtonText: {
+      color: "#fff",
+      fontWeight: "bold",
+      fontSize: 20,
+    },
+    nextButtonTextc: {
+      color: "#A39E9E",
+      fontWeight: "bold",
+      fontSize: 20,
+    },
+    toggleContainer: {
+      width: 200, // Total width
+      height: 50,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: currentTheme.border || "#fff",
+      backgroundColor: currentTheme.background3 || "#ededed",
+      flexDirection: "row",
+      position: "relative",
+      overflow: "hidden",
+    },
+    toggle: {
+      position: "absolute",
+      width: "50%",
+      height: "100%",
+      borderRadius: 12,
+      zIndex: 1,
+    },
+    side: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 2, // Keep text above toggle
+    },
+    text: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: currentTheme.subText || "#343434",
+      textAlign: "center",
+    },
+    activeText: {
+      color: "#FFFFFF",
+    },
+    leftSide: {
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    rightSide: {
+      justifyContent: "center",
+      alignItems: "center",
+    },
+  });
 
 export default JobRequirementsScreen;

@@ -1,19 +1,24 @@
 import React from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ReviewCard({
   reviewerName,
-  reviewerState,
+  reviewerstate,
   reviewerCountry,
   starRating,
   reviewText,
   reviewerPhoto,
 }) {
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+  const styles = getStyles(currentTheme);
+
   const renderStars = () => {
     const stars = [];
     const fullStars = Math.floor(starRating); // Number of full stars
-    const fractionalPart = starRating % 2; // Fractional part for partial stars
+    const fractionalPart = starRating % 1; // Fractional part for partial stars
     const emptyStars = 5 - Math.ceil(starRating); // Remaining empty stars
 
     // Add full stars
@@ -31,7 +36,7 @@ export default function ReviewCard({
           <View
             style={[
               styles.partialFill,
-              { width: `${fractionalPart * 150}%` },
+              { width: `${fractionalPart * 100}%` },
             ]}
           >
             <FontAwesome name="star" size={20} color="#4B0082" />
@@ -65,15 +70,15 @@ export default function ReviewCard({
           <View style={styles.reviewerInfo}>
             <Text style={styles.reviewerName}>{reviewerName}</Text>
             <Text style={styles.reviewerLocation}>
-              {reviewerState}, {reviewerCountry}
+              {reviewerstate}, {reviewerCountry}
             </Text>
             <View style={styles.starRating}>{renderStars()}</View>
           </View>
         </View>
         <FontAwesome
-          name="flag"
+          name="warning"
           size={20}
-          color="black"
+          color="#FF3B30"
           style={styles.flagIcon}
         />
       </View>
@@ -82,57 +87,59 @@ export default function ReviewCard({
   );
 }
 
-const styles = StyleSheet.create({
-  reviewCard: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-  },
-  card: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  reviewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  reviewerImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  reviewerInfo: {
-    marginLeft: 10,
-  },
-  reviewerName: {
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  reviewerLocation: {
-    color: "#888",
-    fontSize: 14,
-  },
-  starRating: {
-    flexDirection: "row",
-    marginTop: 3,
-    gap: 5,
-  },
-  partialStarContainer: {
-    position: "relative",
-    width: 20,
-    height: 20,
-  },
-  partialFill: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    overflow: "hidden",
-  },
-  reviewText: {
-    marginTop: 10,
-    color: "#555",
-    fontSize: 14,
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    reviewCard: {
+      borderBottomWidth: 1,
+      borderBottomColor: "#ddd",
+      paddingVertical: 15,
+      paddingHorizontal: 10,
+    },
+    card: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    reviewHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    reviewerImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+    },
+    reviewerInfo: {
+      marginLeft: 10,
+    },
+    reviewerName: {
+      fontWeight: "600",
+      fontSize: 16,
+      color: currentTheme.text,
+    },
+    reviewerLocation: {
+      color: "#888",
+      fontSize: 14,
+    },
+    starRating: {
+      flexDirection: "row",
+      marginTop: 3,
+      gap: 5,
+    },
+    partialStarContainer: {
+      position: "relative",
+      width: 20,
+      height: 20,
+    },
+    partialFill: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      overflow: "hidden",
+    },
+    reviewText: {
+      marginTop: 10,
+      color: "#555",
+      fontSize: 14,
+    },
+  });

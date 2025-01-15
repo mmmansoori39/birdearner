@@ -98,7 +98,7 @@ const Login = ({ navigation }) => {
 
       {/* Links */}
       {[
-        { text: "Forget Password", screen: "ForgetPassword" },
+        { text: "Forget Password", screen: "ForgotPassword" },
         { text: "New Here? Create Your Account Here!", screen: "Role" },
       ].map((link, index) => (
         <TouchableOpacity
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 44,
     backgroundColor: "#fff",
-    borderRadius: 25,
+    borderRadius: 12,
     paddingHorizontal: 20,
     marginBottom: 20,
     fontSize: 16,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     backgroundColor: "#6A0DAD",
-    borderRadius: 25,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     width: "100%",
     height: 50,
-    borderRadius: 25,
+    borderRadius: 12,
     marginTop: 20,
   },
   googleButtonText: {

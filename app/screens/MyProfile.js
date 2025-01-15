@@ -10,17 +10,20 @@ import {
   ActivityIndicator,
   Share,
   Modal,
-  RefreshControl
+  RefreshControl,
+  Alert,
+  SafeAreaView
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ProfileScreen({ navigation }) {
-  const { user, loading, userData, logout, setUserData } = useAuth();
+  const { user, loading, userData, logout, setUserData, roleOptions, handleRoleSelection } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -28,11 +31,39 @@ export default function ProfileScreen({ navigation }) {
   const [images, setImages] = useState([]);
   const role = userData?.role;
 
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
+
+  const createdAt = userData?.$createdAt
+  const date = new Date(createdAt);
+
+  // Format the date and time
+  const formattedDate = date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const handleSetupRole = async (roleType) => {
+    try {
+
+      const fullName = userData?.full_name
+      const email = userData?.email
+      const role = roleType
+
+      navigation.navigate("DescribeRoleCom", { fullName, email, role })
+    } catch (error) {
+      Alert.alert("Error setting up role:", error.message)
+    }
+  };
+
   useEffect(() => {
     try {
       setData(userData);
     } catch (error) {
-      console.error("Failed to fetch freelancer data:", error);
+      Alert.alert("Failed to fetch freelancer data:", error)
     } finally {
       setLoadingProfile(false);
     }
@@ -40,13 +71,13 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     const flagsData = async () => {
-      if(userData){
+      if (userData) {
         try {
           const freelancerId = userData?.$id;
-  
+
           const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-  
-  
+
+
           const freelancerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             collectionId,
@@ -57,7 +88,7 @@ export default function ProfileScreen({ navigation }) {
           Alert.alert("Error updating flags:", error)
         }
       }
-      }
+    }
 
     flagsData()
   }, [refreshing])
@@ -73,6 +104,16 @@ export default function ProfileScreen({ navigation }) {
 
     setImages([{ url: imageUri }]);
     setModalVisible(true);
+  };
+
+  const formatXP = (xp) => {
+    if (xp >= 1000000) {
+      return (xp / 1000000).toFixed(1) + 'M'; // For millions
+    } else if (xp >= 1000) {
+      return (xp / 1000).toFixed(1) + 'K'; // For thousands
+    } else {
+      return xp; // For values less than 1000
+    }
   };
 
   const onShare = async () => {
@@ -101,7 +142,7 @@ export default function ProfileScreen({ navigation }) {
   if (loading || loadingProfile) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#000" />
+        <ActivityIndicator size="large" color={currentTheme.text || "#fff"} />
       </SafeAreaView>
     );
   }
@@ -113,32 +154,25 @@ export default function ProfileScreen({ navigation }) {
       <Modal
         visible={modalVisible}
         transparent={true}
-        onRequestClose={() => setModalVisible(false)} // Close on back button
+        onRequestClose={() => setModalVisible(false)}
       >
         <ImageViewer
-          imageUrls={images} // Array of images
-          enableSwipeDown={true} // Swipe down to close
+          imageUrls={images}
+          enableSwipeDown={true}
           onSwipeDown={() => setModalVisible(false)}
           renderIndicator={() => null}
           renderHeader={() => (
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
-              style={{
-                position: "absolute",
-                top: 30,
-                left: 20,
-                zIndex: 10,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                borderRadius: 20,
-                padding: 10,
-              }}
+              style={styles.modalHeader}
             >
-              <FontAwesome name="arrow-left" size={24} color="#fff" />
+              <FontAwesome name="arrow-left" size={24}
+                color={currentTheme.text || "#fff"}
+              />
             </TouchableOpacity>
           )}
         />
       </Modal>
-
 
       <ScrollView style={styles.container}
         refreshControl={
@@ -146,7 +180,7 @@ export default function ProfileScreen({ navigation }) {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#3b006b"]}
-            progressBackgroundColor="#fff"
+            progressBackgroundColor={currentTheme.cardBackground || "#fff"}
           />
         }
       >
@@ -185,10 +219,11 @@ export default function ProfileScreen({ navigation }) {
               navigation.navigate('Settings');
             }}
           >
-            <MaterialIcons name="settings" size={30} />
+            <MaterialIcons name="settings" size={30} color={currentTheme.text || "black"} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.share} onPress={onShare}>
-            <FontAwesome name="share" size={24} />
+            {/* <FontAwesome name="share" size={24} /> */}
+            <MaterialIcons name="share" size={30} color={currentTheme.text || "black"}/>
           </TouchableOpacity>
         </ImageBackground>
 
@@ -217,17 +252,21 @@ export default function ProfileScreen({ navigation }) {
           </Text>
         </View>
 
-        <View style={styles.levelContainer}>
-          <View style={styles.xpRan}>
-            <View style={styles.xp}>
-              <Text style={styles.xpText}>{userData?.XP || 0} xp</Text>
+        {
+          userData?.role === "freelancer" && (
+            <View style={styles.levelContainer}>
+              <View style={styles.xpRan}>
+                <View style={styles.xp}>
+                  <Text style={styles.xpText}>{formatXP(userData?.XP) || 0} xp</Text>
+                </View>
+                <Text style={styles.randomText}>Earn xp and promote to next level</Text>
+              </View>
+              <View style={styles.level}>
+                <Text style={styles.levelText}>Lev. {userData?.level || 1}</Text>
+              </View>
             </View>
-            <Text style={styles.randomText}>Earn xp and promote to next level</Text>
-          </View>
-          <View style={styles.level}>
-            <Text style={styles.levelText}>Lev. {userData?.level || 1}</Text>
-          </View>
-        </View>
+          )
+        }
 
         <Text style={styles.Profile_heading}>
           {role === "client"
@@ -235,7 +274,7 @@ export default function ProfileScreen({ navigation }) {
             : data?.profile_heading}
         </Text>
 
-        <Text style={styles.about}>About myself</Text>
+        <Text style={styles.about}>About me</Text>
         <Text style={styles.about_des}>
           {data?.profile_description || "No description available"}
         </Text>
@@ -279,15 +318,67 @@ export default function ProfileScreen({ navigation }) {
           </View>
         )}
 
-        {/* Edit Profile Button */}
-        <TouchableOpacity
+        <View style={styles.line}></View>
+
+        <Text style={styles.locTitle}>Location</Text>
+        <Text style={styles.locSubTitle}> {userData?.city}, {userData?.state} ({userData?.country}) </Text>
+
+        <Text style={styles.locTitle}>Member Since</Text>
+        <Text style={styles.locSubTitle}>{formattedDate}</Text>
+
+        {userData ? (
+          <>
+            {roleOptions?.freelancerData && roleOptions?.clientData ? (
+              <>
+                <TouchableOpacity
+                  style={styles.editProfileButton}
+                  onPress={() =>
+                    handleRoleSelection(
+                      userData.role === "freelancer"
+                        ? roleOptions.clientData
+                        : roleOptions.freelancerData
+                    )
+                  }
+                >
+                  <Text style={styles.buttonText}>
+                    Switch to{" "}
+                    {userData.role === "freelancer" ? "Client" : "Freelancer"}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                {roleOptions?.freelancerData ? (
+                  <TouchableOpacity
+                    style={styles.editProfileButton}
+                    onPress={() => handleSetupRole("client")}
+                  >
+                    <Text style={styles.buttonText}>Setup Client Profile</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.editProfileButton}
+                    onPress={() => handleSetupRole("freelancer")}
+                  >
+                    <Text style={styles.buttonText}>Setup Freelancer Profile</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <Text style={styles.infoText}>No user data available</Text>
+        )}
+
+
+        {/* <TouchableOpacity
           style={styles.editProfileButton}
           onPress={() => {
             navigation.navigate("Settings");
           }}
         >
           <Text style={styles.buttonText}>Edit Your Profile</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Deactivate Account Link */}
         <TouchableOpacity
@@ -306,7 +397,6 @@ export default function ProfileScreen({ navigation }) {
         >
           <Text style={styles.deactivateLink}>Log out</Text>
         </TouchableOpacity>
-
         <Toast />
       </ScrollView>
 
@@ -314,228 +404,261 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  tab: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 2,
-  },
-  tabButtonL: {
-    backgroundColor: "#5732a8",
-    width: "50%",
-    height: 40,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopRightRadius: 80,
-  },
-  tabButtonR: {
-    backgroundColor: "#DADADA",
-    width: "50%",
-    height: 40,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopLeftRadius: 80,
-  },
-  tabTextL: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  tabTextR: {
-    color: "#000",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: currentTheme.background || "#fff",
+      paddingTop: 35,
+      paddingBottom: 80,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: currentTheme.background
+    },
+    tab: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 2,
+    },
+    tabButtonL: {
+      backgroundColor: "#4C0183",
+      width: "50%",
+      height: 40,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderTopRightRadius: 80,
+    },
+    tabButtonR: {
+      backgroundColor: currentTheme.background3 || "#DADADA",
+      width: "50%",
+      height: 40,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderTopLeftRadius: 80,
+    },
+    tabTextL: {
+      color:"#fff",
+      fontSize: 20,
+      fontWeight: "bold",
+    },
+    tabTextR: {
+      color:currentTheme.text ||  "#000",
+      fontSize: 20,
+      fontWeight: "bold",
+    },
+    modalHeader: {
+      paddingTop: 10,
+      paddingLeft: 20
+    },
+    backgroundImg: {
+      width: "100%",
+      height: 150,
+      // justifyContent: "center",
+      // alignItems: "center",
+      // paddingTop: 20,
+      position: "relative",
+    },
+    profileImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      position: "absolute",
+      top: 82,
+      left: "38%",
+    },
+    share: {
+      position: "absolute",
+      bottom: 5,
+      right: 80,
+      backgroundColor: currentTheme.background || "#fff",
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    settings: {
+      position: "absolute",
+      bottom: 5,
+      right: 20,
+      backgroundColor: currentTheme.background || "#fff",
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    userDetails: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingTop: 30,
+    },
+    nameText: {
+      fontSize: 28,
+      fontWeight: "600",
+      color: currentTheme.text
+    },
+    roleWrap: {
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+    },
+    roleText: {
+      fontSize: 14,
+      fontWeight: "400",
+      color: currentTheme.text
+    },
+    statusText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: currentTheme.text
+    },
+    section: {
+      padding: 20,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      textAlign: "center",
+      color: currentTheme.text
+    },
+    sectionContent: {
+      color: currentTheme.text || "#333",
+      marginTop: 5,
+    },
+    portfolioImages: {
+      marginTop: 10,
+      display: "flex",
+      flexWrap: "wrap",
+      flexDirection: "row",
+      justifyContent: "space-around",
+      gap: 10,
+    },
+    portfolioImage: {
+      width: 100,
+      height: 100,
+      marginRight: 10,
+      borderRadius: 6,
+    },
+    editProfileButton: {
+      backgroundColor: "#4C0183",
+      paddingVertical: 12,
+      marginHorizontal: 20,
+      borderRadius: 12,
+      marginBottom: 15,
+      marginTop: 40,
+    },
+    buttonText: {
+      color: "#fff",
+      textAlign: "center",
+      fontSize: 16,
+    },
+    deactivateLink: {
+      textAlign: "center",
+      color: "#4C0183",
+      marginBottom: 50,
+    },
+    Profile_heading: {
+      textAlign: "center",
+      marginTop: 10,
+      fontWeight: "500",
+      fontStyle: "italic",
+      fontSize: 13,
+      color: currentTheme.text
+    },
+    about: {
+      textAlign: "center",
+      marginTop: 10,
+      fontWeight: "600",
+      fontSize: 17,
+      color: currentTheme.text
+    },
+    about_des: {
+      textAlign: "justify",
+      marginTop: 10,
+      fontWeight: "400",
+      fontSize: 13,
+      paddingHorizontal: 25,
+      color: currentTheme.text
+    },
+    levelContainer: {
+      flex: 1,
+      flexDirection: "row",
+      marginHorizontal: 40,
+      marginVertical: 12,
+      position: "relative"
+    },
+    xpRan: {
+      backgroundColor: currentTheme.background3 || "#D9D9D9",
+      flex: 1,
+      flexDirection: "row",
+      borderRadius: 20,
+      gap: 8,
+      height: 20,
+      position: "relative",
+      justifyContent: "center",
+      alignItems: "center"
+    },
+    xp: {
+      backgroundColor: "#56118F",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 20,
+      position: "absolute",
+      left: 0,
+    },
+    xpText: {
+      fontSize: 14,
+      fontWeight: "400",
+      color: "#fff"
+    },
+    randomText: {
+      fontSize: 10,
+      fontWeight: "400",
+      color: "#A1A1A1",
+      paddingHorizontal: 5,
+      // paddingVertical: 4,
+    },
+    level: {
+      backgroundColor: "#56118F",
+      paddingHorizontal: 4,
+      paddingVertical: 12,
+      borderRadius: 50,
+      position: "absolute",
+      right: 0,
+      top: "-10"
+    },
+    levelText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: "#fff"
+    },
 
-  backgroundImg: {
-    width: "100%",
-    height: 150,
-    // justifyContent: "center",
-    // alignItems: "center",
-    // paddingTop: 20,
-    position: "relative",
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    position: "absolute",
-    top: 82,
-    left: "38%",
-  },
-  share: {
-    position: "absolute",
-    bottom: 5,
-    right: 80,
-    backgroundColor: "#fff",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  settings: {
-    position: "absolute",
-    bottom: 5,
-    right: 20,
-    backgroundColor: "#fff",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  userDetails: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 30,
-  },
-  nameText: {
-    fontSize: 28,
-    fontWeight: "600",
-  },
-  roleWrap: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  roleText: {
-    fontSize: 14,
-    fontWeight: "400",
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  section: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  sectionContent: {
-    color: "#333",
-    marginTop: 5,
-  },
-  portfolioImages: {
-    marginTop: 10,
-    display: "flex",
-    flexWrap: "wrap",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    gap: 10,
-  },
-  portfolioImage: {
-    width: 100,
-    height: 100,
-    marginRight: 10,
-    borderRadius: 6,
-  },
-  editProfileButton: {
-    backgroundColor: "#5732a8",
-    paddingVertical: 12,
-    marginHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 15,
-    marginTop: 40,
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 16,
-  },
-  deactivateLink: {
-    textAlign: "center",
-    color: "#5732a8",
-    marginBottom: 20,
-  },
-  Profile_heading: {
-    textAlign: "center",
-    marginTop: 10,
-    fontWeight: "500",
-    fontStyle: "italic",
-    fontSize: 13,
-  },
-  about: {
-    textAlign: "center",
-    marginTop: 10,
-    fontWeight: "600",
-    fontSize: 17,
-  },
-  about_des: {
-    textAlign: "justify",
-    marginTop: 10,
-    fontWeight: "400",
-    fontSize: 13,
-    paddingHorizontal: 25,
-  },
-  levelContainer: {
-    flex: 1,
-    flexDirection: "row",
-    marginHorizontal: 40,
-    marginVertical: 12,
-    position: "relative"
-  },
-  xpRan: {
-    backgroundColor: "#D9D9D9",
-    flex: 1,
-    flexDirection: "row",
-    borderRadius: 20,
-    gap: 8,
-    height: 20,
-    position: "relative",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  xp: {
-    backgroundColor: "#56118F",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 20,
-    position: "absolute",
-    left: 0,
-  },
-  xpText: {
-    fontSize: 14,
-    fontWeight: "400",
-    color: "#fff"
-  },
-  randomText: {
-    fontSize:10,
-    fontWeight: "400",
-    color: "#A1A1A1",
-    paddingHorizontal: 5,
-    // paddingVertical: 4,
-  },
-  level: {
-    backgroundColor: "#56118F",
-    paddingHorizontal: 4,
-    paddingVertical: 12,
-    borderRadius: 50,
-    position: "absolute",
-    right: 0,
-    top: "-10"
-  },
-  levelText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#fff"
-  }
-
-});
+    line: {
+      backgroundColor: "#E2E2E2",
+      width: "90%",
+      height: 1,
+      margin: "auto",
+      marginTop: 10
+    },
+    locTitle: {
+      color: "#8F8F8F",
+      fontSize: 18,
+      fontWeight: "600",
+      marginLeft: 25,
+      marginTop: 15
+    },
+    locSubTitle: {
+      color:currentTheme.text || "#000",
+      fontSize: 15,
+      marginLeft: 25,
+    }
+  }); 

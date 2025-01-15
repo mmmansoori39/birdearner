@@ -12,7 +12,11 @@ export const appwriteConfig = {
   jobCollectionID: "673327260000fb1f8aed",
   messageCollectionID: "674f23ba0019a93a384f",
   paymentHistoryCollectionId: "6769187c002cd44cc156",
-  reviewCollectionId: "676922e0000cae8e2c3f"
+  reviewCollectionId: "676922e0000cae8e2c3f",
+  withdrawalRequestsCollectionId: "677cd4020023da8571b7",
+  blockedAndStarDataCollectionId: "6784d356001feaaed104",
+  pushTokensCollectionId: "6786168c002fde3faf26",
+  userEggsCollectionId: "67863227002c9cf660b3"
 };
 export const client = new Client();
 
@@ -52,7 +56,6 @@ export async function uploadFile(file, type = "application/octet-stream") {
 
     return fileUrl;
   } catch (error) {
-    console.error("Error uploading file:", error.message);
     throw new Error(error);
   }
 }
@@ -72,7 +75,6 @@ export async function getFileURL(fileId, mimeType) {
 
     return fileUrl;
   } catch (error) {
-    console.error("Error getting file URL:", error.message);
     throw new Error(error);
   }
 }

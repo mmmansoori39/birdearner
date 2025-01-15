@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from '../context/ThemeContext';
 
 const notificationsData = [
   {
@@ -158,6 +159,12 @@ const notificationsData = [
 ];
 
 const NotificationScreen = () => {
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Notifications</Text>
@@ -199,68 +206,71 @@ const NotificationScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    // flex: 1,
-    // padding: 16,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  scrollView: {
-    marginBottom: 40,
-  },
-  notificationItem: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 12,
-    // padding: 10,
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
-  customIcon: {
-    fontSize: 30,
-  },
-  notificationContent: {
-    flex: 1,
-  },
-  description: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  projectText: {
-    fontSize: 14,
-    color: '#555',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
-  },
-  icon: {
-    fontSize: 24,
-  },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      // flex: 1,
+      // padding: 16,
+      backgroundColor: currentTheme.background || '#fff',
+      paddingHorizontal: 20
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: 16,
+      color: currentTheme.text
+    },
+    scrollView: {
+      marginBottom: 40,
+    },
+    notificationItem: {
+      flexDirection: 'row',
+      marginBottom: 16,
+      backgroundColor: currentTheme.cardBackground || '#f0f0f0',
+      borderRadius: 12,
+      // padding: 10,
+      alignItems: 'center',
+    },
+    avatarContainer: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      borderWidth: 3,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    avatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+    },
+    customIcon: {
+      fontSize: 30,
+    },
+    notificationContent: {
+      flex: 1,
+    },
+    description: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: currentTheme.text
+    },
+    projectText: {
+      fontSize: 14,
+      color: currentTheme.subText || '#555',
+    },
+    bottomNav: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: '#ccc',
+    },
+    icon: {
+      fontSize: 24,
+    },
+  });
 
 export default NotificationScreen;

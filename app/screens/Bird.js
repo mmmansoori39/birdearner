@@ -7,11 +7,17 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 const Bird = () => {
   const [messages, setMessages] = useState([]); // Chat messages
   const [input, setInput] = useState(""); // Input text
   const [loading, setLoading] = useState(false);
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   // Send a new message
   const sendMessage = async () => {
@@ -52,7 +58,7 @@ const Bird = () => {
         throw new Error(data.error || "An error occurred.");
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.log("Error sending message:", error);
 
       const errorMessage = {
         sender: "bot",
@@ -111,45 +117,54 @@ const Bird = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: 20, marginHorizontal: 10, paddingTop: 50 },
-  chatList: { flex: 1 },
-  chatListContainer: { padding: 10 },
-  messageContainer: {
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 8,
-  },
-  userMessage: {
-    backgroundColor: "#d1e7dd",
-    alignSelf: "flex-end",
-  },
-  botMessage: {
-    backgroundColor: "#f1f1f1",
-    alignSelf: "flex-start",
-  },
-  messageText: { fontSize: 16, color: "#000" },
-  inputContainer: {
-    flexDirection: "row",
-    padding: 10,
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-  },
-  sendButton: {
-    marginLeft: 10,
-    padding: 10,
-    backgroundColor: "#5c2d91",
-    borderRadius: 8,
-    justifyContent: "center",
-  },
-  sendButtonText: { color: "#fff", fontWeight: "bold" },
-});
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background || "#fff",
+      paddingHorizontal: 20,
+      // marginHorizontal: 10,
+      paddingTop: 50
+    },
+    chatList: { flex: 1 },
+    chatListContainer: { padding: 10 },
+    messageContainer: {
+      marginVertical: 5,
+      padding: 10,
+      borderRadius: 8,
+    },
+    userMessage: {
+      backgroundColor: currentTheme.cardBackground || "#d1e7dd",
+      alignSelf: "flex-end",
+    },
+    botMessage: {
+      backgroundColor: currentTheme.cardBackground || "#f1f1f1",
+      alignSelf: "flex-start",
+    },
+    messageText: { fontSize: 16, color: currentTheme.text || "#000" },
+    inputContainer: {
+      flexDirection: "row",
+      padding: 10,
+      borderTopWidth: 1,
+      borderColor: "#ddd",
+    },
+    input: {
+      flex: 1,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: currentTheme.border || "#ddd",
+      borderRadius: 8,
+      color: currentTheme.subText || "#000000",
+      backgroundColor: currentTheme.background3 || '#fff',
+    },
+    sendButton: {
+      marginLeft: 10,
+      padding: 10,
+      backgroundColor: "#5c2d91",
+      borderRadius: 8,
+      justifyContent: "center",
+    },
+    sendButtonText: { color: "#fff", fontWeight: "bold" },
+  });
 
 export default Bird;

@@ -14,6 +14,8 @@ import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 import { Query } from "react-native-appwrite";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from 'react-native-toast-message';
+import { useTheme } from "../context/ThemeContext";
 
 const Chat = ({ route, navigation }) => {
   const { full_name, profileImage, projectId, receiverId } = route.params;
@@ -27,9 +29,34 @@ const Chat = ({ route, navigation }) => {
   const [characterLimit, setCharacterLimit] = useState(0);
   const [projectStatus, setProjectStatus] = useState("pending");
   const [job, setJob] = useState(null);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState(null);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isStar, setIsStar] = useState(false);
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
 
   const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
+
+  const handleError = (message) => {
+    Toast.show({
+      type: 'error',
+      text1: 'Error',
+      text2: message,
+    });
+  };
+
+  const handleSuccess = (message) => {
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: message,
+    });
+  };
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -41,7 +68,7 @@ const Chat = ({ route, navigation }) => {
         );
         setJob(response);
       } catch (err) {
-        console.error("Error fetching project details:", err);
+        handleError("Error fetching project details")
       } finally {
         setLoading(false);
       }
@@ -118,7 +145,7 @@ const Chat = ({ route, navigation }) => {
         );
         setMessages(sortedMessages);
       } catch (err) {
-        console.error("Error fetching messages:", err);
+        handleError("Please connect to the network")
       }
     };
 
@@ -133,6 +160,53 @@ const Chat = ({ route, navigation }) => {
     // Cleanup on unmount
     return () => clearInterval(interval);
   }, [receiverId, userData.$id]);
+
+  useEffect(() => {
+    const fetchBlockedData = async () => {
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "blocked"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          setIsBlocked(true);
+        }
+      } catch (error) {
+        handleError("Failed to unblock the user.");
+      }
+    }
+
+    const fetchStarUnstarData = async () => {
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "star"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          setIsStar(true);
+        }
+      } catch (error) {
+        handleError("Failed to unstar the chat.");
+      }
+    }
+
+    fetchBlockedData();
+    fetchStarUnstarData();
+  }, [receiverId, userData.$id])
 
   // Scroll to bottom whenever messages are updated
   useEffect(() => {
@@ -158,7 +232,7 @@ const Chat = ({ route, navigation }) => {
         setMessages((prev) => [...prev, newMessage]);
         setInput("");
       } catch (err) {
-        console.error("Error sending message:", err);
+        Alert.alert("Error sending message:", err)
       }
     }
   };
@@ -176,18 +250,45 @@ const Chat = ({ route, navigation }) => {
       );
       setSelectedMessage(null); // Close modal after deletion
     } catch (err) {
-      console.error("Error deleting message:", err);
+      Alert.alert("Error deleting message:", err)
     }
   };
 
-
-  // Handle Accept/Reject actions
   const handleAccept = async () => {
     try {
-      await databases.updateDocument(appwriteConfig.databaseId,
-        appwriteConfig.jobCollectionID, projectId, {
-        assigned_freelancer: receiverId,
-      });
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        projectId
+      );
+
+      const projectBudget = jobDoc?.budget;
+
+      const walletBalance = parseFloat(userData?.wallet || 0.0);
+
+      const requiredAmount = projectBudget + projectBudget * 0.10;
+
+      if (walletBalance < requiredAmount) {
+        const additionalAmount = projectBudget * 0.10;
+        Alert.alert(
+          "Balance is insufficient",
+          `Please add at least ₹${requiredAmount.toFixed(2)} to your wallet. This includes the project budget of ₹${projectBudget.toFixed(2)} and an additional 10% of ₹${additionalAmount.toFixed(2)}.`
+        );
+        navigation.navigate('Tabs', {
+          screen: 'Profile',
+          params: {
+            screen: 'Payment',
+          },
+        });
+        return;
+      }
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        projectId,
+        { assigned_freelancer: receiverId }
+      );
 
       const freelancer = await databases.getDocument(
         appwriteConfig.databaseId,
@@ -205,42 +306,370 @@ const Chat = ({ route, navigation }) => {
         receiverId,
         {
           assigned_jobs: updatedAssignedJobs,
+          totalEarnings: projectBudget
         }
       );
+
+      const updatedWalletBalance = walletBalance - requiredAmount;
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.clientCollectionId,
+        userData?.$id,
+        { wallet: updatedWalletBalance }
+      );
+
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.paymentHistoryCollectionId,
+        'unique()',
+        {
+          userId: userData?.$id,
+          paymentId: projectId,
+          amount: requiredAmount,
+          status: 'Paid',
+          date: new Date().toISOString(),
+        }
+      );
+
       setCharacterLimit(null);
     } catch (err) {
-      console.error("Error accepting project:", err);
+      Alert.alert("Error accepting project")
     }
   };
 
+
   const handleReject = async () => {
     try {
-      await databases.updateDocument("databaseId", "projectsCollectionId", projectId, {
-        status: "rejected",
-      });
-      navigation.goBack(); // Go back to the previous screen
-    } catch (err) {
-      console.error("Error rejecting project:", err);
+      const jobId = projectId;
+      const freelancerId = receiverId;
+
+      // Fetch the job document
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+
+
+
+      let updatedFreelancers = jobDoc.applied_freelancer;
+
+      updatedFreelancers = updatedFreelancers.filter(id => id !== freelancerId);
+
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId,
+        {
+          applied_freelancer: updatedFreelancers,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Job Rejected", "You have successfully rejected the application.");
+      navigation.goBack()
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while rejecting the job.");
     }
   };
+
+  const handleBlockUnblockAction = async () => {
+    if (!isBlocked) {
+      // Block user
+      try {
+        const response = await databases.createDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          "unique()",
+          {
+            currentUserId: userData.$id,
+            oppositeUserId: receiverId,
+            projectId: projectId,
+            statusValue: "blocked",
+          }
+        );
+        handleSuccess("The user has been blocked.");
+        setIsBlocked(true);
+      } catch (error) {
+        handleError("Failed to block the user.");
+      }
+    } else {
+      // Unblock user
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "blocked"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          const documentId = documents.documents[0].$id;
+          await databases.deleteDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.blockedAndStarDataCollectionId,
+            documentId
+          );
+          handleSuccess("The user has been unblocked.");
+          setIsBlocked(false);
+        }
+      } catch (error) {
+        handleError("Failed to unblock the user.");
+      }
+    }
+  };
+
+  const handleStarUnstarAction = async () => {
+    if (!isStar) {
+      // star this chat
+      try {
+        const response = await databases.createDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          "unique()",
+          {
+            currentUserId: userData.$id,
+            oppositeUserId: receiverId,
+            projectId: projectId,
+            statusValue: "star",
+          }
+        );
+        handleSuccess("This chat has been star.");
+        setIsStar(true);
+      } catch (error) {
+        handleError("Failed to star the chat.");
+      }
+    } else {
+      // Unstar chat
+      try {
+        const documents = await databases.listDocuments(
+          appwriteConfig.databaseId,
+          appwriteConfig.blockedAndStarDataCollectionId,
+          [
+            Query.equal("currentUserId", userData.$id),
+            Query.equal("oppositeUserId", receiverId),
+            Query.equal("projectId", projectId),
+            Query.equal("statusValue", "star"),
+          ]
+        );
+
+        if (documents.total > 0) {
+          const documentId = documents.documents[0].$id;
+          await databases.deleteDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.blockedAndStarDataCollectionId,
+            documentId
+          );
+          handleSuccess("This chat has been unstar");
+          setIsStar(false);
+        }
+      } catch (error) {
+        handleError("Failed to unstar the chat.");
+      }
+    }
+  };
+
+  const handleCancelJob = async () => {
+    try {
+      const jobId = projectId;
+      const freelancerId = userData?.role === "freelancer" ? userData?.$id : receiverId;
+
+      // Fetch the job document
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+
+      const freelancerDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId
+      );
+
+      let updatedFreelancers = jobDoc.applied_freelancer;
+      let updatedCancelJob = freelancerDoc.cancelled_jobs || [];
+
+      updatedFreelancers = updatedFreelancers.filter(id => id !== freelancerId);
+
+      if (!updatedCancelJob.includes(jobId)) {
+        updatedCancelJob.push(jobId);
+      }
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId,
+        {
+          applied_freelancer: updatedFreelancers,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId,
+        {
+          cancelled_jobs: updatedCancelJob,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Job Cancelled", "You have successfully cancelled your application for this job.");
+      navigation.goBack()
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while cancelling the job.");
+    }
+  };
+
+  const handleConfirmProjComp = async () => {
+    try {
+      const jobId = projectId;
+      const freelancerId = receiverId;
+
+      const deadlineDate = new Date(job?.deadline);
+      const currentDate = new Date();
+      const daysPast = Math.floor((currentDate - deadlineDate) / (1000 * 60 * 60 * 24));
+      const penalty = daysPast * 2; // ₹2 per day
+
+      // Fetch the job document
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+
+      const freelancerDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId
+      );
+
+      let updatedwithdrawableAmount = (freelancerDoc?.withdrawableAmount + jobDoc?.budget) - penalty;
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId,
+        {
+          completed_status: true,
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        freelancerId,
+        {
+          withdrawableAmount: updatedwithdrawableAmount,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        appwriteConfig.userEggsCollectionId,
+        [Query.equal('userId', userData.$id)]
+      );
+
+      if (response.documents.length > 0) {
+        const userEggData = response.documents[0];
+
+        const { eggStatus } = userEggData;
+
+        const updatedEggStatus = [...eggStatus];
+
+        for (let i = 0; i < updatedEggStatus.length; i++) {
+          if (!updatedEggStatus[i]) {
+            updatedEggStatus[i] = true;
+            break;
+          }
+        }
+
+        await databases.updateDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.userEggsCollectionId,
+          userEggData.$id,
+          {
+            eggStatus: updatedEggStatus,
+          }
+        );
+      }
+
+      Alert.alert("Job Status", "You have successfully complete this job.");
+      navigation.goBack()
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while confirming the job.");
+    }
+  };
+
+
+
+  const reportOptions = [
+    "Bullying or unwanted contact",
+    "Suicide, self-injury or eating disorders",
+    "Violence, hate or exploitation",
+    "Selling or promoting restricted items",
+    "Nudity or sexual activity",
+    "Scam, fraud or spam",
+    "False information"
+  ];
+
+  const dotMapData = userData?.role === "client" && job?.assigned_freelancer === null
+    ? ["Cancel this job", "Report this chat", isBlocked ? "Unblock" : "Block", "View Profile"]
+    : job?.assigned_freelancer === null
+      ? ["Cancel this job", "Report this chat", "View Profile"]
+      : [
+        "Job Details",
+        "Mark Unread",
+        isStar ? "Unstar" : "Star",
+        "Review",
+        "View Profile",
+      ];
+
+
 
   // Handle dropdown menu actions
   const handleMenuAction = (action) => {
     switch (action) {
       case "Job Details":
-        navigation.navigate("JobDetailsChat", {projectId})
+        navigation.navigate("JobDetailsChat", { projectId })
         break;
       case "Mark Unread":
         Alert.alert("Marked Unread", "The chat has been marked as unread.");
         break;
-      case "Star":
-        navigation.navigate("ReviewGive", {receiverId})
+      case "Review":
+        navigation.navigate("ReviewGive", { receiverId })
         break;
       case "Delete":
         Alert.alert("Deleted", "The chat has been deleted.");
         break;
       case "Block":
-        Alert.alert("Blocked", "The user has been blocked.");
+      case "Unblock":
+        handleBlockUnblockAction();
+        break;
+      case "Star":
+      case "Unstar":
+        handleStarUnstarAction();
+        break;
+      case "View Profile":
+        navigation.navigate("ProfileScreen", { receiverId });
+        break;
+      case "Report this chat":
+        setReportModalVisible(true);
+        break;
+      case "Cancel this job":
+        handleCancelJob()
         break;
       default:
         break;
@@ -249,6 +678,11 @@ const Chat = ({ route, navigation }) => {
   };
 
 
+  const handleReportSelect = (reason) => {
+    setSelectedReportReason(reason);
+    Alert.alert("Reported", `This chat has been reported for: ${reason}`);
+    setReportModalVisible(false); // Close the modal after reporting
+  };
 
   // Render individual message
   const renderMessage = ({ item }) => {
@@ -261,7 +695,7 @@ const Chat = ({ route, navigation }) => {
 
     return (
       <TouchableOpacity
-        onLongPress={handleLongPress}
+        // onLongPress={handleLongPress}
         style={[
           styles.messageContainer,
           isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage,
@@ -307,16 +741,52 @@ const Chat = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+
+      <Modal
+        visible={reportModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setReportModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Report</Text>
+            <Text style={styles.modalSubtitle}>
+              Why are you reporting this post?
+            </Text>
+            <Text style={styles.modalDescription}>
+              Your report is anonymous. If someone is in immediate danger, call the local emergency services - don't wait.
+            </Text>
+            {reportOptions.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleReportSelect(option)}
+                style={styles.optionButton}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              onPress={() => setReportModalVisible(false)}
+              style={styles.cancelButton}
+            >
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={ currentTheme.text || "black"} />
         </TouchableOpacity>
         <View style={styles.headerData}>
           <Text style={styles.profile}>Tap for contact details</Text>
           <Text style={styles.username}>@{full_name}</Text>
           <Text style={styles.profile}>Last online 3 hrs ago</Text>
 
-          {userData.role === "client" ? (
+          {userData?.role === "client" ? (
             job?.assigned_freelancer === null ? (
               <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
@@ -328,9 +798,102 @@ const Chat = ({ route, navigation }) => {
               </View>
             ) : (
               <View>
-                <Text style={styles.deadline}>Deadline Timer</Text>
+                <Text style={styles.deadline}> {job?.deadline && new Date(job.deadline) < new Date() ? "Deadline Over" : "Deadline Timer"}</Text>
                 <View style={styles.deadlineTimerContainer}>
-                  {timeLeft.split(" ").map((timePart, index) => {
+                  {job?.deadline && new Date(job.deadline) < new Date() ? (
+                    // Penalty logic if the deadline has passed
+                    (() => {
+                      const deadlineDate = new Date(job?.deadline);
+                      const currentDate = new Date();
+                      const daysPast = Math.floor((currentDate - deadlineDate) / (1000 * 60 * 60 * 24));
+                      const penalty = daysPast * 2; // ₹2 per day
+
+                      return (
+                        <View style={styles.timeBoxCon}>
+                          <Text style={styles.penaltyText}>Penalty: ₹{penalty}</Text>
+                          {
+                            !job?.completed_status && (
+                              <TouchableOpacity style={styles.conColor} onPress={handleConfirmProjComp}>
+                                <Text style={styles.applyButtonText}>Confirm Project Completion</Text>
+                              </TouchableOpacity>
+                            )
+                          }
+
+                          {
+                            job?.completed_status && (
+                              <Text style={styles.conColorc}>Project Completed</Text>
+                            )
+                          }
+
+                          {/* {timeLeft.split(" ").map((timePart, index) => {
+                            const unit = timePart.slice(-1);
+                            const value = timePart.slice(0, -1);
+
+                            return (
+                              <View key={index} style={styles.timeBox}>
+                                <Text style={styles.timeText}>{value}</Text>
+                                <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
+                              </View>
+                            );
+                          })} */}
+                        </View>
+                      );
+                    })()
+                  ) : (
+                    // Regular time display if the deadline is not passed
+                    timeLeft.split(" ").map((timePart, index) => {
+                      const unit = timePart.slice(-1);
+                      const value = timePart.slice(0, -1);
+
+                      return (
+                        <View key={index} style={styles.timeBox}>
+                          <Text style={styles.timeText}>{value}</Text>
+                          <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
+                        </View>
+                      );
+                    })
+                  )}
+                </View>
+              </View>
+            )
+          ) : (
+            <View>
+              <Text style={styles.deadline}> {job?.deadline && new Date(job.deadline) < new Date() ? "Deadline Over" : "Deadline Timer"}</Text>
+              <View style={styles.deadlineTimerContainer}>
+                {job?.deadline && new Date(job.deadline) < new Date() ? (
+                  // Penalty logic if the deadline has passed
+                  (() => {
+                    const deadlineDate = new Date(job?.deadline);
+                    const currentDate = new Date();
+                    const daysPast = Math.floor((currentDate - deadlineDate) / (1000 * 60 * 60 * 24));
+                    const penalty = daysPast * 2; // ₹2 per day
+
+                    return (
+                      <View style={styles.timeBoxCon}>
+                        <Text style={styles.penaltyText}>Penalty: ₹{penalty}</Text>
+
+                        {
+                          job?.completed_status && (
+                            <Text style={styles.conColorc}>Project Completed</Text>
+                          )
+                        }
+                        {/* {timeLeft.split(" ").map((timePart, index) => {
+                          const unit = timePart.slice(-1);
+                          const value = timePart.slice(0, -1);
+
+                          return (
+                            <View key={index} style={styles.timeBox}>
+                              <Text style={styles.timeText}>{value}</Text>
+                              <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
+                            </View>
+                          );
+                        })} */}
+                      </View>
+                    );
+                  })()
+                ) : (
+                  // Regular time display if the deadline is not passed
+                  timeLeft.split(" ").map((timePart, index) => {
                     const unit = timePart.slice(-1);
                     const value = timePart.slice(0, -1);
 
@@ -340,32 +903,18 @@ const Chat = ({ route, navigation }) => {
                         <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
                       </View>
                     );
-                  })}
-                </View>
-              </View>
-            )
-          ) : (
-            <View>
-              <Text style={styles.deadline}>Deadline Timer</Text>
-              <View style={styles.deadlineTimerContainer}>
-                {timeLeft.split(" ").map((timePart, index) => {
-                  const unit = timePart.slice(-1);
-                  const value = timePart.slice(0, -1);
-
-                  return (
-                    <View key={index} style={styles.timeBox}>
-                      <Text style={styles.timeText}>{value}</Text>
-                      <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
-                    </View>
-                  );
-                })}
+                  })
+                )}
               </View>
             </View>
           )}
 
+
+
+
         </View>
         <TouchableOpacity onPress={() => setShowMenu(!showMenu)} >
-          <Ionicons name="ellipsis-horizontal" size={24} color="black" />
+          <Ionicons name="ellipsis-horizontal" size={24} color= {currentTheme.text || "black"} />
         </TouchableOpacity>
         {showMenu && (
           // <Modal
@@ -376,7 +925,7 @@ const Chat = ({ route, navigation }) => {
 
           // </Modal>
           <View style={styles.menuContainer}>
-            {["Job Details", "Mark Unread", "Star", "Delete", "Block"].map((action) => (
+            {dotMapData.map((action) => (
               <TouchableOpacity
                 key={action}
                 style={styles.menuItem}
@@ -389,7 +938,7 @@ const Chat = ({ route, navigation }) => {
         )}
       </View>
 
-      {job?.assigned_freelancer === null && (
+      {job?.assigned_freelancer !== null && (
         <View style={styles.limit}>
           <Text style={styles.limitchar}>Characters Limit: {characterLimit}/200</Text>
           <Text style={styles.limitvar}>Please accept this lead to remove the characters limit.</Text>
@@ -425,6 +974,14 @@ const Chat = ({ route, navigation }) => {
         }}
       />
 
+      {
+        isBlocked && (
+          <View style={styles.limit}>
+            <Text style={styles.limitchar}>You have blocked this chat</Text>
+          </View>
+        )
+      }
+
       {/* Input Box */}
       <View style={styles.inputContainer}>
         <TextInput
@@ -433,202 +990,316 @@ const Chat = ({ route, navigation }) => {
           onChangeText={setInput}
           placeholder="Type your message..."
           maxLength={characterLimit || undefined}
-          editable={characterLimit > 0}
+          editable={!isBlocked && (characterLimit > 0)}
         />
-        {/* || job.assigned_freelancer !== null */}
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            isBlocked && styles.disabledButton
+          ]}
+          onPress={sendMessage}
+          disabled={isBlocked}
+        >
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
 
+
       {/* Delete Confirmation Modal */}
       {renderDeleteConfirmation()}
+
+      <Toast />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" , paddingTop: 30},
-  header: {
-    padding: 15,
-    // backgroundColor: "#f4f4f4",
-    alignItems: "center",
-    flex: 0,
-    flexDirection: "row",
-    justifyContent: "space-around"
-  },
-  headerData: {
-    // padding: 15,
-    alignItems: "center",
-    flex: 0,
-    flexDirection: "column",
-  },
-  profile: { fontSize: 12, fontWeight: "400", color: "#000000" },
-  username: { fontSize: 24, fontWeight: "600", color: "#5c2d91", paddingVertical: 4 },
-  deadline: { fontSize: 15, fontWeight: "500", color: "#000000", paddingTop: 6, textAlign: "center" },
-  lastOnline: { fontSize: 12, color: "#888" },
-  deadlineTimer: { fontSize: 12, color: "#888" },
-  chatList: {
-    flex: 1,
-    backgroundColor: "#F1F1F1",
-    marginHorizontal: 15,
-    borderRadius: 10
-  },
-  chatListContainer: { padding: 10 },
-  messageContainer: {
-    marginVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    paddingVertical: 6
-  },
-  currentUserMessage: {
-    backgroundColor: "#DADADA",
-    alignSelf: "flex-end",
-  },
-  otherUserMessage: {
-    backgroundColor: "#4C0183",
-    alignSelf: "flex-start",
-    color: "#fff"
-  },
-  profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
-    backgroundColor: "#e0e0e0", // Fallback background for images
-  },
-  sender: { fontWeight: "bold", color: "#5c2d91" },
-  message: { marginTop: 5, color: "#000" },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-  },
-  sendButton: {
-    marginLeft: 10,
-    padding: 10,
-    backgroundColor: "#5c2d91",
-    borderRadius: 5,
-  },
-  sendButtonText: { color: "#fff" },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  modalButton: {
-    padding: 10,
-    backgroundColor: "#5c2d91",
-    borderRadius: 5,
-    width: "45%",
-    alignItems: "center",
-  },
-  modalButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  actionButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10, gap: 55, marginTop: 25 },
-  acceptButton: { backgroundColor: "#4C0183", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 20 },
-  rejectButton: { backgroundColor: "#A00B0B", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 20 },
-  buttonText: { color: "#fff", textAlign: "center", fontSize: 16, fontWeight: "600", },
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: currentTheme.background || "#fff", paddingTop: 30 },
+    header: {
+      padding: 15,
+      // backgroundColor: "#f4f4f4",
+      alignItems: "center",
+      flex: 0,
+      flexDirection: "row",
+      justifyContent: "space-around"
+    },
+    headerData: {
+      // padding: 15,
+      alignItems: "center",
+      flex: 0,
+      flexDirection: "column",
+    },
+    profile: { fontSize: 12, fontWeight: "400", color: currentTheme.text || "#000000" },
+    username: { fontSize: 24, fontWeight: "600", color: "#5c2d91", paddingVertical: 4 },
+    deadline: { fontSize: 15, fontWeight: "500", color: currentTheme.text || "#000000", paddingTop: 6, textAlign: "center" },
+    lastOnline: { fontSize: 12, color: currentTheme.subText || "#888" },
+    deadlineTimer: { fontSize: 12, color: currentTheme.subText || "#888" },
+    chatList: {
+      flex: 1,
+      backgroundColor: currentTheme.cardBackground || "#F1F1F1",
+      marginHorizontal: 15,
+      borderRadius: 10
+    },
+    chatListContainer: { padding: 10 },
+    messageContainer: {
+      marginVertical: 5,
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      paddingVertical: 6
+    },
+    currentUserMessage: {
+      backgroundColor: "#DADADA",
+      alignSelf: "flex-end",
+    },
+    otherUserMessage: {
+      backgroundColor: "#4C0183",
+      alignSelf: "flex-start",
+      color: "#fff"
+    },
+    profileImage: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      marginRight: 10,
+      backgroundColor: "#e0e0e0", // Fallback background for images
+    },
+    sender: { fontWeight: "bold", color: "#5c2d91" },
+    message: { marginTop: 5, color: "#000" },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 10,
+      borderTopWidth: 1,
+      borderColor: currentTheme.border || "#ddd",
+    },
+    input: {
+      flex: 1,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: currentTheme.background3 || "#ddd",
+      borderRadius: 5,
+      color: currentTheme.subText,
+    },
+    sendButton: {
+      marginLeft: 10,
+      padding: 10,
+      backgroundColor: "#5c2d91",
+      borderRadius: 5,
+    },
+    sendButtonText: { color: "#fff" },
+    modalBackground: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    modalContainer: {
+      width: 300,
+      padding: 20,
+      backgroundColor: "white",
+      borderRadius: 10,
+      alignItems: "center",
+    },
+    modalText: {
+      fontSize: 16,
+      marginBottom: 20,
+    },
+    modalButtons: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+    },
+    modalButton: {
+      padding: 10,
+      backgroundColor: "#5c2d91",
+      borderRadius: 5,
+      width: "45%",
+      alignItems: "center",
+    },
+    modalButtonText: {
+      color: "#fff",
+      fontWeight: "bold",
+    },
+    actionButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10, gap: 10, marginTop: 25 },
+    acceptButton: { backgroundColor: "#4C0183", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
+    rejectButton: { backgroundColor: "#A00B0B", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
+    buttonText: { color: "#fff", textAlign: "center", fontSize: 16, fontWeight: "600", },
 
-  limit: {
-    flex: 0,
-    backgroundColor: "#F1F1F1",
-    marginHorizontal: 15,
-    borderRadius: 10,
-    paddingVertical: 20,
-  },
+    limit: {
+      flex: 0,
+      backgroundColor: currentTheme.cardBackground || "#F1F1F1",
+      marginHorizontal: 15,
+      borderRadius: 10,
+      paddingVertical: 20,
+    },
 
-  limitchar: {
-    color: "#464646", textAlign: "center", fontSize: 12, fontWeight: "600",
-  },
-  limitvar: {
-    color: "#464646", textAlign: "center", fontSize: 10, fontWeight: "400",
-  },
+    limitchar: {
+      color: currentTheme.text || "#464646", textAlign: "center", fontSize: 12, fontWeight: "600",
+    },
+    limitvar: {
+      color: currentTheme.subText || "#464646",
+       textAlign: "center", fontSize: 10, fontWeight: "400",
+    },
 
-  menuButton: { position: "absolute", right: 10, top: 10 },
-  menuButtonText: { fontSize: 24, color: "black" },
-  menuContainer: {
-    position: "absolute",
-    top: 100,
-    right: 20,
-    backgroundColor: "white",
-    borderRadius: 5,
-    padding: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    zIndex: 2334
-  },
-  menuItem: { paddingVertical: 10 },
-  menuItemText: { fontSize: 16, color: "black" },
+    menuButton: { position: "absolute", right: 10, top: 10 },
+    menuButtonText: { fontSize: 24, color: currentTheme.text || "black" },
+    menuContainer: {
+      position: "absolute",
+      top: 115,
+      right: 20,
+      backgroundColor: currentTheme.background3 || "white",
+      borderRadius: 5,
+      padding: 10,
+      shadowColor: currentTheme.shadow || "#000",
+      shadowOpacity: 0.2,
+      shadowRadius: 5,
+      shadowOffset: { width: 0, height: 2 },
+      zIndex: 2334
+    },
+    menuItem: { paddingVertical: 10 },
+    menuItemText: { fontSize: 16, color: currentTheme.text || "black" },
 
-  deadlineTimerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 5,
-  },
-  timeBox: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    backgroundColor: "#000000",
-    marginHorizontal: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 4
-  },
-  timeText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF", // White text
-  },
-  unitText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF", // White text
-  },
+    deadlineTimerContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      marginVertical: 5,
+      // backgroundColor: currentTheme.text
+    },
+    timeBoxCon: {
+      // paddingHorizontal: 8,
+      // paddingVertical: 5,
+      // backgroundColor: "#000000",
+      // marginHorizontal: 1,
+      alignItems: "center",
+      // justifyContent: "center",
+      flexDirection: "column",
+      gap: 12
+    },
 
+    applyButtonText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    conColor: {
+      backgroundColor: '#00871E',
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginBottom: 0,
+      paddingVertical: 10,
+      shadowColor: "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+    conColorc: {
+      paddingHorizontal: 15,
+      alignItems: 'center',
+      marginBottom: 0,
+      // paddingVertical: 10,
+      color: "#00871E"
+    },
+    penaltyText: {
+      backgroundColor: '#B64928',
+      paddingHorizontal: 10,
+      borderRadius: 6,
+      alignItems: 'center',
+      // marginBottom: 20,
+      paddingVertical: 3,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
 
-  // actionButtons: { flexDirection: "row", justifyContent: "space-around", marginBottom: 10 },
-  // acceptButton: { backgroundColor: "#4C0183", padding: 10, borderRadius: 5 },
-  // rejectButton: { backgroundColor: "#A00B0B", padding: 10, borderRadius: 5 },
-  // buttonText: { color: "#fff", textAlign: "center" },
-  // messageContainer: { padding: 10, backgroundColor: "#eaeaea", marginVertical: 5, borderRadius: 5 },
-  // messageText: { fontSize: 14 },
-  // input: { borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 10 },
-  // sendButton: { backgroundColor: "#007BFF", padding: 10, borderRadius: 5 },
+    timeBox: {
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      backgroundColor: currentTheme.text || "#000000",
+      marginHorizontal: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+      gap: 4,
+    },
+    timeText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: currentTheme.background|| "#FFFFFF", // White text
+    },
+    unitText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: currentTheme.background || "#FFFFFF", // White text
+    },
 
+    modalOverlay: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)"
+    },
+    modalContent: {
+      width: "100%",
+      height: "100%",
+      padding: 30,
+      backgroundColor: "#121212", // Dark background
+      borderRadius: 10,
+      alignItems: "center"
+    },
+    modalTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: "#fff",
+      marginBottom: 10
+    },
+    modalSubtitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#fff",
+      marginBottom: 10
+    },
+    modalDescription: {
+      fontSize: 14,
+      color: "#b0b0b0",
+      textAlign: "center",
+      marginBottom: 20
+    },
+    optionButton: {
+      width: "100%",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#303030"
+    },
+    optionText: {
+      fontSize: 16,
+      color: "#fff",
+      textAlign: "left"
+    },
+    cancelButton: {
+      marginTop: 20,
+      backgroundColor: "red",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 5
+    },
+    cancelText: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold"
+    }
 
-});
+  });
 
 export default Chat;

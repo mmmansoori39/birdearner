@@ -18,11 +18,13 @@ import {
     account,
 } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useAuth } from "../context/AuthContext";
 
 const PortfolioComScreen = ({ navigation, route }) => {
     const [portfolioImages, setPortfolioImages] = useState([]);
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [agreeTnC, setAgreeTnC] = useState(false);
+    const {checkUserSession} = useAuth()
     const { role } = route.params;
 
     const showToast = (type, title, message) => {
@@ -116,6 +118,7 @@ const PortfolioComScreen = ({ navigation, route }) => {
             );
 
             showToast("success", "Success", "Portfolio submitted successfully!");
+            await checkUserSession();
             navigation.goBack()
         } catch (error) {
             showToast("error", "Error", `Failed to submit: ${error.message}`);
@@ -161,7 +164,14 @@ const PortfolioComScreen = ({ navigation, route }) => {
         }
     };
 
-    const skipScreen = () => navigation.goBack();
+    const skipScreen = async () => {
+        try {
+          await checkUserSession();
+          navigation.goBack()
+        } catch (error) {
+            Alert.alert("Error during session check")
+        }
+      };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>

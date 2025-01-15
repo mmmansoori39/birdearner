@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases, uploadFile } from "../lib/appwrite";
 import { ID } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const TOTAL_TIME = 30;
 
@@ -14,6 +15,11 @@ const JobSubmissionTimmerScreen = ({ route, navigation }) => {
   const [submitted, setSubmitted] = useState(false);
   const { formData } = route.params;
   const { userData } = useAuth();
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const submitJob = async () => {
     try {
@@ -57,7 +63,6 @@ const JobSubmissionTimmerScreen = ({ route, navigation }) => {
       });
       setSubmitted(true);
     } catch (error) {
-      console.error("Error updating details:", error);
       Alert.alert("Error", `Failed to update details: ${error.message}`);
     }
   };
@@ -127,62 +132,63 @@ const JobSubmissionTimmerScreen = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  backButton: {
-    position: "absolute",
-    top: 40,
-    left: 20,
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#5A4CAE",
-    marginBottom: 40,
-  },
-  timerWrapper: {
-    width: 150,
-    height: 150,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  timerText: {
-    position: "absolute",
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#5A4CAE",
-  },
-  submitButton: {
-    backgroundColor: "#4B0082",
-    paddingVertical: 10,
-    paddingHorizontal: 40,
-    borderRadius: 20,
-    marginBottom: 15,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+const getStyles =  (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: currentTheme.background || "#FFFFFF",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 20,
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  cancelText: {
-    color: "#6D6D6D",
-    fontSize: 16,
-  },
-});
+    backButton: {
+      position: "absolute",
+      top: 40,
+      left: 20,
+    },
+    header: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: "#5A4CAE",
+      marginBottom: 40,
+    },
+    timerWrapper: {
+      width: 150,
+      height: 150,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 30,
+    },
+    timerText: {
+      position: "absolute",
+      fontSize: 32,
+      fontWeight: "bold",
+      color: "#5A4CAE",
+    },
+    submitButton: {
+      backgroundColor: "#4B0082",
+      paddingVertical: 10,
+      paddingHorizontal: 40,
+      borderRadius: 20,
+      marginBottom: 15,
+      shadowColor: "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+    submitButtonText: {
+      color: "#FFFFFF",
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    cancelText: {
+      color: "#6D6D6D",
+      fontSize: 16,
+    },
+  });
 
 export default JobSubmissionTimmerScreen;

@@ -9,15 +9,16 @@ import {
   ActivityIndicator,
   Share,
   RefreshControl,
-  Alert
+  Alert,
+  SafeAreaView
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { TouchableOpacity } from "react-native";
 import ReviewCard from "../components/ReviewCard";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { Query } from "react-native-appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ReviewsScreen({ navigation }) {
   const { user, loading, userData, setUserData } = useAuth();
@@ -26,6 +27,10 @@ export default function ReviewsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [reviews, setReviews] = useState([]);
 
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
   const role = userData?.role
 
@@ -34,21 +39,21 @@ export default function ReviewsScreen({ navigation }) {
     try {
       setData(userData)
     } catch (error) {
-      console.error("Failed to fetch freelancer data:", error);
+      Alert.alert("Failed to fetch freelancer data")
     } finally {
       setLoadingProfile(false);
     }
   }, [user]);
 
-useEffect(() => {
+  useEffect(() => {
     const flagsData = async () => {
-      if(userData){
+      if (userData) {
         try {
           const freelancerId = userData?.$id;
-  
+
           const collectionId = userData?.role === "client" ? appwriteConfig.clientCollectionId : appwriteConfig.freelancerCollectionId
-  
-  
+
+
           const freelancerDoc = await databases.getDocument(
             appwriteConfig.databaseId,
             collectionId,
@@ -59,7 +64,7 @@ useEffect(() => {
           Alert.alert("Error updating flags:", error)
         }
       }
-      }
+    }
 
     flagsData()
   }, [refreshing])
@@ -72,19 +77,19 @@ useEffect(() => {
           role === "client"
             ? appwriteConfig.freelancerCollectionId
             : appwriteConfig.clientCollectionId;
-  
+
         // Fetch reviews for the current user (receiverId)
         const response = await databases.listDocuments(
           appwriteConfig.databaseId,
           appwriteConfig.reviewCollectionId,
           [Query.equal("receiverId", receiverId)] // Correct query syntax
         );
-  
+
         // Sort reviews by createdAt field in descending order
         const sortedDocuments = response.documents.sort((a, b) =>
           new Date(b.$createdAt) - new Date(a.$createdAt)
         );
-  
+
         const reviewsWithGiverData = await Promise.all(
           sortedDocuments.map(async (review) => {
             try {
@@ -93,7 +98,7 @@ useEffect(() => {
                 userCollectionId,
                 review.giverId
               );
-  
+
               return {
                 ...review,
                 giverName: giverResponse.full_name,
@@ -102,21 +107,21 @@ useEffect(() => {
                 country: giverResponse.country,
               };
             } catch (giverError) {
-              console.error("Error fetching giver data:", giverError);
+              Alert.alert("Error fetching giver data")
               return review; // Return review without giver info if fetch fails
             }
           })
         );
-  
+
         setReviews(reviewsWithGiverData); // Update state with enriched reviews
       } catch (error) {
-        console.error("Failed to fetch reviews:", error.message || error);
+        Alert.alert("Failed to fetch reviews")
       }
     };
-  
+
     fetchReviews();
   }, [refreshing]);
-  
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -165,7 +170,7 @@ useEffect(() => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#3b006b"]}
-            progressBackgroundColor="#fff"
+            progressBackgroundColor={currentTheme.cardBackground || "#fff"}
           />
         }
       >
@@ -195,7 +200,7 @@ useEffect(() => {
             }
             style={styles.profileImage}
           />
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.settings}
             onPress={() => {
               navigation.navigate("Settings");
@@ -205,7 +210,7 @@ useEffect(() => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.share} onPress={onShare}>
             <FontAwesome name="share" size={24} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ImageBackground>
 
         <View style={styles.userDetails}>
@@ -224,8 +229,9 @@ useEffect(() => {
           )}
           <Text style={styles.statusText}>
             Status:
-            {data?.currently_available ? "Active" : "Inactive"}
-            <FontAwesome name="circle" size={12} color="#6BCD2F" />
+            {userData?.currently_available === true ? " Active " : " Inactive "}
+            {userData?.currently_available === true ? (<FontAwesome name="circle" size={12} color="#6BCD2F" />)
+              : (<FontAwesome name="circle" size={12} color="#FF3131" />)}
           </Text>
         </View>
 
@@ -233,12 +239,12 @@ useEffect(() => {
           {reviews?.map((review, index) => (
             <ReviewCard
               key={index}
-              reviewerName={review.giverName}
-              reviewerstate={review.state}
-              reviewerCountry={review.country}
-              starRating={review.rating}
-              reviewText={review.message_text}
-              reviewerPhoto={review.giverPhoto}
+              reviewerName={review?.giverName}
+              reviewerstate={review?.state}
+              reviewerCountry={review?.country}
+              starRating={review?.rating}
+              reviewText={review?.message_text}
+              reviewerPhoto={review?.giverPhoto}
             />
           ))}
         </View>
@@ -247,106 +253,112 @@ useEffect(() => {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-  },
-  tab: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 2,
-  },
-  tabButtonL: {
-    backgroundColor: "#DADADA",
-    width: "50%",
-    height: 40,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopRightRadius: 80,
-  },
-  tabButtonR: {
-    backgroundColor: "#5732a8",
-    width: "50%",
-    height: 40,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    borderTopLeftRadius: 80,
-  },
-  tabTextL: {
-    color: "#000",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  tabTextR: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: currentTheme.background || "#fff",
+      paddingTop: 35,
+      paddingBottom: 500,
+    },
+    tab: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 2,
+    },
+    tabButtonL: {
+      backgroundColor: currentTheme.background3 || "#DADADA",
+      width: "50%",
+      height: 40,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderTopRightRadius: 80,
+    },
+    tabButtonR: {
+      backgroundColor: "#4C0183",
+      width: "50%",
+      height: 40,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderTopLeftRadius: 80,
+    },
+    tabTextL: {
+      color: currentTheme.text || "#000",
+      fontSize: 20,
+      fontWeight: "bold",
+    },
+    tabTextR: {
+      color: "#fff",
+      fontSize: 20,
+      fontWeight: "bold",
+    },
 
-  backgroundImg: {
-    width: "100%",
-    height: 150,
-    position: "relative",
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    position: "absolute",
-    bottom: -20,
-    left: "38%",
-  },
-  share: {
-    position: "absolute",
-    bottom: 5,
-    right: 80,
-    backgroundColor: "#fff",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  settings: {
-    position: "absolute",
-    bottom: 5,
-    right: 20,
-    backgroundColor: "#fff",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  userDetails: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 30,
-  },
-  nameText: {
-    fontSize: 28,
-    fontWeight: "600",
-  },
-  roleWrap: {
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  roleText: {
-    fontSize: 14,
-    fontWeight: "400",
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  reviewSection: {
-    padding: 20,
-  },
-});
+    backgroundImg: {
+      width: "100%",
+      height: 150,
+      position: "relative",
+    },
+    profileImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      position: "absolute",
+      bottom: -20,
+      left: "38%",
+    },
+    share: {
+      position: "absolute",
+      bottom: 5,
+      right: 80,
+      backgroundColor: "#fff",
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    settings: {
+      position: "absolute",
+      bottom: 5,
+      right: 20,
+      backgroundColor: "#fff",
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    userDetails: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingTop: 30,
+    },
+    nameText: {
+      fontSize: 28,
+      fontWeight: "600",
+      color: currentTheme.text
+    },
+    roleWrap: {
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+    },
+    roleText: {
+      fontSize: 14,
+      fontWeight: "400",
+      color: currentTheme.text
+    },
+    statusText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: currentTheme.text
+    },
+    reviewSection: {
+      padding: 20,
+    },
+  }); 

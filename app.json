@@ -16,6 +16,9 @@
     "ios": {
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to display maps."
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyDk_drKIe9VsU3mi-muwYZJ5FYvHRak2fI"
       }
     },
     "android": {
@@ -32,8 +35,8 @@
       "package": "com.mmmansoori39.birdearner",
       "buildToolsVersion": "33.0.2",
       "config": {
-        "olaMaps": {
-          "apiKey": "MTaKhXqkZwxQn4MQfUeSynGw092Nfkf6RIJbx2YH"
+        "googleMaps": {
+          "apiKey": "AIzaSyDk_drKIe9VsU3mi-muwYZJ5FYvHRak2fI"
         }
       }
     },

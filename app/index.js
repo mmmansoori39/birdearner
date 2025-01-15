@@ -29,6 +29,8 @@ import Role from "./screens/Role";
 import PortfolioComScreen from "./screens/PortfolioCom";
 import ChatList from "./screens/ChatList";
 import OffersScreen from "./screens/Offers";
+import DescribeRoleCom from "./screens/DescribeRoleCom";
+import ProfileScreen from "./screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -37,7 +39,7 @@ const Stack = createStackNavigator();
 function MainTabs() {
     const { userData } = useAuth();
     const isClient = userData?.role === "client";
-
+    
     const tabScreens = isClient
         ? [
             { name: "Home", component: ClientHomeStack },
@@ -154,8 +156,10 @@ export default function App() {
                         <Stack.Screen name="JobDetailsChat" component={JobDetailsChatScreen} />
                         <Stack.Screen name="PortfolioCom" component={PortfolioComScreen} />
                         <Stack.Screen name="TellUsAboutYouCom" component={TellUsAboutYouScreen} />
+                        <Stack.Screen name="DescribeRoleCom" component={DescribeRoleCom} />
                         <Stack.Screen name="Chatlist" component={ChatList} />
                         <Stack.Screen name="Offers" component={OffersScreen} />
+                        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
                     </>
                 ) : (
                     <>

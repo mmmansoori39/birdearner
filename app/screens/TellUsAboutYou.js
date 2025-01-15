@@ -21,6 +21,7 @@ import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
 import { useNavigation } from "expo-router";
 import Toast from 'react-native-toast-message';
+import { useAuth } from "../context/AuthContext";
 
 const TellUsAboutYouScreen = ({ route }) => {
   const [gender, setGender] = useState("");
@@ -32,6 +33,7 @@ const TellUsAboutYouScreen = ({ route }) => {
   const [profileImage, setProfileImage] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
   const { role } = route.params;
+  const { checkUserSession } = useAuth();
   const navigation = useNavigation()
 
   const handleError = (message) => {
@@ -89,22 +91,22 @@ const TellUsAboutYouScreen = ({ route }) => {
     try {
       // Check if gender is selected
       if (!gender) return handleError("Gender is required.");
-  
+
       // Validate Date of Birth (must be at least 12 years ago)
       const today = new Date();
       const minDob = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
       if (dob > minDob) return handleError("Date of Birth must be at least 12 years ago.");
-  
+
       // Validate social media links
       let emptySocialLinks = socialLinks.filter(link => link.trim() === "");
       if (emptySocialLinks.length > 0) return handleError("Please fill in all social media links.");
-  
+
       for (const link of socialLinks) {
         if (link && !isValidURL(link)) {
           return handleError("Please enter valid URLs for your social media links.");
         }
       }
-  
+
       // Check if certifications and bio are filled for freelancers
       if (role === "freelancer") {
         if (certifications.some(cert => !cert)) {
@@ -114,26 +116,26 @@ const TellUsAboutYouScreen = ({ route }) => {
           return handleError("Bio is required.");
         }
       }
-  
+
       // Validate profile image upload
       if (!profileImage) return handleError("Profile image is required.");
-  
+
       // Validate cover art upload
       if (!coverImage) return handleError("Cover art is required.");
-  
+
       const user = await account.get();
       const userCollection = role === "client"
         ? appwriteConfig.clientCollectionId
         : appwriteConfig.freelancerCollectionId;
-  
+
       const response = await databases.listDocuments(appwriteConfig.databaseId, userCollection, [Query.equal("email", user.email)]);
       if (response.documents.length === 0) return handleError("No user document found with the provided email.");
-  
+
       const userDocumentId = response.documents[0].$id;
-  
+
       let profileImageFileURL = profileImage ? await uploadFile(profileImage, "image") : null;
       let coverImageFileURL = coverImage ? await uploadFile(coverImage, "image") : null;
-  
+
       const updatedDetails = {
         gender,
         dob: dob.toISOString(),
@@ -142,21 +144,26 @@ const TellUsAboutYouScreen = ({ route }) => {
         ...(coverImageFileURL && { cover_photo: coverImageFileURL }),
         updated_at: new Date().toISOString(),
       };
-  
+
       await databases.updateDocument(appwriteConfig.databaseId, userCollection, userDocumentId, updatedDetails);
-  
+
       handleSuccess("Your details have been updated successfully.");
       navigation.navigate("Portfolio", { role });
     } catch (error) {
       handleError(`Failed to update details: ${error.message}`);
     }
   };
-  
+
 
 
   // Skip the current screen
-  const skipScreen = () => {
-    navigation.navigate("Tabs", { screen: 'Home' })
+  const skipScreen = async () => {
+    try {
+      await checkUserSession();
+      navigation.navigate("Tabs", { screen: "Home" });
+    } catch (error) {
+      Alert.alert("Error during session check")
+    }
   };
 
   return (
@@ -309,7 +316,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderColor: "#fff",
     borderWidth: 1,
-    borderRadius: 24,
+    borderRadius: 10,
     paddingHorizontal: 10,
     backgroundColor: "#fff",
     justifyContent: "center",
@@ -319,7 +326,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderColor: "#fff",
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 10,
     paddingHorizontal: 10,
     backgroundColor: "#fff",
     justifyContent: "center",
@@ -334,7 +341,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderColor: "#fff",
     borderWidth: 1,
-    borderRadius: 24,
+    borderRadius: 10,
     paddingHorizontal: 10,
     marginBottom: 10,
     backgroundColor: "#fff",
@@ -391,7 +398,7 @@ const styles = StyleSheet.create({
     width: "32%",
     height: 40,
     backgroundColor: "#fff", // Dark purple for button
-    borderRadius: 25,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -405,7 +412,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     backgroundColor: "#fff",
-    borderRadius: 20,
+    borderRadius: 10,
     marginBottom: 20,
     height: 44,
   },
