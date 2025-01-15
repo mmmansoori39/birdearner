@@ -142,7 +142,7 @@ export default function ProfileScreen({ navigation }) {
   if (loading || loadingProfile) {
     return (
       <SafeAreaView style={styles.centered}>
-        <ActivityIndicator size="large" color="#000" />
+        <ActivityIndicator size="large" color={currentTheme.text || "#fff"} />
       </SafeAreaView>
     );
   }
@@ -415,6 +415,7 @@ const getStyles = (currentTheme) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
+      backgroundColor: currentTheme.background
     },
     tab: {
       display: "flex",

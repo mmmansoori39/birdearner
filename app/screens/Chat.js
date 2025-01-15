@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import { Query } from "react-native-appwrite";
 import { Ionicons } from "@expo/vector-icons";
 import Toast from 'react-native-toast-message';
+import { useTheme } from "../context/ThemeContext";
 
 const Chat = ({ route, navigation }) => {
   const { full_name, profileImage, projectId, receiverId } = route.params;
@@ -31,7 +32,12 @@ const Chat = ({ route, navigation }) => {
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedReportReason, setSelectedReportReason] = useState(null);
   const [isBlocked, setIsBlocked] = useState(false);
-  const [isStar, setIsStar] = useState(false)
+  const [isStar, setIsStar] = useState(false);
+
+  const { theme, themeStyles } = useTheme();
+  const currentTheme = themeStyles[theme];
+
+  const styles = getStyles(currentTheme);
 
 
   const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
@@ -773,7 +779,7 @@ const Chat = ({ route, navigation }) => {
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={ currentTheme.text || "black"} />
         </TouchableOpacity>
         <View style={styles.headerData}>
           <Text style={styles.profile}>Tap for contact details</Text>
@@ -908,7 +914,7 @@ const Chat = ({ route, navigation }) => {
 
         </View>
         <TouchableOpacity onPress={() => setShowMenu(!showMenu)} >
-          <Ionicons name="ellipsis-horizontal" size={24} color="black" />
+          <Ionicons name="ellipsis-horizontal" size={24} color= {currentTheme.text || "black"} />
         </TouchableOpacity>
         {showMenu && (
           // <Modal
@@ -932,7 +938,7 @@ const Chat = ({ route, navigation }) => {
         )}
       </View>
 
-      {job?.assigned_freelancer === null && (
+      {job?.assigned_freelancer !== null && (
         <View style={styles.limit}>
           <Text style={styles.limitchar}>Characters Limit: {characterLimit}/200</Text>
           <Text style={styles.limitvar}>Please accept this lead to remove the characters limit.</Text>
@@ -1007,289 +1013,293 @@ const Chat = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingTop: 30 },
-  header: {
-    padding: 15,
-    // backgroundColor: "#f4f4f4",
-    alignItems: "center",
-    flex: 0,
-    flexDirection: "row",
-    justifyContent: "space-around"
-  },
-  headerData: {
-    // padding: 15,
-    alignItems: "center",
-    flex: 0,
-    flexDirection: "column",
-  },
-  profile: { fontSize: 12, fontWeight: "400", color: "#000000" },
-  username: { fontSize: 24, fontWeight: "600", color: "#5c2d91", paddingVertical: 4 },
-  deadline: { fontSize: 15, fontWeight: "500", color: "#000000", paddingTop: 6, textAlign: "center" },
-  lastOnline: { fontSize: 12, color: "#888" },
-  deadlineTimer: { fontSize: 12, color: "#888" },
-  chatList: {
-    flex: 1,
-    backgroundColor: "#F1F1F1",
-    marginHorizontal: 15,
-    borderRadius: 10
-  },
-  chatListContainer: { padding: 10 },
-  messageContainer: {
-    marginVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    paddingVertical: 6
-  },
-  currentUserMessage: {
-    backgroundColor: "#DADADA",
-    alignSelf: "flex-end",
-  },
-  otherUserMessage: {
-    backgroundColor: "#4C0183",
-    alignSelf: "flex-start",
-    color: "#fff"
-  },
-  profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
-    backgroundColor: "#e0e0e0", // Fallback background for images
-  },
-  sender: { fontWeight: "bold", color: "#5c2d91" },
-  message: { marginTop: 5, color: "#000" },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-  },
-  input: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 5,
-  },
-  sendButton: {
-    marginLeft: 10,
-    padding: 10,
-    backgroundColor: "#5c2d91",
-    borderRadius: 5,
-  },
-  sendButtonText: { color: "#fff" },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  modalButton: {
-    padding: 10,
-    backgroundColor: "#5c2d91",
-    borderRadius: 5,
-    width: "45%",
-    alignItems: "center",
-  },
-  modalButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  actionButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10, gap: 10, marginTop: 25 },
-  acceptButton: { backgroundColor: "#4C0183", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
-  rejectButton: { backgroundColor: "#A00B0B", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
-  buttonText: { color: "#fff", textAlign: "center", fontSize: 16, fontWeight: "600", },
-
-  limit: {
-    flex: 0,
-    backgroundColor: "#F1F1F1",
-    marginHorizontal: 15,
-    borderRadius: 10,
-    paddingVertical: 20,
-  },
-
-  limitchar: {
-    color: "#464646", textAlign: "center", fontSize: 12, fontWeight: "600",
-  },
-  limitvar: {
-    color: "#464646", textAlign: "center", fontSize: 10, fontWeight: "400",
-  },
-
-  menuButton: { position: "absolute", right: 10, top: 10 },
-  menuButtonText: { fontSize: 24, color: "black" },
-  menuContainer: {
-    position: "absolute",
-    top: 115,
-    right: 20,
-    backgroundColor: "white",
-    borderRadius: 5,
-    padding: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    zIndex: 2334
-  },
-  menuItem: { paddingVertical: 10 },
-  menuItemText: { fontSize: 16, color: "black" },
-
-  deadlineTimerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 5,
-  },
-  timeBoxCon: {
-    // paddingHorizontal: 8,
-    // paddingVertical: 5,
-    // backgroundColor: "#000000",
-    // marginHorizontal: 1,
-    alignItems: "center",
-    // justifyContent: "center",
-    flexDirection: "column",
-    gap: 12
-  },
-
-  applyButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  conColor: {
-    backgroundColor: '#00871E',
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 0,
-    paddingVertical: 10,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+const getStyles = (currentTheme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: currentTheme.background || "#fff", paddingTop: 30 },
+    header: {
+      padding: 15,
+      // backgroundColor: "#f4f4f4",
+      alignItems: "center",
+      flex: 0,
+      flexDirection: "row",
+      justifyContent: "space-around"
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4
-  },
-  conColorc: {
-    paddingHorizontal: 15,
-    alignItems: 'center',
-    marginBottom: 0,
-    // paddingVertical: 10,
-    color: "#00871E"
-  },
-  penaltyText: {
-    backgroundColor: '#B64928',
-    paddingHorizontal: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-    // marginBottom: 20,
-    paddingVertical: 3,
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
+    headerData: {
+      // padding: 15,
+      alignItems: "center",
+      flex: 0,
+      flexDirection: "column",
     },
-    shadowOpacity: 0.17,
-    shadowRadius: 3.05,
-    elevation: 4
-  },
+    profile: { fontSize: 12, fontWeight: "400", color: currentTheme.text || "#000000" },
+    username: { fontSize: 24, fontWeight: "600", color: "#5c2d91", paddingVertical: 4 },
+    deadline: { fontSize: 15, fontWeight: "500", color: currentTheme.text || "#000000", paddingTop: 6, textAlign: "center" },
+    lastOnline: { fontSize: 12, color: currentTheme.subText || "#888" },
+    deadlineTimer: { fontSize: 12, color: currentTheme.subText || "#888" },
+    chatList: {
+      flex: 1,
+      backgroundColor: currentTheme.cardBackground || "#F1F1F1",
+      marginHorizontal: 15,
+      borderRadius: 10
+    },
+    chatListContainer: { padding: 10 },
+    messageContainer: {
+      marginVertical: 5,
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      paddingVertical: 6
+    },
+    currentUserMessage: {
+      backgroundColor: "#DADADA",
+      alignSelf: "flex-end",
+    },
+    otherUserMessage: {
+      backgroundColor: "#4C0183",
+      alignSelf: "flex-start",
+      color: "#fff"
+    },
+    profileImage: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      marginRight: 10,
+      backgroundColor: "#e0e0e0", // Fallback background for images
+    },
+    sender: { fontWeight: "bold", color: "#5c2d91" },
+    message: { marginTop: 5, color: "#000" },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 10,
+      borderTopWidth: 1,
+      borderColor: currentTheme.border || "#ddd",
+    },
+    input: {
+      flex: 1,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: currentTheme.background3 || "#ddd",
+      borderRadius: 5,
+      color: currentTheme.subText,
+    },
+    sendButton: {
+      marginLeft: 10,
+      padding: 10,
+      backgroundColor: "#5c2d91",
+      borderRadius: 5,
+    },
+    sendButtonText: { color: "#fff" },
+    modalBackground: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    modalContainer: {
+      width: 300,
+      padding: 20,
+      backgroundColor: "white",
+      borderRadius: 10,
+      alignItems: "center",
+    },
+    modalText: {
+      fontSize: 16,
+      marginBottom: 20,
+    },
+    modalButtons: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+    },
+    modalButton: {
+      padding: 10,
+      backgroundColor: "#5c2d91",
+      borderRadius: 5,
+      width: "45%",
+      alignItems: "center",
+    },
+    modalButtonText: {
+      color: "#fff",
+      fontWeight: "bold",
+    },
+    actionButtons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10, gap: 10, marginTop: 25 },
+    acceptButton: { backgroundColor: "#4C0183", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
+    rejectButton: { backgroundColor: "#A00B0B", paddingHorizontal: 22, paddingVertical: 7, borderRadius: 8 },
+    buttonText: { color: "#fff", textAlign: "center", fontSize: 16, fontWeight: "600", },
 
-  timeBox: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    backgroundColor: "#000000",
-    marginHorizontal: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 4,
-  },
-  timeText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF", // White text
-  },
-  unitText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#FFFFFF", // White text
-  },
+    limit: {
+      flex: 0,
+      backgroundColor: currentTheme.cardBackground || "#F1F1F1",
+      marginHorizontal: 15,
+      borderRadius: 10,
+      paddingVertical: 20,
+    },
 
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)"
-  },
-  modalContent: {
-    width: "100%",
-    height: "100%",
-    padding: 30,
-    backgroundColor: "#121212", // Dark background
-    borderRadius: 10,
-    alignItems: "center"
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 10
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-    marginBottom: 10
-  },
-  modalDescription: {
-    fontSize: 14,
-    color: "#b0b0b0",
-    textAlign: "center",
-    marginBottom: 20
-  },
-  optionButton: {
-    width: "100%",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#303030"
-  },
-  optionText: {
-    fontSize: 16,
-    color: "#fff",
-    textAlign: "left"
-  },
-  cancelButton: {
-    marginTop: 20,
-    backgroundColor: "red",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5
-  },
-  cancelText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold"
-  }
+    limitchar: {
+      color: currentTheme.text || "#464646", textAlign: "center", fontSize: 12, fontWeight: "600",
+    },
+    limitvar: {
+      color: currentTheme.subText || "#464646",
+       textAlign: "center", fontSize: 10, fontWeight: "400",
+    },
 
-});
+    menuButton: { position: "absolute", right: 10, top: 10 },
+    menuButtonText: { fontSize: 24, color: currentTheme.text || "black" },
+    menuContainer: {
+      position: "absolute",
+      top: 115,
+      right: 20,
+      backgroundColor: currentTheme.background3 || "white",
+      borderRadius: 5,
+      padding: 10,
+      shadowColor: currentTheme.shadow || "#000",
+      shadowOpacity: 0.2,
+      shadowRadius: 5,
+      shadowOffset: { width: 0, height: 2 },
+      zIndex: 2334
+    },
+    menuItem: { paddingVertical: 10 },
+    menuItemText: { fontSize: 16, color: currentTheme.text || "black" },
+
+    deadlineTimerContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      marginVertical: 5,
+      // backgroundColor: currentTheme.text
+    },
+    timeBoxCon: {
+      // paddingHorizontal: 8,
+      // paddingVertical: 5,
+      // backgroundColor: "#000000",
+      // marginHorizontal: 1,
+      alignItems: "center",
+      // justifyContent: "center",
+      flexDirection: "column",
+      gap: 12
+    },
+
+    applyButtonText: {
+      color: '#fff',
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    conColor: {
+      backgroundColor: '#00871E',
+      paddingHorizontal: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginBottom: 0,
+      paddingVertical: 10,
+      shadowColor: "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+    conColorc: {
+      paddingHorizontal: 15,
+      alignItems: 'center',
+      marginBottom: 0,
+      // paddingVertical: 10,
+      color: "#00871E"
+    },
+    penaltyText: {
+      backgroundColor: '#B64928',
+      paddingHorizontal: 10,
+      borderRadius: 6,
+      alignItems: 'center',
+      // marginBottom: 20,
+      paddingVertical: 3,
+      shadowColor: currentTheme.shadow || "#000000",
+      shadowOffset: {
+        width: 0,
+        height: 3,
+      },
+      shadowOpacity: 0.17,
+      shadowRadius: 3.05,
+      elevation: 4
+    },
+
+    timeBox: {
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      backgroundColor: currentTheme.text || "#000000",
+      marginHorizontal: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+      gap: 4,
+    },
+    timeText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: currentTheme.background|| "#FFFFFF", // White text
+    },
+    unitText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: currentTheme.background || "#FFFFFF", // White text
+    },
+
+    modalOverlay: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)"
+    },
+    modalContent: {
+      width: "100%",
+      height: "100%",
+      padding: 30,
+      backgroundColor: "#121212", // Dark background
+      borderRadius: 10,
+      alignItems: "center"
+    },
+    modalTitle: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: "#fff",
+      marginBottom: 10
+    },
+    modalSubtitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: "#fff",
+      marginBottom: 10
+    },
+    modalDescription: {
+      fontSize: 14,
+      color: "#b0b0b0",
+      textAlign: "center",
+      marginBottom: 20
+    },
+    optionButton: {
+      width: "100%",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#303030"
+    },
+    optionText: {
+      fontSize: 16,
+      color: "#fff",
+      textAlign: "left"
+    },
+    cancelButton: {
+      marginTop: 20,
+      backgroundColor: "red",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 5
+    },
+    cancelText: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold"
+    }
+
+  });
 
 export default Chat;

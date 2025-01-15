@@ -214,7 +214,7 @@ const JobDescriptionScreen = ({ route, navigation }) => {
               <FontAwesome
                 name="flag"
                 size={24}
-                color={flagged ? '#4C0183' : 'black'}
+                color={flagged ? '#4C0183' : currentTheme.text || 'black'}
                 style={styles.flagIcon}
               />
             </TouchableOpacity>
@@ -328,7 +328,7 @@ const getStyles = (currentTheme) =>
       padding: 10,
       borderRadius: 10,
       marginBottom: 20,
-      shadowColor: "#000",
+      shadowColor: currentTheme.shadow ||  "#000",
       shadowOpacity: 0.1,
       shadowRadius: 5,
       shadowOffset: { width: 0, height: 2 },

@@ -10,6 +10,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
+import { useTheme } from "../context/ThemeContext";
 
 const ReviewGive = ({ navigation, route }) => {
     const [ratings, setRatings] = useState({
@@ -21,6 +22,11 @@ const ReviewGive = ({ navigation, route }) => {
     const { receiverId } = route.params;
     const { userData } = useAuth();
     const [reviewText, setReviewText] = useState("");
+
+    const { theme, themeStyles } = useTheme();
+    const currentTheme = themeStyles[theme];
+  
+    const styles = getStyles(currentTheme);
 
     const handleStarPress = (category, index) => {
         setRatings({ ...ratings, [category]: index });
@@ -85,11 +91,16 @@ const ReviewGive = ({ navigation, route }) => {
     const submitReview = async () => {
         try {
             const { experience, knowledge, response } = ratings;
+    
+            if (!reviewText.trim()) {
+                Alert.alert("Error", "Please provide a review before submitting.");
+                return;
+            }
+    
             const averageRating = parseFloat(
                 ((experience + knowledge + response) / 3).toFixed(1)
             );
-            
-
+    
             // Save the review in the database
             await databases.createDocument(
                 appwriteConfig.databaseId,
@@ -102,18 +113,18 @@ const ReviewGive = ({ navigation, route }) => {
                     message_text: reviewText,
                 }
             );
-
-
+    
             // Update the receiver's XP and rating
             const baseXP = 30;
             await updateFreelancerXP(receiverId, baseXP, averageRating);
-
+    
             Alert.alert("Success", "Review submitted successfully!");
             navigation.goBack();
         } catch (error) {
             Alert.alert("Error", "Failed to submit review. Please try again.");
         }
     };
+    
 
     return (
         <View style={styles.container}>
@@ -130,7 +141,7 @@ const ReviewGive = ({ navigation, route }) => {
                         <MaterialIcons
                             name="star"
                             size={36}
-                            color={index <= ratings.experience ? "#4B0082" : "#D9D9D9"}
+                            color={index <= ratings.experience ? "#4B0082" : currentTheme.subText || "#D9D9D9"}
                         />
                     </TouchableOpacity>
                 ))}
@@ -147,7 +158,7 @@ const ReviewGive = ({ navigation, route }) => {
                         <MaterialIcons
                             name="star"
                             size={36}
-                            color={index <= ratings.knowledge ? "#4B0082" : "#D9D9D9"}
+                            color={index <= ratings.knowledge ? "#4B0082" :currentTheme.subText || "#D9D9D9"}
                         />
                     </TouchableOpacity>
                 ))}
@@ -164,7 +175,7 @@ const ReviewGive = ({ navigation, route }) => {
                         <MaterialIcons
                             name="star"
                             size={36}
-                            color={index <= ratings.response ? "#4B0082" : "#D9D9D9"}
+                            color={index <= ratings.response ? "#4B0082" : currentTheme.subText || "#D9D9D9"}
                         />
                     </TouchableOpacity>
                 ))}
@@ -189,69 +200,71 @@ const ReviewGive = ({ navigation, route }) => {
     );
 };
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#FFF",
-        padding: 20,
-        alignItems: "center",
-        paddingTop: 30,
-    },
-    heading: {
-        fontSize: 26,
-        fontWeight: "bold",
-        color: "#4B0082",
-        marginBottom: 10,
-        marginTop: 25,
-    },
-    label: {
-        fontSize: 15,
-        fontWeight: "500",
-        color: "#555",
-        marginTop: 24,
-    },
-    starContainer: {
-        flexDirection: "row",
-        marginVertical: 5,
-        gap: 18,
-    },
-    subHeading: {
-        fontSize: 26,
-        fontWeight: "bold",
-        color: "#4B0082",
-        marginTop: 40,
-    },
-    textInput: {
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 10,
-        width: "100%",
-        minHeight: 140,
-        padding: 10,
-        marginVertical: 10,
-        textAlignVertical: "top",
-        color: "#000",
-    },
-    submitButton: {
-        backgroundColor: "#4B0082",
-        paddingVertical: 10,
-        paddingHorizontal: 40,
-        borderRadius: 20,
-        marginTop: 10,
-        shadowColor: "#000000",
-        shadowOffset: {
-            width: 0,
-            height: 3,
+const getStyles = (currentTheme) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: currentTheme.background || "#FFF",
+            padding: 20,
+            alignItems: "center",
+            paddingTop: 30,
         },
-        shadowOpacity: 0.17,
-        shadowRadius: 3.05,
-        elevation: 4,
-    },
-    submitButtonText: {
-        color: "#FFF",
-        fontSize: 16,
-        fontWeight: "600",
-    },
-});
+        heading: {
+            fontSize: 26,
+            fontWeight: "bold",
+            color: currentTheme.primary || "#4B0082",
+            marginBottom: 10,
+            marginTop: 25,
+        },
+        label: {
+            fontSize: 15,
+            fontWeight: "500",
+            color: currentTheme.text || "#555",
+            marginTop: 24,
+        },
+        starContainer: {
+            flexDirection: "row",
+            marginVertical: 5,
+            gap: 18,
+        },
+        subHeading: {
+            fontSize: 26,
+            fontWeight: "bold",
+            color: currentTheme.primary || "#4B0082",
+            marginTop: 40,
+        },
+        textInput: {
+            borderWidth: 1,
+            borderColor: currentTheme.border || "#ddd",
+            borderRadius: 10,
+            width: "100%",
+            minHeight: 140,
+            padding: 10,
+            marginVertical: 10,
+            textAlignVertical: "top",
+            color: currentTheme.subText,
+            backgroundColor: currentTheme.background3
+        },
+        submitButton: {
+            backgroundColor: "#4B0082",
+            paddingVertical: 10,
+            paddingHorizontal: 40,
+            borderRadius: 8,
+            marginTop: 10,
+            shadowColor: "#000000",
+            shadowOffset: {
+                width: 0,
+                height: 3,
+            },
+            shadowOpacity: 0.17,
+            shadowRadius: 3.05,
+            elevation: 4,
+        },
+        submitButtonText: {
+            color: "#FFF",
+            fontSize: 16,
+            fontWeight: "600",
+        },
+    });
 
 export default ReviewGive;

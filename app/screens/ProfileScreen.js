@@ -10,13 +10,14 @@ import {
     ActivityIndicator,
     Modal,
     RefreshControl,
-    Alert
+    Alert,
+    SafeAreaView
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useAuth } from "../context/AuthContext";
 import ImageViewer from "react-native-image-zoom-viewer";
+import { useTheme } from "../context/ThemeContext";
 
 export default function ProfileScreen({ route, navigation }) {
     const { receiverId } = route.params;
@@ -28,13 +29,18 @@ export default function ProfileScreen({ route, navigation }) {
     const [images, setImages] = useState([]);
     const role = userData?.role === "client" ? "freelancer" : "client";
 
+     const { theme, themeStyles } = useTheme();
+      const currentTheme = themeStyles[theme];
+    
+      const styles = getStyles(currentTheme);
+
     const createdAt = profileData?.$createdAt;
     const date = new Date(createdAt);
     const formattedDate = date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
-    });
+    }); 
 
     // Fetch profile data on component mount or when receiverId changes
     const fetchProfile = useCallback(async () => {
@@ -85,7 +91,7 @@ export default function ProfileScreen({ route, navigation }) {
     if (loadingProfile) {
         return (
             <SafeAreaView style={styles.centered}>
-                <ActivityIndicator size="large" color="#000" />
+                <ActivityIndicator size="large" color={currentTheme.text || "#fff"} />
             </SafeAreaView>
         );
     }
@@ -117,7 +123,7 @@ export default function ProfileScreen({ route, navigation }) {
             {/* Profile Information */}
             <ScrollView
                 style={styles.container}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b006b"]} progressBackgroundColor="#fff" />}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b006b"]} progressBackgroundColor={currentTheme.cardBackground || "#fff"} />}
             >
                 <ImageBackground
                     source={profileData?.cover_photo ? { uri: profileData.cover_photo } : require("../assets/backGroungBanner.png")}
@@ -234,249 +240,259 @@ export default function ProfileScreen({ route, navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: "#fff",
-        marginBottom: 10
-    },
-    centered: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    tab: {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        gap: 2,
-    },
-    tabButtonL: {
-        backgroundColor: "#4C0183",
-        width: "50%",
-        height: 40,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        borderTopRightRadius: 80,
-    },
-    tabButtonR: {
-        backgroundColor: "#DADADA",
-        width: "50%",
-        height: 40,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        borderTopLeftRadius: 80,
-    },
-    tabTextL: {
-        color: "#fff",
-        fontSize: 20,
-        fontWeight: "bold",
-    },
-    tabTextR: {
-        color: "#000",
-        fontSize: 20,
-        fontWeight: "bold",
-    },
-
-    backgroundImg: {
-        width: "100%",
-        height: 150,
-        // justifyContent: "center",
-        // alignItems: "center",
-        // paddingTop: 20,
-        position: "relative",
-    },
-    profileImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        position: "absolute",
-        top: 82,
-        left: "38%",
-    },
-    share: {
-        position: "absolute",
-        bottom: 5,
-        right: 80,
-        backgroundColor: "#fff",
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    settings: {
-        position: "absolute",
-        bottom: 5,
-        right: 20,
-        backgroundColor: "#fff",
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    userDetails: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        paddingTop: 30,
-    },
-    nameText: {
-        fontSize: 28,
-        fontWeight: "600",
-    },
-    roleWrap: {
-        display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-    },
-    roleText: {
-        fontSize: 14,
-        fontWeight: "400",
-    },
-    statusText: {
-        fontSize: 14,
-        fontWeight: "600",
-    },
-    section: {
-        padding: 20,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-        textAlign: "center",
-    },
-    sectionContent: {
-        color: "#333",
-        marginTop: 5,
-    },
-    portfolioImages: {
-        marginTop: 10,
-        display: "flex",
-        flexWrap: "wrap",
-        flexDirection: "row",
-        justifyContent: "space-around",
-        gap: 10,
-    },
-    portfolioImage: {
-        width: 100,
-        height: 100,
-        marginRight: 10,
-        borderRadius: 6,
-    },
-    editProfileButton: {
-        backgroundColor: "#4C0183",
-        paddingVertical: 12,
-        marginHorizontal: 20,
-        borderRadius: 12,
-        marginBottom: 15,
-        marginTop: 40,
-    },
-    buttonText: {
-        color: "#fff",
-        textAlign: "center",
-        fontSize: 16,
-    },
-    deactivateLink: {
-        textAlign: "center",
-        color: "#4C0183",
-        marginBottom: 20,
-    },
-    Profile_heading: {
-        textAlign: "center",
-        marginTop: 10,
-        fontWeight: "500",
-        fontStyle: "italic",
-        fontSize: 13,
-    },
-    about: {
-        textAlign: "center",
-        marginTop: 10,
-        fontWeight: "600",
-        fontSize: 17,
-    },
-    about_des: {
-        textAlign: "justify",
-        marginTop: 10,
-        fontWeight: "400",
-        fontSize: 13,
-        paddingHorizontal: 25,
-    },
-    levelContainer: {
-        flex: 1,
-        flexDirection: "row",
-        marginHorizontal: 40,
-        marginVertical: 12,
-        position: "relative"
-    },
-    xpRan: {
-        backgroundColor: "#D9D9D9",
-        flex: 1,
-        flexDirection: "row",
-        borderRadius: 20,
-        gap: 8,
-        height: 20,
-        position: "relative",
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    xp: {
-        backgroundColor: "#56118F",
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 20,
-        position: "absolute",
-        left: 0,
-    },
-    xpText: {
-        fontSize: 14,
-        fontWeight: "400",
-        color: "#fff"
-    },
-    randomText: {
-        fontSize: 10,
-        fontWeight: "400",
-        color: "#A1A1A1",
-        paddingHorizontal: 5,
-        // paddingVertical: 4,
-    },
-    level: {
-        backgroundColor: "#56118F",
-        paddingHorizontal: 4,
-        paddingVertical: 12,
-        borderRadius: 50,
-        position: "absolute",
-        right: 0,
-        top: "-10"
-    },
-    levelText: {
-        fontSize: 13,
-        fontWeight: "600",
-        color: "#fff"
-    },
-
-    line: {
-        backgroundColor: "#E2E2E2",
-        width: "90%",
-        height: 1,
-        margin: "auto",
-        marginTop: 10
-    },
-    locTitle: {
-        color: "#8F8F8F",
-        fontSize: 18,
-        fontWeight: "600",
-        marginLeft: 25,
-        marginTop: 15
-    },
-    locSubTitle: {
-        color: "#000",
-        fontSize: 15,
-        marginLeft: 25,
-    }
-
-});
+const getStyles = (currentTheme) =>
+    StyleSheet.create({
+        container: {
+            backgroundColor: currentTheme.background || "#fff",
+            // marginBottom: 10,
+            paddingBottom: 80,
+        },
+        centered: {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: currentTheme.background
+        },
+        tab: {
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 2,
+        },
+        tabButtonL: {
+            backgroundColor: "#4C0183",
+            width: "50%",
+            height: 40,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderTopRightRadius: 80,
+        },
+        tabButtonR: {
+            backgroundColor: "#DADADA",
+            width: "50%",
+            height: 40,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderTopLeftRadius: 80,
+        },
+        tabTextL: {
+            color: "#fff",
+            fontSize: 20,
+            fontWeight: "bold",
+        },
+        tabTextR: {
+            color: "#000",
+            fontSize: 20,
+            fontWeight: "bold",
+        },
+    
+        backgroundImg: {
+            width: "100%",
+            height: 150,
+            // justifyContent: "center",
+            // alignItems: "center",
+            // paddingTop: 20,
+            position: "relative",
+        },
+        profileImage: {
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+            position: "absolute",
+            top: 82,
+            left: "38%",
+        },
+        share: {
+            position: "absolute",
+            bottom: 5,
+            right: 80,
+            backgroundColor: "#fff",
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+        },
+        settings: {
+            position: "absolute",
+            bottom: 5,
+            right: 20,
+            backgroundColor: "#fff",
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+        },
+        userDetails: {
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            paddingTop: 30,
+        },
+        nameText: {
+            fontSize: 28,
+            fontWeight: "600",
+            color: currentTheme.text
+        },
+        roleWrap: {
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+        },
+        roleText: {
+            fontSize: 14,
+            fontWeight: "400",
+            color: currentTheme.text
+        },
+        statusText: {
+            fontSize: 14,
+            fontWeight: "600",
+            color: currentTheme.text
+        },
+        section: {
+            padding: 20,
+        },
+        sectionTitle: {
+            fontSize: 18,
+            fontWeight: "600",
+            textAlign: "center",
+            color: currentTheme.text
+        },
+        sectionContent: {
+            color: currentTheme.text || "#333",
+            marginTop: 5,
+        },
+        portfolioImages: {
+            marginTop: 10,
+            display: "flex",
+            flexWrap: "wrap",
+            flexDirection: "row",
+            justifyContent: "space-around",
+            gap: 10,
+        },
+        portfolioImage: {
+            width: 100,
+            height: 100,
+            marginRight: 10,
+            borderRadius: 6,
+        },
+        editProfileButton: {
+            backgroundColor: "#4C0183",
+            paddingVertical: 12,
+            marginHorizontal: 20,
+            borderRadius: 12,
+            marginBottom: 15,
+            marginTop: 40,
+        },
+        buttonText: {
+            color: "#fff",
+            textAlign: "center",
+            fontSize: 16,
+        },
+        deactivateLink: {
+            textAlign: "center",
+            color: "#4C0183",
+            marginBottom: 20,
+        },
+        Profile_heading: {
+            textAlign: "center",
+            marginTop: 10,
+            fontWeight: "500",
+            fontStyle: "italic",
+            fontSize: 13,
+            color: currentTheme.text
+        },
+        about: {
+            textAlign: "center",
+            marginTop: 10,
+            fontWeight: "600",
+            fontSize: 17,
+            color: currentTheme.text
+        },
+        about_des: {
+            textAlign: "justify",
+            marginTop: 10,
+            fontWeight: "400",
+            fontSize: 13,
+            paddingHorizontal: 25,
+            color: currentTheme.text
+        },
+        levelContainer: {
+            flex: 1,
+            flexDirection: "row",
+            marginHorizontal: 40,
+            marginVertical: 12,
+            position: "relative"
+        },
+        xpRan: {
+            backgroundColor: currentTheme.background3 || "#D9D9D9",
+            flex: 1,
+            flexDirection: "row",
+            borderRadius: 20,
+            gap: 8,
+            height: 20,
+            position: "relative",
+            justifyContent: "center",
+            alignItems: "center"
+        },
+        xp: {
+            backgroundColor: "#56118F",
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 20,
+            position: "absolute",
+            left: 0,
+        },
+        xpText: {
+            fontSize: 14,
+            fontWeight: "400",
+            color: "#fff"
+        },
+        randomText: {
+            fontSize: 10,
+            fontWeight: "400",
+            color: "#A1A1A1",
+            paddingHorizontal: 5,
+            // paddingVertical: 4,
+        },
+        level: {
+            backgroundColor: "#56118F",
+            paddingHorizontal: 4,
+            paddingVertical: 12,
+            borderRadius: 50,
+            position: "absolute",
+            right: 0,
+            top: "-10"
+        },
+        levelText: {
+            fontSize: 13,
+            fontWeight: "600",
+            color: "#fff"
+        },
+    
+        line: {
+            backgroundColor: "#E2E2E2",
+            width: "90%",
+            height: 1,
+            margin: "auto",
+            marginTop: 10
+        },
+        locTitle: {
+            color: "#8F8F8F",
+            fontSize: 18,
+            fontWeight: "600",
+            marginLeft: 25,
+            marginTop: 15
+        },
+        locSubTitle: {
+            color: currentTheme.text || "#000",
+            fontSize: 15,
+            marginLeft: 25,
+        }
+    
+    });
