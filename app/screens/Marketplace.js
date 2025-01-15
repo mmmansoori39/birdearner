@@ -101,7 +101,7 @@ const MarketplaceScreen = ({ navigation }) => {
     return categorizedJobs;
   };
 
-  const fetchJobs = async (filterByLocation = true) => {
+  const fetchJobs = async (filterByLocation = false) => {
     try {
       const response = await databases.listDocuments(
         appwriteConfig.databaseId,
@@ -280,7 +280,7 @@ const MarketplaceScreen = ({ navigation }) => {
         </View>
 
 
-        <MapView
+        {/* <MapView
           style={styles.map}
           region={
             location
@@ -354,7 +354,7 @@ const MarketplaceScreen = ({ navigation }) => {
               />
             ) : null
           )}
-        </MapView>
+        </MapView> */}
 
 
         <Text style={styles.jobsAround}>Jobs around...</Text>
