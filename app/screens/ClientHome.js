@@ -339,19 +339,8 @@ const ClientHomeScreen = () => {
       style={styles.safeContainer}
       showsVerticalScrollIndicator={true}
     >
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#3b006b"]}
-            progressBackgroundColor= {currentTheme.cardBackground || "#fff"}
-          />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
+      {/* Header */}
+      <View style={styles.header}>
           <View style={styles.wraptext}>
             <Text style={styles.welcome}>Welcome</Text>
             <Text style={styles.how}>How’s the day!</Text>
@@ -373,6 +362,18 @@ const ClientHomeScreen = () => {
         </View>
 
         <View style={styles.line}></View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#3b006b"]}
+            progressBackgroundColor= {currentTheme.cardBackground || "#fff"}
+          />
+        }
+      >
+        
 
         <View style={styles.ongoingJobsContainer}>
           <Text style={styles.ongoingTitle}>Your Ongoing Jobs</Text>
@@ -608,8 +609,8 @@ const ClientHomeScreen = () => {
             <Text style={styles.whatsNewText}>No new updates</Text>
           </View>
         </View>
-
-        <View style={styles.stickyButton}>
+      </ScrollView>
+      <View style={styles.stickyButton}>
           <TouchableOpacity
             style={styles.chats}
             onPress={() => {
@@ -619,7 +620,6 @@ const ClientHomeScreen = () => {
             <FontAwesome name="comments" size={28} color="#fff" />
           </TouchableOpacity>
         </View>
-      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -631,6 +631,7 @@ const getStyles = (currentTheme) =>
       backgroundColor: currentTheme.background || "#ffffff",
       // paddingHorizontal: 20,
       paddingTop: 10,
+      // position: "relative"
     },
     header: {
       flexDirection: "row",
@@ -641,7 +642,8 @@ const getStyles = (currentTheme) =>
       padding: 4,
       paddingHorizontal: 20,
       alignItems: "center",
-      gap: 140
+      gap: 140,
+      position: "static"
     },
     gifStyle: {
       // width: 10,
@@ -846,11 +848,11 @@ const getStyles = (currentTheme) =>
       height: 60,
       borderRadius: 40,
       backgroundColor: "#3b006b",
-      // position: "absolute",
-      // bottom: 20,
-      // right: 20,
-      marginLeft: 310,
-      marginBottom: 12,
+      position: "absolute",
+      bottom: 20,
+      right: 20,
+      // marginLeft: 310,
+      // marginBottom: 12,
       shadowColor: currentTheme.shadow || "#000000",
       shadowOffset: {
         width: 0,
@@ -869,7 +871,7 @@ const getStyles = (currentTheme) =>
       alignItems: "center",
     },
     line: {
-      backgroundColor: "#5F5959",
+      backgroundColor: currentTheme.line || "#5F5959",
       width: "90%",
       height: 1,
       margin: "auto",
