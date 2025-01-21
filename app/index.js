@@ -31,6 +31,7 @@ import ChatList from "./screens/ChatList";
 import OffersScreen from "./screens/Offers";
 import DescribeRoleCom from "./screens/DescribeRoleCom";
 import ProfileScreen from "./screens/ProfileScreen";
+import ReviewsScreen from "./screens/ReviewsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -160,6 +161,7 @@ export default function App() {
                         <Stack.Screen name="Chatlist" component={ChatList} />
                         <Stack.Screen name="Offers" component={OffersScreen} />
                         <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+                        <Stack.Screen name="ReviewsScreen" component={ReviewsScreen} />
                     </>
                 ) : (
                     <>
