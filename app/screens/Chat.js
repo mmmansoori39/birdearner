@@ -17,6 +17,36 @@ import { Ionicons } from "@expo/vector-icons";
 import Toast from 'react-native-toast-message';
 import { useTheme } from "../context/ThemeContext";
 
+const WarningModal = ({ visible, onConfirm, onCancel }) => {
+  return (
+    <Modal
+      transparent={true}
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>⚠️ Warning</Text>
+          <Text style={styles.modalMessage}>
+            Choose a freelancer at your own risk. Ensure you verify their
+            credentials and previous work experience. We are not responsible
+            for any disputes or project failures.
+          </Text>
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
+              <Text style={styles.buttonText}>Proceed</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 const Chat = ({ route, navigation }) => {
   const { full_name, profileImage, projectId, receiverId } = route.params;
   const [messages, setMessages] = useState([]);
@@ -33,6 +63,7 @@ const Chat = ({ route, navigation }) => {
   const [selectedReportReason, setSelectedReportReason] = useState(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isStar, setIsStar] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const { theme, themeStyles } = useTheme();
   const currentTheme = themeStyles[theme];
@@ -41,6 +72,7 @@ const Chat = ({ route, navigation }) => {
 
 
   const [timeLeft, setTimeLeft] = useState("00D 00H 00M 00S");
+
 
   const handleError = (message) => {
     Toast.show({
@@ -254,88 +286,10 @@ const Chat = ({ route, navigation }) => {
     }
   };
 
-  const handleAccept = async () => {
-    try {
-      const jobDoc = await databases.getDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.jobCollectionID,
-        projectId
-      );
+  const handleAccept = () => {
 
-      const projectBudget = jobDoc?.budget;
+    setModalVisible(true);
 
-      const walletBalance = parseFloat(userData?.wallet || 0.0);
-
-      const requiredAmount = projectBudget + projectBudget * 0.10;
-
-      if (walletBalance < requiredAmount) {
-        const additionalAmount = projectBudget * 0.10;
-        Alert.alert(
-          "Balance is insufficient",
-          `Please add at least ₹${requiredAmount.toFixed(2)} to your wallet. This includes the project budget of ₹${projectBudget.toFixed(2)} and an additional 10% of ₹${additionalAmount.toFixed(2)}.`
-        );
-        navigation.navigate('Tabs', {
-          screen: 'Profile',
-          params: {
-            screen: 'Payment',
-          },
-        });
-        return;
-      }
-
-      await databases.updateDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.jobCollectionID,
-        projectId,
-        { assigned_freelancer: receiverId }
-      );
-
-      const freelancer = await databases.getDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        receiverId
-      );
-
-      const updatedAssignedJobs = freelancer.assigned_jobs
-        ? [...freelancer.assigned_jobs, projectId]
-        : [projectId];
-
-      await databases.updateDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.freelancerCollectionId,
-        receiverId,
-        {
-          assigned_jobs: updatedAssignedJobs,
-          totalEarnings: projectBudget
-        }
-      );
-
-      const updatedWalletBalance = walletBalance - requiredAmount;
-
-      await databases.updateDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.clientCollectionId,
-        userData?.$id,
-        { wallet: updatedWalletBalance }
-      );
-
-      await databases.createDocument(
-        appwriteConfig.databaseId,
-        appwriteConfig.paymentHistoryCollectionId,
-        'unique()',
-        {
-          userId: userData?.$id,
-          paymentId: projectId,
-          amount: requiredAmount,
-          status: 'Paid',
-          date: new Date().toISOString(),
-        }
-      );
-
-      setCharacterLimit(null);
-    } catch (err) {
-      Alert.alert("Error accepting project")
-    }
   };
 
 
@@ -372,6 +326,94 @@ const Chat = ({ route, navigation }) => {
       navigation.goBack()
     } catch (error) {
       Alert.alert("Error", "An error occurred while rejecting the job.");
+    }
+  };
+
+  const handleConfirm = async () => {
+    setModalVisible(false);
+
+    try {
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        projectId
+      );
+
+      const projectBudget = jobDoc?.budget;
+
+      const walletBalance = parseFloat(userData?.wallet || 0.0);
+
+      const requiredAmount = projectBudget;
+
+      if (walletBalance < requiredAmount) {
+        const additionalAmount = projectBudget - walletBalance;
+        Alert.alert(
+          "Balance is insufficient",
+          `Please add at least ₹${additionalAmount} to your wallet.`
+        );
+        navigation.navigate('Tabs', {
+          screen: 'Profile',
+          params: {
+            screen: 'Payment',
+          },
+        });
+        return;
+      }
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        projectId,
+        { assigned_freelancer: receiverId }
+      );
+
+      const freelancer = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        receiverId
+      );
+
+      const updatedAssignedJobs = freelancer.assigned_jobs
+        ? [...freelancer.assigned_jobs, projectId]
+        : [projectId];
+
+      const updatedAmount = freelancer?.totalEarnings + projectBudget
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.freelancerCollectionId,
+        receiverId,
+        {
+          assigned_jobs: updatedAssignedJobs,
+          totalEarnings: updatedAmount
+        }
+      );
+
+      const updatedWalletBalance = walletBalance - requiredAmount;
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.clientCollectionId,
+        userData?.$id,
+        { wallet: updatedWalletBalance }
+      );
+
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.paymentHistoryCollectionId,
+        'unique()',
+        {
+          userId: userData?.$id,
+          paymentId: projectId,
+          amount: requiredAmount,
+          status: 'Paid',
+          date: new Date().toISOString(),
+        }
+      );
+
+      setCharacterLimit(null);
+    } catch (err) {
+      Alert.alert("Error accepting project")
     }
   };
 
@@ -487,6 +529,16 @@ const Chat = ({ route, navigation }) => {
         jobId
       );
 
+      const projectBudget = jobDoc?.budget;
+
+      const walletBalance = parseFloat(userData?.wallet || 0.0);
+
+      const cutAmount = projectBudget * 0.1;
+
+      const updatedWalletBalance = walletBalance + (projectBudget - cutAmount)
+
+      const hisAmount = projectBudget - cutAmount;
+
       const freelancerDoc = await databases.getDocument(
         appwriteConfig.databaseId,
         appwriteConfig.freelancerCollectionId,
@@ -495,6 +547,9 @@ const Chat = ({ route, navigation }) => {
 
       let updatedFreelancers = jobDoc.applied_freelancer;
       let updatedCancelJob = freelancerDoc.cancelled_jobs || [];
+      let totolAmount = freelancerDoc?.totalEarnings
+
+      totolAmount = totolAmount - projectBudget
 
       updatedFreelancers = updatedFreelancers.filter(id => id !== freelancerId);
 
@@ -518,6 +573,61 @@ const Chat = ({ route, navigation }) => {
         freelancerId,
         {
           cancelled_jobs: updatedCancelJob,
+          totalEarnings: totolAmount,
+          updated_at: new Date().toISOString(),
+        }
+      );
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.clientCollectionId,
+        userData?.$id,
+        { wallet: updatedWalletBalance }
+      );
+
+      await databases.createDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.paymentHistoryCollectionId,
+        'unique()',
+        {
+          userId: userData?.$id,
+          paymentId: projectId,
+          amount: hisAmount,
+          status: 'Recieved',
+          date: new Date().toISOString(),
+        }
+      );
+
+      Alert.alert("Job Cancelled", "You have successfully cancelled your application for this job.");
+      navigation.goBack()
+    } catch (error) {
+      Alert.alert("Error", "An error occurred while cancelling the job.");
+    }
+  };
+
+  const handleMisapplyJob = async () => {
+    try {
+      const jobId = projectId;
+      const freelancerId = userData?.role === "freelancer" ? userData?.$id : receiverId;
+
+      // Fetch the job document
+      const jobDoc = await databases.getDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+
+
+      let updatedFreelancers = jobDoc.applied_freelancer;
+
+      updatedFreelancers = updatedFreelancers.filter(id => id !== freelancerId);
+
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId,
+        {
+          applied_freelancer: updatedFreelancers,
           updated_at: new Date().toISOString(),
         }
       );
@@ -552,7 +662,9 @@ const Chat = ({ route, navigation }) => {
         freelancerId
       );
 
-      let updatedwithdrawableAmount = (freelancerDoc?.withdrawableAmount + jobDoc?.budget) - penalty;
+      const additionalAmount = jobDoc?.budget * 0.10;
+
+      let updatedwithdrawableAmount = (freelancerDoc?.withdrawableAmount + jobDoc?.budget) - penalty - additionalAmount;
 
       await databases.updateDocument(
         appwriteConfig.databaseId,
@@ -626,16 +738,32 @@ const Chat = ({ route, navigation }) => {
   ];
 
   const dotMapData = userData?.role === "client" && job?.assigned_freelancer === null
-    ? ["Cancel this job", "Report this chat", isBlocked ? "Unblock" : "Block", "View Profile"]
-    : job?.assigned_freelancer === null
-      ? ["Cancel this job", "Report this chat", "View Profile"]
-      : [
+    ? ["Job Details",
+      "Report this chat",
+      isBlocked ? "Unblock" : "Block",
+      "View Profile"]
+    : userData?.role === "freelancer" && job?.assigned_freelancer === null
+      ? ["Misapply this job",
         "Job Details",
+        "Report this chat",
+        "View Profile"]
+      : userData?.role === "freelancer" ? [
+        "Job Details",
+        "Submit Solution",
         "Mark Unread",
         isStar ? "Unstar" : "Star",
         "Review",
         "View Profile",
-      ];
+      ]
+        : [
+          "Job Details",
+          "View Solution",
+          "Cancel this job",
+          "Mark Unread",
+          isStar ? "Unstar" : "Star",
+          "Review",
+          "View Profile",
+        ];
 
 
 
@@ -665,11 +793,20 @@ const Chat = ({ route, navigation }) => {
       case "View Profile":
         navigation.navigate("ProfileScreen", { receiverId });
         break;
+      case "Submit Solution":
+        navigation.navigate("SubmitSolution", { projectId });
+        break;
+      case "View Solution":
+        navigation.navigate("ViewSolutions", { projectId });
+        break;
       case "Report this chat":
         setReportModalVisible(true);
         break;
       case "Cancel this job":
         handleCancelJob()
+        break;
+      case "Misapply this job":
+        handleMisapplyJob()
         break;
       default:
         break;
@@ -744,7 +881,7 @@ const Chat = ({ route, navigation }) => {
 
       <Modal
         visible={reportModalVisible}
-        transparent={true}
+        transparent={false}
         animationType="fade"
         onRequestClose={() => setReportModalVisible(false)}
       >
@@ -779,7 +916,7 @@ const Chat = ({ route, navigation }) => {
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={ currentTheme.text || "black"} />
+          <Ionicons name="arrow-back" size={24} color={currentTheme.text || "black"} />
         </TouchableOpacity>
         <View style={styles.headerData}>
           <Text style={styles.profile}>Tap for contact details</Text>
@@ -914,7 +1051,7 @@ const Chat = ({ route, navigation }) => {
 
         </View>
         <TouchableOpacity onPress={() => setShowMenu(!showMenu)} >
-          <Ionicons name="ellipsis-horizontal" size={24} color= {currentTheme.text || "black"} />
+          <Ionicons name="ellipsis-horizontal" size={24} color={currentTheme.text || "black"} />
         </TouchableOpacity>
         {showMenu && (
           // <Modal
@@ -1007,6 +1144,12 @@ const Chat = ({ route, navigation }) => {
 
       {/* Delete Confirmation Modal */}
       {renderDeleteConfirmation()}
+
+      <WarningModal
+        visible={modalVisible}
+        onConfirm={handleConfirm}
+        onCancel={() => setModalVisible(false)}
+      />
 
       <Toast />
     </View>
@@ -1139,7 +1282,7 @@ const getStyles = (currentTheme) =>
     },
     limitvar: {
       color: currentTheme.subText || "#464646",
-       textAlign: "center", fontSize: 10, fontWeight: "400",
+      textAlign: "center", fontSize: 10, fontWeight: "400",
     },
 
     menuButton: { position: "absolute", right: 10, top: 10 },
@@ -1236,7 +1379,7 @@ const getStyles = (currentTheme) =>
     timeText: {
       fontSize: 18,
       fontWeight: "bold",
-      color: currentTheme.background|| "#FFFFFF", // White text
+      color: currentTheme.background || "#FFFFFF", // White text
     },
     unitText: {
       fontSize: 18,
@@ -1301,5 +1444,70 @@ const getStyles = (currentTheme) =>
     }
 
   });
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
+  acceptButton: {
+    backgroundColor: "#007bff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    alignItems: "center",
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#dc3545",
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#6c757d",
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  cancelButton: {
+    backgroundColor: "#6c757d",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  confirmButton: {
+    backgroundColor: "#4C0183",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+});
+
 
 export default Chat;

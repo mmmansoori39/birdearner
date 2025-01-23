@@ -11,8 +11,8 @@ import {
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { appwriteConfig, databases } from "../lib/appwrite";
-import { useNavigation } from "expo-router";
 import { useTheme } from "../context/ThemeContext";
+import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
   const { user, userData, setUserData } = useAuth();

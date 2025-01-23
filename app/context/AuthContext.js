@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }) => {
       <Modal
         visible={roleSelectionVisible}
         animationType="slide"
-        transparent={true}
+        transparent={false}
       >
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Select Role</Text>
@@ -188,15 +188,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   freelancerButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#fff",
   },
   clientButton: {
-    backgroundColor: "#28a745",
+    backgroundColor: "#fff",
   },
   buttonText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#4B0082"
   },
   loadingOverlay: {
     position: "absolute",
