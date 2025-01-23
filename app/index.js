@@ -33,6 +33,7 @@ import ProfileScreen from "./screens/ProfileScreen";
 import ReviewsScreen from "./screens/ReviewsScreen";
 import SubmitSolutionScreen from "./screens/SubmitSolutionScreen";
 import ViewSolutionsScreen from "./screens/ViewSolutionsScreen";
+import UpdateJobDetailsScreen from "./screens/UpdateJobDetailsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -164,6 +165,7 @@ export default function App() {
                         <Stack.Screen name="ReviewsScreen" component={ReviewsScreen} />
                         <Stack.Screen name="SubmitSolution" component={SubmitSolutionScreen} />
                         <Stack.Screen name="ViewSolutions" component={ViewSolutionsScreen} />
+                        <Stack.Screen name="UpdateJobDetailsScreen" component={UpdateJobDetailsScreen} />
                     </>
                 ) : (
                     <>

@@ -23,7 +23,7 @@ const Intro = () => {
     <View style={styles.container}>
       {/* Logo Image */}
       <Image
-        source={require('../assets/logo.png')}
+        source={require('../assets/logo11.png')}
         style={styles.logo}
         resizeMode="contain"
       />
@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#4B0082', // Background color
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 140,
+    height: 140,
     marginBottom: 20,
   },
   heading: {

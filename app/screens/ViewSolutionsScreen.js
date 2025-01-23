@@ -33,7 +33,6 @@ const ViewSolutionsScreen = ({ route, navigation }) => {
           Alert.alert("No Solutions", "No solutions have been submitted yet.");
         }
       } catch (err) {
-        console.error("Error fetching solutions:", err);
         Alert.alert("Error", "Failed to load solutions. Please try again.");
       } finally {
         setLoading(false);
@@ -44,7 +43,7 @@ const ViewSolutionsScreen = ({ route, navigation }) => {
   }, [projectId]);
 
   const handleDownload = (fileUri) => {
-    Alert.alert("Download", `Download functionality for ${fileUri} is not implemented yet.`);
+    Alert.alert("Download", `You can't download for now.`);
     // Here, you can implement file download functionality if needed
   };
 
@@ -56,15 +55,19 @@ const ViewSolutionsScreen = ({ route, navigation }) => {
         <Text style={styles.loadingText}>Loading...</Text>
       ) : (
         <FlatList
+        style={{marginLeft: 30}}
           data={solutions}
           keyExtractor={(item, index) => `${item}-${index}`}
+          // horizontal
+          numColumns={3} 
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.fileItem}
               onPress={() => setPreviewFile(item)}
               onLongPress={() => handleDownload(item)}
             >
-              <Text style={styles.fileText}>{item.split("/").pop()}</Text>
+              <Image source={{ uri: item }} style={styles.filePreview1} />
+              
             </TouchableOpacity>
           )}
           ListEmptyComponent={
@@ -93,7 +96,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#fff",
     paddingTop: 50,
   },
   headerText: {
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   fileItem: {
-    backgroundColor: "#f1f1f1",
+    backgroundColor: "#fff",
     padding: 10,
     borderRadius: 5,
     marginVertical: 5,
@@ -147,6 +150,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
   },
+  filePreview1:{
+    width: 80,
+    height:80,
+    borderRadius: 10
+  }
 });
 
 export default ViewSolutionsScreen;

@@ -48,8 +48,11 @@
       "react-native-video"
     ],
     "extra": {
+      "router": {
+        "origin": false
+      },
       "eas": {
-        "projectId": "3170f810-6dbf-42e0-8737-d859da7420a0"
+        "projectId": "e9ba2ff2-13a3-4a7a-b07b-e184de3972f7"
       }
     }
   }

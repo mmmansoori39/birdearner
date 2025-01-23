@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
@@ -43,6 +43,10 @@ const JobsPostedScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
+  const [selectedJob, setSelectedJob] = useState(null);
+
+
   const cachedJobs = useRef([]);
   const profilePic = userData?.profile_photo
 
@@ -93,6 +97,42 @@ const JobsPostedScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
+  const handleOptionSelect = (option) => {
+    setModalVisible(false); // Close the modal
+    if (option === 'View Details') {
+      navigation.navigate('JobDetailsChat', { projectId: selectedJob.$id });
+    } else if (option === 'Update') {
+      navigation.navigate('UpdateJobDetailsScreen', { projectId: selectedJob.$id});
+    } else if (option === 'Delete') {
+      Alert.alert(
+        'Delete Job',
+        'Are you sure you want to delete this job?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => deleteJob(selectedJob.$id),
+          },
+        ]
+      );
+    }
+  };
+
+  const deleteJob = async (jobId) => {
+    try {
+      await databases.deleteDocument(
+        appwriteConfig.databaseId,
+        appwriteConfig.jobCollectionID,
+        jobId
+      );
+      Alert.alert('Success', 'Job deleted successfully.');
+      fetchJobs(); // Refresh jobs after deletion
+    } catch (err) {
+      Alert.alert('Error', 'Failed to delete job.');
+    }
+  };
+
   const renderJobItem = ({ item }) => {
     const title = item.title;
     const freelancersId = item.applied_freelancer;
@@ -117,6 +157,15 @@ const JobsPostedScreen = ({ navigation }) => {
           <Text style={styles.jobStatus}>Status: {item.priority}</Text>
         </View>
         <View style={[styles.statusIndicator, { backgroundColor: item.color }]} />
+        <TouchableOpacity
+        style={styles.threedots}
+        onPress={() => {
+          setSelectedJob(item); // Set the selected job
+          setModalVisible(true); // Show the modal
+        }}
+      >
+        <Ionicons name="ellipsis-vertical" size={24} color={currentTheme.text} />
+      </TouchableOpacity>
       </TouchableOpacity>
     );
   };
@@ -125,7 +174,7 @@ const JobsPostedScreen = ({ navigation }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3b006b" />
-        <Text style={{color: currentTheme.subText}} >Loading jobs...</Text>
+        <Text style={{ color: currentTheme.subText }} >Loading jobs...</Text>
       </View>
     );
   }
@@ -175,6 +224,34 @@ const JobsPostedScreen = ({ navigation }) => {
           />
         }
       />
+
+      {/* Modal for Job Options */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Options for {selectedJob?.title}</Text>
+            <TouchableOpacity onPress={() => handleOptionSelect('View Details')}>
+              <Text style={styles.modalOption}>View Job Details</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleOptionSelect('Update')}>
+              <Text style={styles.modalOption}>Update Job Details</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleOptionSelect('Delete')}>
+              <Text style={[styles.modalOption, { color: 'red' }]}>Delete This Job</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalCancel}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+
     </View>
   );
 };
@@ -248,6 +325,13 @@ const getStyles = (currentTheme) =>
       borderTopRightRadius: 10,
       borderBottomRightRadius: 10,
       backgroundColor: currentTheme.accent || "#FF4500",
+      position: "relative"
+    },
+    threedots: {
+      // position: "absolute",
+      // top: 20,
+      // right: -7,
+      // zIndex: 12
     },
     loadingContainer: {
       flex: 1,
@@ -284,13 +368,44 @@ const getStyles = (currentTheme) =>
     },
     emptyMessage: {
       fontSize: 16,
-      color:  currentTheme.subText || '#6D6D6D',
+      color: currentTheme.subText || '#6D6D6D',
       textAlign: 'center',
       marginBottom: 20,
     },
     backButtonText: {
       color: currentTheme.subText || '#3b006b',
       fontSize: 16,
+    },
+
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+      width: '80%',
+      backgroundColor: currentTheme.cardBackground || '#fff',
+      borderRadius: 10,
+      padding: 20,
+      alignItems: 'center',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      color: currentTheme.text,
+    },
+    modalOption: {
+      fontSize: 16,
+      paddingVertical: 10,
+      color: currentTheme.text,
+    },
+    modalCancel: {
+      marginTop: 10,
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: currentTheme.subText,
     },
   });
 

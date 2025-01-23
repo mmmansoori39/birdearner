@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
@@ -8,16 +8,36 @@ import {
     Modal,
     Image,
     Alert,
+    Linking,
 } from "react-native";
-import { WebView } from "react-native-webview";
 import { appwriteConfig, databases, uploadFile } from "../lib/appwrite";
-import { AntDesign } from "@expo/vector-icons";
-// import { Video } from 'expo-av';
+import ImageViewer from 'react-native-image-zoom-viewer';
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 
 const SubmitSolutionScreen = ({ route, navigation }) => {
     const { projectId } = route.params;
     const [files, setFiles] = useState([]);
     const [previewFile, setPreviewFile] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [images, setImages] = useState([]);
+
+
+    useEffect(() => {
+        const getJobdetails = async () => {
+            const jobDoc = await databases.getDocument(
+                appwriteConfig.databaseId,
+                appwriteConfig.jobCollectionID,
+                projectId
+            );
+
+            setFiles(jobDoc.solutions)
+            
+        }
+
+        getJobdetails()
+    }, [])
+
 
     const handleSubmit = async () => {
         if (files.length === 0) {
@@ -35,7 +55,7 @@ const SubmitSolutionScreen = ({ route, navigation }) => {
             const uploadedURLs = await Promise.all(
                 files.map(async (uri) => {
                     try {
-                        const fileResponse = await uploadFile({ uri: uri }, "");
+                        const fileResponse = await uploadFile({ uri: uri }, "image");
                         return fileResponse;
                     } catch (err) {
                         Alert.alert("error", "Upload Error", `Failed to upload: ${err.message}`);
@@ -59,136 +79,128 @@ const SubmitSolutionScreen = ({ route, navigation }) => {
             navigation.goBack();
         } catch (err) {
             console.log(err);
-            
+
             Alert.alert("Error", "Failed to submit solutions. Please try again.");
         }
     };
 
-    const renderPreview = (file) => {
-        const fileType = file.name.split(".").pop().toLowerCase();
-        const fileUrl = file.url;
+    // const renderPreview = (file) => {
+    //     const fileType = file.name.split(".").pop().toLowerCase();
 
-        switch (fileType) {
-            case "jpg":
-            case "jpeg":
-            case "png":
-            case "gif":
-                return <Image source={{ uri: fileUrl }} style={styles.previewImage} />;
-            // case "mp4":
-            // case "mov":
-            // case "avi":
-            //     return (
-            //         <Video
-            //             source={{ uri: fileUrl }}
-            //             style={styles.previewVideo}
-            //             useNativeControls
-            //             resizeMode="contain"
-            //             shouldPlay
-            //         />
-            //     );
-            case "pdf":
-                return (
-                    <WebView
-                        source={{ uri: fileUrl }}
-                        style={styles.previewPDF}
-                        originWhitelist={["*"]}
-                    />
-                );
-            case "txt":
-                return (
-                    <WebView
-                        source={{ html: `<pre>${fileUrl}</pre>` }}
-                        style={styles.previewText}
-                    />
-                );
-            default:
-                return (
-                    <Text style={styles.unsupportedText}>
-                        Preview not available for this file type.
-                    </Text>
-                );
+    //     switch (fileType) {
+    //         case "jpg":
+    //         case "jpeg":
+    //         case "png":
+    //         case "gif":
+    //             return <Image source={{ uri: file.uri }} style={styles.previewImage} />;
+    //         case "pdf":
+    //             return (
+    //                 <TouchableOpacity
+    //                     style={styles.openFileButton}
+    //                     onPress={() => Linking.openURL(file.uri)}
+    //                 >
+    //                     <Text style={styles.openFileButtonText}>
+    //                         Open PDF in Native Viewer
+    //                     </Text>
+    //                 </TouchableOpacity>
+    //             );
+    //         default:
+    //             return (
+    //                 <Text style={styles.unsupportedText}>
+    //                     Preview not available for this file type.
+    //                 </Text>
+    //             );
+    //     }
+    // };
+
+
+    const handleUpload = async () => {
+        try {
+            // Request permission for image picker
+            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permissionResult.granted) {
+                Alert.alert("Permission Denied", "Please grant access to your photos.");
+                return;
+            }
+
+            // Launch image picker with proper configuration
+            const pickerResult = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.All,
+                quality: 1,
+                allowsMultipleSelection: true,
+            });
+
+            if (pickerResult.assets && pickerResult.assets.length > 0) {
+                const newImages = pickerResult.assets.map((asset) => asset.uri);
+                setFiles((prev) => [...prev, ...newImages]);
+            }
+        } catch (error) {
+            Alert.alert("Error", "An error occurred while uploading files.");
         }
     };
 
-    const addFile = (fileData) => {
-        const fileExists = files.some((file) => file.name === fileData.name);
-        if (fileExists) {
-            Alert.alert("Duplicate File", "This file has already been uploaded.");
-        } else {
-            setFiles([...files, fileData]);
-        }
+    const openImageModal = (imageUri) => {
+        setImages([{ url: imageUri }]);
+        setModalVisible(true);
     };
+
+    const handleDeleteFile = (index) => {
+        const updatedFiles = [...files];
+        updatedFiles.splice(index, 1);
+        setFiles(updatedFiles);
+    };
+
 
     return (
         <View style={styles.container}>
+
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <ImageViewer
+                    imageUrls={images}
+                    enableSwipeDown={true}
+                    onSwipeDown={() => setModalVisible(false)}
+                    renderIndicator={() => null}
+                    renderHeader={() => (
+                        <TouchableOpacity
+                            onPress={() => setModalVisible(false)}
+                            style={{
+                                position: "absolute",
+                                top: 30,
+                                left: 20,
+                                zIndex: 10,
+                                backgroundColor: "rgba(0,0,0,0.5)",
+                                borderRadius: 20,
+                                padding: 10,
+                            }}
+                        >
+                            <FontAwesome name="arrow-left" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    )}
+                />
+            </Modal>
             <Text style={styles.headerText}>Submit Solutions</Text>
 
-            <View style={styles.uploadContainer}>
-                <WebView
-                    style={styles.uploadButtonWebView}
-                    source={{
-                        html: `
-                        <input 
-                            type="file" 
-                            id="fileInput" 
-                            onchange="(function() {
-                                const file = this.files[0];
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                    const fileUrl = reader.result;
-                                    window.ReactNativeWebView.postMessage(JSON.stringify({
-                                        name: file.name,
-                                        url: fileUrl
-                                    }));
-                                };
-                                reader.readAsDataURL(file);
-                            }).call(this)" 
-                            style="display: none;"
-                        />
-                        <label for="fileInput" style="
-                    display: inline-block;
-                    padding: 45px 55px;
-                    background-color: #4C0183;
-                    color: white;
-                    width: 80%;
-                    border-radius: 25px;
-                    text-align: center;
-                    cursor: pointer;
-                    font-size: 48px;
-                    font-weight: bold;
-                    box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.17);
-                    margin: 10px 40px
-                ">
-                            Upload File
-                        </label> 
-                    `,
-                    }}
-                    onMessage={(event) => {
-                        try {
-                            const fileData = JSON.parse(event.nativeEvent.data);
-                            addFile(fileData);
-                        } catch (err) {
-                            console.error("Error parsing uploaded file data:", err);
-                        }
-                    }}
-                />
+            <TouchableOpacity style={styles.uploadButton} onPress={handleUpload}>
+                <Text style={styles.uploadButtonText}>Upload File</Text>
+            </TouchableOpacity>
+
+            <View style={styles.filePreviewContainer}>
+                {files ? files.map((image, index) => (
+                    <View key={index} style={styles.filePreviewWrapper1}>
+                        <TouchableOpacity onPress={() => openImageModal(image)}>
+                            <Image source={{ uri: image }} style={styles.filePreview1} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDeleteFile(index)} style={styles.deleteButton1}>
+                            <FontAwesome name="trash" size={20} color="#B64928" />
+                        </TouchableOpacity>
+                    </View>
+                )) : (<Text style={styles.emptyListText}>No files uploaded yet.</Text>)}
             </View>
 
-            <FlatList
-                data={files}
-                keyExtractor={(item, index) => `${item.name}-${index}`}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={styles.fileItem}
-                        onPress={() => setPreviewFile(item)}
-                    >
-                        <Text style={styles.fileText}>{item.name}</Text>
-                    </TouchableOpacity>
-                )}
-                ListEmptyComponent={
-                    <Text style={styles.emptyListText}>No files uploaded yet.</Text>
-                }
-            />
 
             <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
@@ -202,7 +214,7 @@ const SubmitSolutionScreen = ({ route, navigation }) => {
                 </TouchableOpacity>
             </View>
 
-            <Modal
+            {/* <Modal
                 visible={!!previewFile}
                 transparent={false}
                 animationType="slide"
@@ -217,7 +229,7 @@ const SubmitSolutionScreen = ({ route, navigation }) => {
                     </View>
                     {previewFile && renderPreview(previewFile)}
                 </View>
-            </Modal>
+            </Modal> */}
         </View>
     );
 };
@@ -236,18 +248,12 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         textAlign: "center",
     },
-    uploadContainer: {
-        flex: 0.2
-    },
-    webViewStyle: {
-        height: 80,
-        marginBottom: 20,
-        backgroundColor: "transparent",
-    },
-    uploadButtonWebView: {
-
+    uploadButton: {
+        backgroundColor: "#4B0082",
+        padding: 15,
         borderRadius: 10,
-        backgroundColor: "#fff",
+        alignItems: "center",
+        marginBottom: 20,
         shadowColor: "#000000",
         shadowOffset: {
             width: 0,
@@ -256,6 +262,11 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.17,
         shadowRadius: 3.05,
         elevation: 4,
+    },
+    uploadButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
     },
     fileItem: {
         backgroundColor: "#f1f1f1",
@@ -374,6 +385,72 @@ const styles = StyleSheet.create({
         color: "#fff",
         textAlign: "center",
     },
+
+    textArea1: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        padding: 10,
+        fontSize: 14,
+        height: 100,
+        textAlignVertical: 'top',
+        marginBottom: 15,
+    },
+    attachedFilesContainer1: {
+        marginTop: 20,
+    },
+    attachedFilesTitle1: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    filePreviewContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginTop: 10,
+        justifyContent: "center",
+        gap: 10
+    },
+    filePreviewWrapper1: {
+        position: 'relative',
+        margin: 5,
+    },
+    filePreview1: {
+        width: 140,
+        height: 140,
+        borderRadius: 5,
+    },
+    deleteButton1: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 50,
+        padding: 5,
+    },
+    uploadButton1: {
+        fontSize: 14,
+        color: '#4e2587',
+        marginTop: 10,
+        textDecorationLine: 'underline',
+    },
+    buttonContainer1: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 40,
+        marginBottom: 40,
+    },
+    buttonSave: {
+        backgroundColor: "#4e2587",
+        paddingHorizontal: 30,
+        paddingVertical: 12,
+        borderRadius: 12
+    },
+    buttoncancel: {
+        backgroundColor: "#B64928",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 12,
+    }
 });
 
 export default SubmitSolutionScreen;
