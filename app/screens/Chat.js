@@ -64,6 +64,8 @@ const Chat = ({ route, navigation }) => {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isStar, setIsStar] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [countdown, setCountdown] = useState(30);
 
   const { theme, themeStyles } = useTheme();
   const currentTheme = themeStyles[theme];
@@ -89,6 +91,27 @@ const Chat = ({ route, navigation }) => {
       text2: message,
     });
   };
+
+  const handleCancelTime = () => {
+    setCancelModalVisible(true);
+    setCountdown(30);
+  };
+
+  // Countdown timer logic
+  useEffect(() => {
+    let timer;
+    if (cancelModalVisible && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      // Automatically cancel the job when the timer ends
+      handleCancelJob()
+      setCancelModalVisible(false);
+      setCountdown(30)
+    }
+    return () => clearInterval(timer);
+  }, [cancelModalVisible, countdown]);
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -244,6 +267,11 @@ const Chat = ({ route, navigation }) => {
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
+
+  const confirmCancellation = () => {
+    handleCancelJob();
+    setCancelModalVisible(false);
+  };
 
   // Send a new message
   const sendMessage = async () => {
@@ -520,7 +548,8 @@ const Chat = ({ route, navigation }) => {
   const handleCancelJob = async () => {
     try {
       const jobId = projectId;
-      const freelancerId = userData?.role === "freelancer" ? userData?.$id : receiverId;
+      const freelancerId =
+        userData?.role === "freelancer" ? userData?.$id : receiverId;
 
       // Fetch the job document
       const jobDoc = await databases.getDocument(
@@ -529,13 +558,13 @@ const Chat = ({ route, navigation }) => {
         jobId
       );
 
-      const projectBudget = jobDoc?.budget;
+      const projectBudget = jobDoc?.budget || 0;
 
       const walletBalance = parseFloat(userData?.wallet || 0.0);
 
       const cutAmount = projectBudget * 0.1;
 
-      const updatedWalletBalance = walletBalance + (projectBudget - cutAmount)
+      const updatedWalletBalance = walletBalance + (projectBudget - cutAmount);
 
       const hisAmount = projectBudget - cutAmount;
 
@@ -545,18 +574,24 @@ const Chat = ({ route, navigation }) => {
         freelancerId
       );
 
-      let updatedFreelancers = jobDoc.applied_freelancer;
+      let updatedFreelancers = jobDoc.applied_freelancer || [];
       let updatedCancelJob = freelancerDoc.cancelled_jobs || [];
-      let totolAmount = freelancerDoc?.totalEarnings
+      let totalAmount = freelancerDoc?.totalEarnings || 0;
 
-      totolAmount = totolAmount - projectBudget
+      // Ensure total earnings don't become negative
+      totalAmount = Math.max(0, totalAmount - projectBudget);
 
-      updatedFreelancers = updatedFreelancers.filter(id => id !== freelancerId);
+      // Remove freelancer from applied freelancers
+      updatedFreelancers = updatedFreelancers.filter(
+        (id) => id !== freelancerId
+      );
 
+      // Add the job ID to cancelled jobs if not already present
       if (!updatedCancelJob.includes(jobId)) {
         updatedCancelJob.push(jobId);
       }
 
+      // Update the job document
       await databases.updateDocument(
         appwriteConfig.databaseId,
         appwriteConfig.jobCollectionID,
@@ -567,17 +602,19 @@ const Chat = ({ route, navigation }) => {
         }
       );
 
+      // Update freelancer details
       await databases.updateDocument(
         appwriteConfig.databaseId,
         appwriteConfig.freelancerCollectionId,
         freelancerId,
         {
           cancelled_jobs: updatedCancelJob,
-          totalEarnings: totolAmount,
+          totalEarnings: totalAmount,
           updated_at: new Date().toISOString(),
         }
       );
 
+      // Update the client's wallet balance
       await databases.updateDocument(
         appwriteConfig.databaseId,
         appwriteConfig.clientCollectionId,
@@ -585,25 +622,31 @@ const Chat = ({ route, navigation }) => {
         { wallet: updatedWalletBalance }
       );
 
+      // Add payment history entry
       await databases.createDocument(
         appwriteConfig.databaseId,
         appwriteConfig.paymentHistoryCollectionId,
-        'unique()',
+        "unique()",
         {
           userId: userData?.$id,
           paymentId: projectId,
           amount: hisAmount,
-          status: 'Recieved',
+          status: "Received",
           date: new Date().toISOString(),
         }
       );
 
-      Alert.alert("Job Cancelled", "You have successfully cancelled your application for this job.");
-      navigation.goBack()
+      Alert.alert(
+        "Job Cancelled",
+        "You have successfully cancelled your application for this job."
+      );
+      navigation.goBack();
     } catch (error) {
+      console.log(error);
       Alert.alert("Error", "An error occurred while cancelling the job.");
     }
   };
+
 
   const handleMisapplyJob = async () => {
     try {
@@ -766,7 +809,6 @@ const Chat = ({ route, navigation }) => {
         ];
 
 
-
   // Handle dropdown menu actions
   const handleMenuAction = (action) => {
     switch (action) {
@@ -803,7 +845,7 @@ const Chat = ({ route, navigation }) => {
         setReportModalVisible(true);
         break;
       case "Cancel this job":
-        handleCancelJob()
+        setCancelModalVisible(true);
         break;
       case "Misapply this job":
         handleMisapplyJob()
@@ -913,6 +955,39 @@ const Chat = ({ route, navigation }) => {
         </View>
       </Modal>
 
+      <Modal
+        visible={cancelModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setCancelModalVisible(false)}
+      >
+        <View style={styles.modalContainer1}>
+          <View style={styles.modalContent1}>
+            <Text style={styles.modalText1}>
+              Are you sure you want to cancel this job?
+            </Text>
+            <Text style={styles.timerText1}>{countdown} seconds remaining</Text>
+            <View style={styles.modalActions1}>
+              <TouchableOpacity
+                style={styles.confirmButton1}
+                onPress={confirmCancellation}
+              >
+                <Text style={styles.buttonText1}>Yes, Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton1}
+                onPress={() => {
+                  setCancelModalVisible(false)
+                  setCountdown(30)
+                }}
+              >
+                <Text style={styles.buttonText1}>No, Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -961,18 +1036,6 @@ const Chat = ({ route, navigation }) => {
                               <Text style={styles.conColorc}>Project Completed</Text>
                             )
                           }
-
-                          {/* {timeLeft.split(" ").map((timePart, index) => {
-                            const unit = timePart.slice(-1);
-                            const value = timePart.slice(0, -1);
-
-                            return (
-                              <View key={index} style={styles.timeBox}>
-                                <Text style={styles.timeText}>{value}</Text>
-                                <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
-                              </View>
-                            );
-                          })} */}
                         </View>
                       );
                     })()
@@ -1014,17 +1077,6 @@ const Chat = ({ route, navigation }) => {
                             <Text style={styles.conColorc}>Project Completed</Text>
                           )
                         }
-                        {/* {timeLeft.split(" ").map((timePart, index) => {
-                          const unit = timePart.slice(-1);
-                          const value = timePart.slice(0, -1);
-
-                          return (
-                            <View key={index} style={styles.timeBox}>
-                              <Text style={styles.timeText}>{value}</Text>
-                              <Text style={styles.unitText}>{unit.toUpperCase()}</Text>
-                            </View>
-                          );
-                        })} */}
                       </View>
                     );
                   })()
@@ -1441,7 +1493,57 @@ const getStyles = (currentTheme) =>
       color: "white",
       fontSize: 16,
       fontWeight: "bold"
-    }
+    },
+
+
+    modalContainer1: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent1: {
+      width: "80%",
+      backgroundColor: "white",
+      borderRadius: 10,
+      padding: 20,
+      alignItems: "center",
+    },
+    modalText1: {
+      fontSize: 18,
+      fontWeight: "bold",
+      textAlign: "center",
+      marginBottom: 15,
+    },
+    timerText1: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: "red",
+      marginBottom: 20,
+    },
+    modalActions1: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      width: "100%",
+    },
+    confirmButton1: {
+      backgroundColor: "#FF6347",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 5,
+      marginRight: 10,
+    },
+    cancelButton1: {
+      backgroundColor: "#4682B4",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 5,
+    },
+    buttonText1: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+    },
 
   });
 
