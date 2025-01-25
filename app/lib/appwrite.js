@@ -1,41 +1,97 @@
 import { ID, Account, Client, Databases, Storage } from "react-native-appwrite";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // For React Native. Use localStorage for web.
 
-export const appwriteConfig = {
-  endpoint: "https://cloud.appwrite.io/v1",
-  projectId: "671cc8860027b96d7f3d",
-  databaseId: "671cc8b0001ff969ee76",
-  freelancerCollectionId: "671cc8be00219424fe65",
-  clientCollectionId: "671cceb9002cacc68e57",
-  bucketId: "671d0e22001ee9f5b509",
-  filesBucketId: "6769c9d1002a8bd22e16",
-  roleCollectionID: "6733184d001684b89a24",
-  jobCollectionID: "673327260000fb1f8aed",
-  messageCollectionID: "674f23ba0019a93a384f",
-  paymentHistoryCollectionId: "6769187c002cd44cc156",
-  reviewCollectionId: "676922e0000cae8e2c3f",
-  withdrawalRequestsCollectionId: "677cd4020023da8571b7",
-  blockedAndStarDataCollectionId: "6784d356001feaaed104",
-  pushTokensCollectionId: "6786168c002fde3faf26",
-  userEggsCollectionId: "67863227002c9cf660b3"
-};
-export const client = new Client();
+export let appwriteConfig = {};
+const client = new Client();
+export let account;
+export let databases;
+export let storage;
 
-client
-  .setEndpoint(appwriteConfig.endpoint)
-  .setProject(appwriteConfig.projectId)
-  .setPlatform("*");
+const CONFIG_STORAGE_KEY = "appwriteConfig";
 
-export const account = new Account(client);
-export const databases = new Databases(client);
-export const storage = new Storage(client);
+async function fetchAppwriteConfigFromServer() {
+  try {
+    const response = await fetch("http://api.birdearner.com/credentials");
+    if (!response.ok) {
+      throw new Error(`Failed to fetch config: ${response.statusText}`);
+    }
 
-// Upload File
+    const data = await response.json();
+    let { expiration, ...config } = data;
+
+    // If expiration is missing, set it to 1 day from now
+    if (!expiration) {
+      const now = new Date();
+      expiration = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(); // Add 24 hours
+    }
+
+    // Save to local storage
+    await AsyncStorage.setItem(
+      CONFIG_STORAGE_KEY,
+      JSON.stringify({ ...config, expiration })
+    );
+
+    return { config, expiration };
+  } catch (error) {
+    console.error("Error fetching Appwrite configuration:", error.message);
+    throw error;
+  }
+}
+
+
+async function getAppwriteConfig() {
+  try {
+    // Check local storage for configuration
+    const storedData = await AsyncStorage.getItem(CONFIG_STORAGE_KEY);
+    if (storedData) {
+      const { expiration, ...config } = JSON.parse(storedData);
+
+      // Check if the stored configuration is still valid
+      if (new Date(expiration) > new Date()) {
+        return { config, expiration };
+      }
+    }
+
+    // If expired or not found, fetch new configuration
+    return await fetchAppwriteConfigFromServer();
+  } catch (error) {
+    console.error("Error retrieving Appwrite configuration:", error.message);
+    throw error;
+  }
+}
+
+async function initializeAppwrite() {
+  try {
+    const { config } = await getAppwriteConfig();
+    appwriteConfig = config;
+
+    // Initialize Appwrite services with the fetched configuration
+    client
+      .setEndpoint(appwriteConfig.endpoint)
+      .setProject(appwriteConfig.projectId)
+      .setPlatform("*");
+
+    account = new Account(client);
+    databases = new Databases(client);
+    storage = new Storage(client);
+  } catch (error) {
+    console.error("App initialization failed:", error.message);
+    throw error;
+  }
+}
+
+// Call the initializeAppwrite function during app initialization
+initializeAppwrite().catch((err) => {
+  console.error("Failed to initialize Appwrite:", err);
+});
+
+// Exported functions remain unchanged
 export async function uploadFile(file, type = "application/octet-stream") {
   if (!file || !file.uri) return;
 
   const fileData = {
     name: file.name || file.fileName || `file_${ID.unique()}`,
-    type: file.mimeType || file.type || "application/octet-stream", 
+    type: file.mimeType || file.type || "application/octet-stream",
     size: file.size || file.fileSize || 0,
     uri: file.uri,
   };
@@ -51,19 +107,15 @@ export async function uploadFile(file, type = "application/octet-stream") {
       fileData
     );
 
-    // Generate URL based on file type
     const fileUrl = await getFileURL(uniqueID, fileData.type);
-
     return fileUrl;
   } catch (error) {
     throw new Error(error);
   }
 }
 
-// Get File URL based on type
 export async function getFileURL(fileId, mimeType) {
   try {
-    // Use getFilePreview for images and getFileView for other types
     let fileUrl;
     if (mimeType.startsWith("image")) {
       fileUrl = storage.getFilePreview(appwriteConfig.bucketId, fileId);
@@ -72,7 +124,6 @@ export async function getFileURL(fileId, mimeType) {
     }
 
     if (!fileUrl) throw new Error("Failed to retrieve file URL");
-
     return fileUrl;
   } catch (error) {
     throw new Error(error);
