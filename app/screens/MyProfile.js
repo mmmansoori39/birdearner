@@ -12,7 +12,8 @@ import {
   Modal,
   RefreshControl,
   Alert,
-  SafeAreaView
+  SafeAreaView,
+  Animated
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 // import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,6 +30,8 @@ export default function ProfileScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [images, setImages] = useState([]);
+  const [modalVisiblet, setModalVisiblet] = useState(false);
+  const [animation] = useState(new Animated.Value(0));
   const role = userData?.role;
 
   const { theme, themeStyles } = useTheme();
@@ -45,6 +48,27 @@ export default function ProfileScreen({ navigation }) {
     month: "long",
     day: "numeric",
   });
+
+  const handleRoleSwitch = (newRoleData) => {
+    setModalVisiblet(true);
+    Animated.timing(animation, {
+      toValue: 1,
+      duration: 3000,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisiblet(false);
+      animation.setValue(0); // Reset animation
+      handleRoleSelection(newRoleData); // Perform the role switch
+    });
+  };
+
+  const transitionText =
+  userData?.role === "freelancer" ? "Switching to Client" : "Switching to Freelancer";
+
+const translateX = animation.interpolate({
+  inputRange: [0, 1],
+  outputRange: [0, 300], // Moves horizontally
+});
 
   const handleSetupRole = async (roleType) => {
     try {
@@ -327,48 +351,63 @@ export default function ProfileScreen({ navigation }) {
         <Text style={styles.locSubTitle}>{formattedDate}</Text>
 
         {userData ? (
-          <>
-            {roleOptions?.freelancerData && roleOptions?.clientData ? (
-              <>
+        <>
+          {roleOptions?.freelancerData && roleOptions?.clientData ? (
+            <TouchableOpacity
+              style={styles.editProfileButton}
+              onPress={() =>
+                handleRoleSwitch(
+                  userData.role === "freelancer"
+                    ? roleOptions.clientData
+                    : roleOptions.freelancerData
+                )
+              }
+            >
+              <Text style={styles.buttonText}>
+                Switch to {userData.role === "freelancer" ? "Client" : "Freelancer"}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              {roleOptions?.freelancerData ? (
                 <TouchableOpacity
                   style={styles.editProfileButton}
-                  onPress={() =>
-                    handleRoleSelection(
-                      userData.role === "freelancer"
-                        ? roleOptions.clientData
-                        : roleOptions.freelancerData
-                    )
-                  }
+                  onPress={() => handleSetupRole("client")}
                 >
-                  <Text style={styles.buttonText}>
-                    Switch to{" "}
-                    {userData.role === "freelancer" ? "Client" : "Freelancer"}
-                  </Text>
+                  <Text style={styles.buttonText}>Setup Client Profile</Text>
                 </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                {roleOptions?.freelancerData ? (
-                  <TouchableOpacity
-                    style={styles.editProfileButton}
-                    onPress={() => handleSetupRole("client")}
-                  >
-                    <Text style={styles.buttonText}>Setup Client Profile</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.editProfileButton}
-                    onPress={() => handleSetupRole("freelancer")}
-                  >
-                    <Text style={styles.buttonText}>Setup Freelancer Profile</Text>
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
-          </>
-        ) : (
-          <Text style={styles.infoText}>No user data available</Text>
-        )}
+              ) : (
+                <TouchableOpacity
+                  style={styles.editProfileButton}
+                  onPress={() => handleSetupRole("freelancer")}
+                >
+                  <Text style={styles.buttonText}>Setup Freelancer Profile</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <Text style={styles.infoText}>No user data available</Text>
+      )}
+
+      {/* Modal for Transition Animation */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisiblet}
+        onRequestClose={() => setModalVisiblet(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.modalContent, { transform: [{ translateX }] }]}>
+            <Image
+              source={require("../assets/logo.png")} // Replace with the path to your logo
+              style={styles.logo}
+            />
+            <Text style={styles.modalText}>{transitionText}</Text>
+          </Animated.View>
+        </View>
+      </Modal>
 
 
         {/* <TouchableOpacity
@@ -417,6 +456,34 @@ const getStyles = (currentTheme) =>
       alignItems: "center",
       backgroundColor: currentTheme.background
     },
+
+    modalContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    modalContent: {
+      width: 300,
+      height: 200,
+      backgroundColor: "#fff",
+      borderRadius: 12,
+      justifyContent: "center",
+      alignItems: "center",
+      elevation: 5,
+    },
+    logo: {
+      width: 100,
+      height: 100,
+      marginBottom: 20,
+    },
+    modalText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#4B0082",
+    },
+
+    
     tab: {
       display: "flex",
       flexDirection: "row",

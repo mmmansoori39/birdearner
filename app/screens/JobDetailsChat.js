@@ -3,7 +3,6 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, Ale
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { appwriteConfig, databases } from '../lib/appwrite';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import ImageViewer from "react-native-image-zoom-viewer";
 import { useTheme } from '../context/ThemeContext';
 

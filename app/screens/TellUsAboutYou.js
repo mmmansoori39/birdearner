@@ -19,9 +19,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
-import { useNavigation } from "expo-router";
 import Toast from 'react-native-toast-message';
 import { useAuth } from "../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
 
 const TellUsAboutYouScreen = ({ route }) => {
   const [gender, setGender] = useState("");

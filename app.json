@@ -44,14 +44,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "react-native-video"
     ],
     "extra": {
       "router": {
         "origin": false
       },
       "eas": {
-        "projectId": "9d77e96e-8d4f-40e8-9abe-2342204e5677"
+        "projectId": "e9ba2ff2-13a3-4a7a-b07b-e184de3972f7"
       }
     }
   }

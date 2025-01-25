@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -31,6 +30,10 @@ import ChatList from "./screens/ChatList";
 import OffersScreen from "./screens/Offers";
 import DescribeRoleCom from "./screens/DescribeRoleCom";
 import ProfileScreen from "./screens/ProfileScreen";
+import ReviewsScreen from "./screens/ReviewsScreen";
+import SubmitSolutionScreen from "./screens/SubmitSolutionScreen";
+import ViewSolutionsScreen from "./screens/ViewSolutionsScreen";
+import UpdateJobDetailsScreen from "./screens/UpdateJobDetailsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -39,7 +42,7 @@ const Stack = createStackNavigator();
 function MainTabs() {
     const { userData } = useAuth();
     const isClient = userData?.role === "client";
-    
+
     const tabScreens = isClient
         ? [
             { name: "Home", component: ClientHomeStack },
@@ -145,8 +148,7 @@ export default function App() {
     }
 
     return (
-        <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {isAuthenticated ? (
                     <>
                         <Stack.Screen name="Tabs" component={MainTabs} />
@@ -160,6 +162,10 @@ export default function App() {
                         <Stack.Screen name="Chatlist" component={ChatList} />
                         <Stack.Screen name="Offers" component={OffersScreen} />
                         <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+                        <Stack.Screen name="ReviewsScreen" component={ReviewsScreen} />
+                        <Stack.Screen name="SubmitSolution" component={SubmitSolutionScreen} />
+                        <Stack.Screen name="ViewSolutions" component={ViewSolutionsScreen} />
+                        <Stack.Screen name="UpdateJobDetailsScreen" component={UpdateJobDetailsScreen} />
                     </>
                 ) : (
                     <>
@@ -173,7 +179,6 @@ export default function App() {
                     </>
                 )}
             </Stack.Navigator>
-        </NavigationContainer>
     );
 }
 
@@ -194,11 +199,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     gradientBackground: {
-        width: "180%",
-        height: "135%",
+        width: "100%",
+        height: "100%",
         justifyContent: "center",
         alignItems: "center",
-        borderRadius: 50,
+        // borderRadius: 50,
     },
     customIcon: {
         width: 25,

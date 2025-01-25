@@ -29,10 +29,10 @@ export default function ProfileScreen({ route, navigation }) {
     const [images, setImages] = useState([]);
     const role = userData?.role === "client" ? "freelancer" : "client";
 
-     const { theme, themeStyles } = useTheme();
-      const currentTheme = themeStyles[theme];
-    
-      const styles = getStyles(currentTheme);
+    const { theme, themeStyles } = useTheme();
+    const currentTheme = themeStyles[theme];
+
+    const styles = getStyles(currentTheme);
 
     const createdAt = profileData?.$createdAt;
     const date = new Date(createdAt);
@@ -40,7 +40,7 @@ export default function ProfileScreen({ route, navigation }) {
         year: "numeric",
         month: "long",
         day: "numeric",
-    }); 
+    });
 
     // Fetch profile data on component mount or when receiverId changes
     const fetchProfile = useCallback(async () => {
@@ -80,6 +80,8 @@ export default function ProfileScreen({ route, navigation }) {
     };
 
     const openImageModal = (imageUri) => {
+        // console.log(imageUri);
+
         if (imageUri) {
             setImages([{ url: imageUri }]);
             setModalVisible(true);
@@ -111,7 +113,7 @@ export default function ProfileScreen({ route, navigation }) {
                     renderIndicator={() => null}
                     renderHeader={() => (
                         <TouchableOpacity
-                            onPress={() => setModalVisible(false)} 
+                            onPress={() => setModalVisible(false)}
                             style={styles.modalHeader}
                         >
                             <FontAwesome name="arrow-left" size={24} color="#fff" />
@@ -125,6 +127,19 @@ export default function ProfileScreen({ route, navigation }) {
                 style={styles.container}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#3b006b"]} progressBackgroundColor={currentTheme.cardBackground || "#fff"} />}
             >
+                <View style={styles.tab}>
+                    <TouchableOpacity style={styles.tabButtonL}>
+                        <Text style={styles.tabTextL}>Profile</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.tabButtonR}
+                        onPress={() => {
+                            navigation.navigate("ReviewsScreen", { receiverId });
+                        }}
+                    >
+                        <Text style={styles.tabTextR}>Reviews</Text>
+                    </TouchableOpacity>
+                </View>
                 <ImageBackground
                     source={profileData?.cover_photo ? { uri: profileData.cover_photo } : require("../assets/backGroungBanner.png")}
                     style={styles.backgroundImg}
@@ -244,7 +259,7 @@ const getStyles = (currentTheme) =>
     StyleSheet.create({
         container: {
             backgroundColor: currentTheme.background || "#fff",
-            // marginBottom: 10,
+            paddingTop: 35,
             paddingBottom: 80,
         },
         centered: {
@@ -269,7 +284,7 @@ const getStyles = (currentTheme) =>
             borderTopRightRadius: 80,
         },
         tabButtonR: {
-            backgroundColor: "#DADADA",
+            backgroundColor: currentTheme.background3 || "#DADADA",
             width: "50%",
             height: 40,
             display: "flex",
@@ -283,11 +298,11 @@ const getStyles = (currentTheme) =>
             fontWeight: "bold",
         },
         tabTextR: {
-            color: "#000",
+            color:currentTheme.text ||  "#000",
             fontSize: 20,
             fontWeight: "bold",
         },
-    
+
         backgroundImg: {
             width: "100%",
             height: 150,
@@ -474,7 +489,7 @@ const getStyles = (currentTheme) =>
             fontWeight: "600",
             color: "#fff"
         },
-    
+
         line: {
             backgroundColor: "#E2E2E2",
             width: "90%",
@@ -494,5 +509,5 @@ const getStyles = (currentTheme) =>
             fontSize: 15,
             marginLeft: 25,
         }
-    
+
     });

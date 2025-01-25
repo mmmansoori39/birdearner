@@ -109,7 +109,9 @@ const MarketplaceScreen = ({ navigation }) => {
       );
       const allJobs = response.documents;
 
-      const remainingJobs = allJobs.filter((job) => job?.completed_status === false);
+      const remainingJobs = allJobs.filter((job) => job?.assigned_freelancer === null);
+      console.log(remainingJobs);
+      
 
       if (filterByLocation && location) {
         const filteredJobs = remainingJobs.filter((job) => {

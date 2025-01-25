@@ -24,6 +24,7 @@ export const ThemeProvider = ({ children }) => {
             accent: "#FF4500",
             border: "#E0E0E0",
             shadow: "#000000",
+            line: "#5F5959"
         },
         dark: {
             background: "#000000",
@@ -39,6 +40,7 @@ export const ThemeProvider = ({ children }) => {
             accent: "#FFA07A",
             border: "#444444",
             shadow: "#FFFFFF",
+            line: "#4B0082"
         },
     };
 
