@@ -15,5 +15,7 @@ export default function App() {
         </AuthProvider>
       </ThemeProvider>
     </NavigationContainer>
+
+
   );
 }
