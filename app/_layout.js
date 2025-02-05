@@ -8,10 +8,10 @@ import { ThemeProvider } from './context/ThemeContext';
 export default function App() {
   return (
     <ThemeProvider>
-        <AuthProvider>
-          <Slot />
-          <StatusBar style="auto" />
-        </AuthProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <Slot />
+        <StatusBar style="auto" />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
