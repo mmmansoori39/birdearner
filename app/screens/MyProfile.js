@@ -24,7 +24,7 @@ import Toast from "react-native-toast-message";
 import { useTheme } from "../context/ThemeContext";
 
 export default function ProfileScreen({ navigation }) {
-  const { user, loading, userData, logout, setUserData, roleOptions, handleRoleSelection } = useAuth();
+  const { user, loading, userData, logout, setUserData, roleOptions, handleRoleSelection, fetchUserData } = useAuth();
   const [data, setData] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -118,6 +118,9 @@ const translateX = animation.interpolate({
   }, [refreshing])
 
   const onRefresh = () => {
+    console.log("Refreshing...");
+    fetchUserData();
+    
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);

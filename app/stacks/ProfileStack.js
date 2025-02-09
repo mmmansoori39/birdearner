@@ -18,6 +18,7 @@ import TermsAndConditionsScreen from '../screens/TermsAndConditionsScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 import BlogsAndForumScreen from '../screens/BlogsAndForumScreen';
+import PortfolioScreen from '../screens/Portfolio';
 
 
 const Stack = createStackNavigator();
@@ -116,6 +117,11 @@ export default function ProfileStack() {
       component={BlogsAndForumScreen}
       options={{headerShown: false}}
        />
+       <Stack.Screen
+       name="Portfolio"
+       component={PortfolioScreen}
+       options={{headerShown: false}}
+        />
     </Stack.Navigator>
   );
 }

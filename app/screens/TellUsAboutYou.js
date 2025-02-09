@@ -19,7 +19,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
-import Toast from 'react-native-toast-message';
+import Toast from "react-native-toast-message";
 import { useAuth } from "../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 
@@ -33,21 +33,25 @@ const TellUsAboutYouScreen = ({ route }) => {
   const [profileImage, setProfileImage] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
   const { role } = route.params;
-  const { checkUserSession } = useAuth();
-  const navigation = useNavigation()
+  const { user, checkUserSession } = useAuth();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    checkUserSession();
+  }, []);
 
   const handleError = (message) => {
     Toast.show({
-      type: 'error',
-      text1: 'Error',
+      type: "error",
+      text1: "Error",
       text2: message,
     });
   };
 
   const handleSuccess = (message) => {
     Toast.show({
-      type: 'success',
-      text1: 'Success',
+      type: "success",
+      text1: "Success",
       text2: message,
     });
   };
@@ -56,15 +60,19 @@ const TellUsAboutYouScreen = ({ route }) => {
 
   const addSocialLink = () => setSocialLinks([...socialLinks, ""]);
 
-  const handleImageUpload = async (setImage) => {
+  const handleImageUpload = async (setImage, aspectRatio = [1, 1]) => {
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        return handleError("You need to grant camera roll permissions to upload an image.");
+        return handleError(
+          "You need to grant camera roll permissions to upload an image."
+        );
       }
 
       const pickerResult = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
+        aspect: aspectRatio, // Set fixed ratio for cropping (1:1 ratio)
         quality: 1,
       });
 
@@ -76,9 +84,9 @@ const TellUsAboutYouScreen = ({ route }) => {
     }
   };
 
-  const handleProfileUpload = () => handleImageUpload(setProfileImage);
+  const handleProfileUpload = () => handleImageUpload(setProfileImage, [1, 1]);
 
-  const handleCoverUpload = () => handleImageUpload(setCoverImage);
+  const handleCoverUpload = () => handleImageUpload(setCoverImage, [3, 2]);
 
   const onChangeDob = (event, selectedDate) => {
     setShowDatePicker(false);
@@ -94,22 +102,29 @@ const TellUsAboutYouScreen = ({ route }) => {
 
       // Validate Date of Birth (must be at least 12 years ago)
       const today = new Date();
-      const minDob = new Date(today.getFullYear() - 12, today.getMonth(), today.getDate());
-      if (dob > minDob) return handleError("Date of Birth must be at least 12 years ago.");
+      const minDob = new Date(
+        today.getFullYear() - 12,
+        today.getMonth(),
+        today.getDate()
+      );
+      if (dob > minDob)
+        return handleError("Date of Birth must be at least 12 years ago.");
 
-      // Validate social media links
-      let emptySocialLinks = socialLinks.filter(link => link.trim() === "");
-      if (emptySocialLinks.length > 0) return handleError("Please fill in all social media links.");
+      const socialMediaLinks = socialLinks.filter((link) => link.trim() !== "");
 
-      for (const link of socialLinks) {
-        if (link && !isValidURL(link)) {
-          return handleError("Please enter valid URLs for your social media links.");
+      if (socialMediaLinks.length > 0) {
+        for (const link of socialMediaLinks) {
+          if (link && !isValidURL(link)) {
+            return handleError(
+              "Please enter valid URLs for your social media links."
+            );
+          }
         }
       }
 
       // Check if certifications and bio are filled for freelancers
       if (role === "freelancer") {
-        if (certifications.some(cert => !cert)) {
+        if (certifications.some((cert) => !cert)) {
           return handleError("Please fill in all certification fields.");
         }
         if (bio.length === 0) {
@@ -123,38 +138,64 @@ const TellUsAboutYouScreen = ({ route }) => {
       // Validate cover art upload
       if (!coverImage) return handleError("Cover art is required.");
 
-      const user = await account.get();
-      const userCollection = role === "client"
-        ? appwriteConfig.clientCollectionId
-        : appwriteConfig.freelancerCollectionId;
+      console.log({ user });
 
-      const response = await databases.listDocuments(appwriteConfig.databaseId, userCollection, [Query.equal("email", user.email)]);
-      if (response.documents.length === 0) return handleError("No user document found with the provided email.");
+      const userCollection =
+        role === "client"
+          ? appwriteConfig.clientCollectionId
+          : appwriteConfig.freelancerCollectionId;
+
+      const response = await databases.listDocuments(
+        appwriteConfig.databaseId,
+        userCollection,
+        [Query.equal("email", user.email)]
+      );
+      if (response.documents.length === 0)
+        return handleError("No user document found with the provided email.");
 
       const userDocumentId = response.documents[0].$id;
 
-      let profileImageFileURL = profileImage ? await uploadFile(profileImage, "image") : null;
-      let coverImageFileURL = coverImage ? await uploadFile(coverImage, "image") : null;
+      let profileImageFileURL = profileImage
+        ? await uploadFile(profileImage, "image")
+        : null;
+      let coverImageFileURL = coverImage
+        ? await uploadFile(coverImage, "image")
+        : null;
 
       const updatedDetails = {
         gender,
         dob: dob.toISOString(),
-        ...(role === "freelancer" && { certifications, profile_description: bio, social_media_links: socialLinks }),
+        ...(role === "freelancer" && {
+          certifications,
+          profile_description: bio,
+          social_media_links:
+            socialMediaLinks.length > 0 ? socialMediaLinks : [],
+        }),
         ...(profileImageFileURL && { profile_photo: profileImageFileURL }),
         ...(coverImageFileURL && { cover_photo: coverImageFileURL }),
         updated_at: new Date().toISOString(),
       };
 
-      await databases.updateDocument(appwriteConfig.databaseId, userCollection, userDocumentId, updatedDetails);
+      await databases.updateDocument(
+        appwriteConfig.databaseId,
+        userCollection,
+        userDocumentId,
+        updatedDetails
+      );
 
       handleSuccess("Your details have been updated successfully.");
       navigation.navigate("Portfolio", { role });
     } catch (error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code,
+        response: error.response,
+      });
       handleError(`Failed to update details: ${error.message}`);
     }
   };
-
-
 
   // Skip the current screen
   const skipScreen = async () => {
@@ -162,13 +203,14 @@ const TellUsAboutYouScreen = ({ route }) => {
       await checkUserSession();
       navigation.navigate("Tabs", { screen: "Home" });
     } catch (error) {
-      Alert.alert("Error during session check")
+      Alert.alert("Error during session check");
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Tell us about you</Text>
+      <Text style={styles.heading}>for role: {role}</Text>
 
       <TouchableOpacity style={styles.skipButton} onPress={skipScreen}>
         <Text style={styles.skipButtonText}>Skip</Text>
@@ -176,7 +218,7 @@ const TellUsAboutYouScreen = ({ route }) => {
 
       <View style={styles.row}>
         <View style={styles.dropdownContainer}>
-          <Text style={styles.label}>Gender</Text>
+          <Text style={styles.label}>Gender cd</Text>
           <View style={styles.dropdown}>
             <Picker selectedValue={gender} onValueChange={setGender}>
               <Picker.Item label="Select Gender" value="" />
@@ -189,10 +231,21 @@ const TellUsAboutYouScreen = ({ route }) => {
 
         <View>
           <Text style={styles.label}>Date of Birth</Text>
-          <TouchableOpacity style={styles.dob} onPress={() => setShowDatePicker(true)}>
+          <TouchableOpacity
+            style={styles.dob}
+            onPress={() => setShowDatePicker(true)}
+          >
             <Text>{dob ? dob.toDateString() : "DOB"}</Text>
           </TouchableOpacity>
-          {showDatePicker && <DateTimePicker value={dob} mode="date" display="default" onChange={onChangeDob} maximumDate={new Date()} />}
+          {showDatePicker && (
+            <DateTimePicker
+              value={dob}
+              mode="date"
+              display="default"
+              onChange={onChangeDob}
+              maximumDate={new Date()}
+            />
+          )}
         </View>
       </View>
 
@@ -205,7 +258,11 @@ const TellUsAboutYouScreen = ({ route }) => {
               style={styles.input}
               placeholder="Certification"
               value={cert}
-              onChangeText={(text) => setCertifications(certifications.map((c, i) => (i === index ? text : c)))}
+              onChangeText={(text) =>
+                setCertifications(
+                  certifications.map((c, i) => (i === index ? text : c))
+                )
+              }
             />
           ))}
           <TouchableOpacity onPress={addCertification}>
@@ -221,7 +278,11 @@ const TellUsAboutYouScreen = ({ route }) => {
             style={styles.input}
             placeholder="www.instagram.com/xyz"
             value={link}
-            onChangeText={(text) => setSocialLinks(socialLinks.map((l, i) => (i === index ? text : l)))}
+            onChangeText={(text) =>
+              setSocialLinks(
+                socialLinks.map((l, i) => (i === index ? text : l))
+              )
+            }
           />
         </View>
       ))}
@@ -245,22 +306,38 @@ const TellUsAboutYouScreen = ({ route }) => {
 
       <Text style={styles.label}>Add your profile picture</Text>
       <View style={styles.profileUploadContainer}>
-        <TouchableOpacity onPress={handleProfileUpload} style={styles.uploadButton}>
+        <TouchableOpacity
+          onPress={handleProfileUpload}
+          style={styles.uploadButton}
+        >
           <Text>Click here to upload</Text>
         </TouchableOpacity>
-        {profileImage && <Image source={{ uri: profileImage?.uri }} style={styles.profileImage} />}
+        {profileImage && (
+          <Image
+            source={{ uri: profileImage?.uri }}
+            style={styles.profileImage}
+          />
+        )}
       </View>
 
       <Text style={styles.label}>Add your cover art</Text>
       <View style={styles.profileUploadContainer}>
-        <TouchableOpacity onPress={handleCoverUpload} style={styles.uploadButton}>
+        <TouchableOpacity
+          onPress={handleCoverUpload}
+          style={styles.uploadButton}
+        >
           <Text>Click here to upload</Text>
         </TouchableOpacity>
-        {coverImage && <Image source={{ uri: coverImage?.uri }} style={styles.coverImage} />}
+        {coverImage && (
+          <Image source={{ uri: coverImage?.uri }} style={styles.coverImage} />
+        )}
       </View>
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.nextButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.nextButtonText}>Previous</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.nextButton} onPress={saveDetails}>
@@ -269,7 +346,6 @@ const TellUsAboutYouScreen = ({ route }) => {
       </View>
 
       <Toast />
-
     </ScrollView>
   );
 };
@@ -304,7 +380,7 @@ const styles = StyleSheet.create({
   charCount: {
     color: "#fff",
     marginTop: 2,
-    left: "auto"
+    left: "auto",
   },
   skipButtonText: {
     color: "#ffffff",

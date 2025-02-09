@@ -37,28 +37,39 @@ const Bird = () => {
       // Prepare chat history
       const history = messages.map((msg) => msg.text);
 
+      console.log("test 1");
+      
+
       // API request to backend
-      const response = await fetch("http://ai.birdearner.com/faq", {
+      const response = await fetch("http://api.birdearner.com/faq", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: input, history }),
       });
+      console.log("test 2");
 
       const data = await response.json();
+      console.log("test 3");
+
+      console.log(response);
+      
 
       if (response.ok) {
         const botMessage = {
           sender: "bot",
           text: data.answer || "I couldn't process that. Please try again.",
         };
+        console.log("test 4");
 
         // Add bot response to the chat
         setMessages((prevMessages) => [...prevMessages, botMessage]);
-      } else {
+      console.log("test 5");
+    } else {
         throw new Error(data.error || "An error occurred.");
       }
     } catch (error) {
       console.log("Error sending message:", error);
+      console.log("Error sending message:", JSON.stringify(error));
 
       const errorMessage = {
         sender: "bot",

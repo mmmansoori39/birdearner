@@ -45,6 +45,7 @@ const PaymentScreen = ({ navigation }) => {
       await updateWalletAmount(amount, paymentData.razorpay_payment_id);
       setPaymentSuccess(true);
     } catch (error) {
+      console.error(error);
       alert('Payment failed. Please try again.');
     }
   };

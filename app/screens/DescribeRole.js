@@ -11,9 +11,11 @@ import { account, databases, appwriteConfig } from "../lib/appwrite";
 import Toast from "react-native-toast-message";
 import { Picker } from "@react-native-picker/picker";
 import { ID, Query } from "react-native-appwrite";
+import { useAuth } from "../context/AuthContext";
 
 const DescribeRole = ({ navigation, route }) => {
-  const { fullName, email, role } = route.params;
+  const { fullName, email, role, password } = route.params;
+  const { user, login, checkUserSession } = useAuth();
   const [formData, setFormData] = useState({
     qualification: "",
     experience: "",
@@ -27,6 +29,10 @@ const DescribeRole = ({ navigation, route }) => {
     designations: [],
   });
   const [services, setServices] = useState([]);
+
+  useEffect(() => {
+    checkUserSession();
+  }, []);
 
   // List of Indian states
   const indianStates = [
@@ -73,9 +79,11 @@ const DescribeRole = ({ navigation, route }) => {
       text2: message,
     });
   };
+  console.log({ user });
 
   const handleInputChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+    addRole();
   };
 
   const addRole = () => {
@@ -93,15 +101,7 @@ const DescribeRole = ({ navigation, route }) => {
   const validateForm = () => {
     const requiredFields =
       role === "client"
-        ? [
-            "designation",
-            "heading",
-            "city",
-            "state",
-            "zipCode",
-            "country",
-            "bio",
-          ]
+        ? ["designation", "city", "state", "zipCode", "country", "bio"]
         : [
             "designations",
             "qualification",
@@ -114,6 +114,8 @@ const DescribeRole = ({ navigation, route }) => {
           ];
 
     for (const field of requiredFields) {
+      console.log(formData[field]);
+
       if (
         !formData[field] ||
         (Array.isArray(formData[field]) && !formData[field].length)
@@ -129,7 +131,7 @@ const DescribeRole = ({ navigation, route }) => {
     try {
       return await account.getSession("current");
     } catch {
-      await account.createEmailPasswordSession(email, password);
+      await login(email, password);
     }
   };
 
@@ -140,7 +142,6 @@ const DescribeRole = ({ navigation, route }) => {
 
     try {
       const user = await authenticateUser();
-      
 
       const collectionId =
         role === "client"
@@ -177,6 +178,8 @@ const DescribeRole = ({ navigation, route }) => {
               userId: user.userId,
             };
 
+      console.log({ payload });
+
       await databases.createDocument(
         appwriteConfig.databaseId,
         collectionId,
@@ -188,6 +191,7 @@ const DescribeRole = ({ navigation, route }) => {
       navigation.navigate("TellUsAboutYou", { role });
     } catch (error) {
       showToast("error", `Error saving details: ${error.message}`);
+      console.error(error);
     }
   };
 
@@ -208,11 +212,18 @@ const DescribeRole = ({ navigation, route }) => {
     fetchServices();
   }, []);
 
+  useEffect(() => {
+    if (!user) {
+      login(email, password);
+    }
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
         {role === "client" ? "Tell us about yourself" : "Describe Your Role"}
       </Text>
+      <Text style={styles.heading}>for role: {role}</Text>
 
       {/* Role/Designation */}
       <Text style={styles.label}>

@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "birdearner",
     "name": "BirdEarner",
     "slug": "birdearner",
     "newArchEnabled": true,
@@ -14,11 +15,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.birdearner",
+      "buildNumber": "1.0.0",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to your location to display maps."
-      },
-      "config": {
-        "googleMapsApiKey": "AIzaSyDk_drKIe9VsU3mi-muwYZJ5FYvHRak2fI"
       }
     },
     "android": {
@@ -32,12 +32,7 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.mmmansoori39.birdearner",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyDk_drKIe9VsU3mi-muwYZJ5FYvHRak2fI"
-        }
-      }
+      "package": "com.birdearner"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,6 +45,7 @@
       "router": {
         "origin": false
       },
+      "googleMapsApiKey": "AIzaSyDk_drKIe9VsU3mi-muwYZJ5FYvHRak2fI",
       "eas": {
         "projectId": "e9ba2ff2-13a3-4a7a-b07b-e184de3972f7"
       }

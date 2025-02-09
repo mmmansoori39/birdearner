@@ -23,7 +23,7 @@ export default function HomeStack() {
       />
       <Stack.Screen
         name="Inbox"
-        component={(props) => <Inbox {...props} parentNavigation={navigation} />}
+        component={Inbox}
         options={{
           headerShown: false,
           tabBarStyle: { display: "block" }, 

@@ -15,12 +15,12 @@ const validateEmail = (email) => {
   return re.test(String(email).toLowerCase());
 };
 
-const Signup = ({ navigation }) => {
+const Signup = ({ navigation, route }) => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const role = "client"; // Temporary hard-coded role for demonstration
+  const { role } = route.params || {};
 
   const showToast = (type, text1, text2) => {
     Toast.show({
@@ -53,16 +53,25 @@ const Signup = ({ navigation }) => {
 
       // Call Appwrite signup API
       await account.create(ID.unique(), email, password, fullName);
+      await account.createEmailPasswordSession(email, password);
       showToast("success", "Success", "User registered successfully!");
 
       // Navigate to the DescribeRole screen
-      navigation.navigate("DescribeRole", { fullName, email, role });
+      navigation.navigate("DescribeRole", { fullName, email, role, password });
     } catch (error) {
       // Detailed error handling
       if (error.code === 409) {
-        showToast("error", "Signup Failed", "User with this email already exists.");
+        showToast(
+          "error",
+          "Signup Failed",
+          "User with this email already exists."
+        );
       } else if (error.code === 400) {
-        showToast("error", "Signup Failed", "Invalid request. Check your inputs.");
+        showToast(
+          "error",
+          "Signup Failed",
+          "Invalid request. Check your inputs."
+        );
       } else if (error.message.includes("network error")) {
         showToast("error", "Signup Failed", "Network error. Please try again.");
       } else {

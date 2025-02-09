@@ -282,7 +282,7 @@ const MarketplaceScreen = ({ navigation }) => {
         </View>
 
 
-        {/* <MapView
+        <MapView
           style={styles.map}
           region={
             location
@@ -293,8 +293,8 @@ const MarketplaceScreen = ({ navigation }) => {
                 longitudeDelta: 0.05,
               }
               : {
-                latitude: 37.7749,
-                longitude: -122.4194,
+                latitude: 22.886473,
+                longitude: 79.610891,
                 latitudeDelta: 1.0,
                 longitudeDelta: 1.0,
               }
@@ -356,7 +356,7 @@ const MarketplaceScreen = ({ navigation }) => {
               />
             ) : null
           )}
-        </MapView> */}
+        </MapView>
 
 
         <Text style={styles.jobsAround}>Jobs around...</Text>

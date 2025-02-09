@@ -121,6 +121,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         handleRoleSelection,
         setUser,
+        fetchUserData,
         setUserData,
         checkUserSession
       }}

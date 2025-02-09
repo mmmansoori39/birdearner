@@ -15,7 +15,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
-  const { user, userData, setUserData } = useAuth();
+  const { user, userData, setUserData, fetchUserData } = useAuth();
   const [profilePercentage, setProfilePercentage] = useState(20);
   const [flagsCount, setFlagsCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -30,45 +30,45 @@ const HomeScreen = () => {
 
   const styles = getStyles(currentTheme);
 
-  useEffect(() => {
-    const fetchOrderRecords = async () => {
-      try {
-        const cancelledOrders = userData?.cancelled_jobs.length
-        const assignedJobs = userData?.assigned_jobs
+  const fetchOrderRecords = async () => {
+    try {
+      const cancelledOrders = userData?.cancelled_jobs.length
+      const assignedJobs = userData?.assigned_jobs
 
-        setCancelledOrdersOrders(cancelledOrders)
+      setCancelledOrdersOrders(cancelledOrders)
 
-        if (userData?.assigned_jobs.length === 0) {
-          setActiveOrders(0)
-          setCompletedOrders(0)
-        } else {
-          const jobPromises = assignedJobs.map((jobId) =>
-            databases.getDocument(appwriteConfig.databaseId, appwriteConfig.jobCollectionID, jobId)
-          );
+      if (userData?.assigned_jobs.length === 0) {
+        setActiveOrders(0)
+        setCompletedOrders(0)
+      } else {
+        const jobPromises = assignedJobs.map((jobId) =>
+          databases.getDocument(appwriteConfig.databaseId, appwriteConfig.jobCollectionID, jobId)
+        );
 
-          const jobs = await Promise.all(jobPromises);
+        const jobs = await Promise.all(jobPromises);
 
-          const completedCount = jobs.filter((job) => job?.completed_status === true).length;
-          const activeCount = jobs.filter((job) => job?.completed_status === false || job?.completed_status === null).length;
+        const completedCount = jobs.filter((job) => job?.completed_status === true).length;
+        const activeCount = jobs.filter((job) => job?.completed_status === false || job?.completed_status === null).length;
 
-          setCompletedOrders(completedCount);
-          setActiveOrders(activeCount);
+        setCompletedOrders(completedCount);
+        setActiveOrders(activeCount);
 
-          const totalOrders = completedCount + cancelledOrders;
-          const calSuccessScore = totalOrders
-            ? ((completedCount / totalOrders) * 100).toFixed(0)
-            : 0;
+        const totalOrders = completedCount + cancelledOrders;
+        const calSuccessScore = totalOrders
+          ? ((completedCount / totalOrders) * 100).toFixed(0)
+          : 0;
 
-          setSuccessScore(calSuccessScore)
-        }
-
-      } catch (error) {
-        throw error
+        setSuccessScore(calSuccessScore)
       }
-    }
 
+    } catch (error) {
+      throw error
+    }
+  }
+
+  useEffect(() => {
     fetchOrderRecords()
-  }, [refreshing])
+  }, [])
 
 
   useEffect(() => {
@@ -139,6 +139,8 @@ const HomeScreen = () => {
 
   const onRefresh = () => {
     setRefreshing(true);
+    fetchUserData();
+    fetchOrderRecords();
     setTimeout(() => {
       setRefreshing(false);
     }, 1000);

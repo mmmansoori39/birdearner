@@ -166,6 +166,7 @@ export default function App() {
                         <Stack.Screen name="SubmitSolution" component={SubmitSolutionScreen} />
                         <Stack.Screen name="ViewSolutions" component={ViewSolutionsScreen} />
                         <Stack.Screen name="UpdateJobDetailsScreen" component={UpdateJobDetailsScreen} />
+                        <Stack.Screen name="Portfolio" component={PortfolioScreen} />
                     </>
                 ) : (
                     <>
