@@ -8,8 +8,8 @@ import Chat from '../screens/Chat';
 
 const Stack = createStackNavigator();
 
-export default function MarketPlaceStack() {
-  return (
+const MarketPlaceStack = () => 
+   (
     <Stack.Navigator>
       <Stack.Screen
         name="MarketplaceScreen"
@@ -33,4 +33,5 @@ export default function MarketPlaceStack() {
       />
     </Stack.Navigator>
   );
-}
+
+  export default MarketPlaceStack;

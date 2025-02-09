@@ -23,105 +23,107 @@ import PortfolioScreen from '../screens/Portfolio';
 
 const Stack = createStackNavigator();
 
-export default function ProfileStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="MyProfile"
-        component={MyProfileScreen}
-        options={{headerShown: false}}
+const ProfileStack = () =>
+(
+  <Stack.Navigator>
+    <Stack.Screen
+      name="MyProfile"
+      component={MyProfileScreen}
+      options={{ headerShown: false }}
 
-      />
-      <Stack.Screen
-        name="MyReview"
-        component={MyReviewScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
+    />
+    <Stack.Screen
+      name="MyReview"
+      component={MyReviewScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Settings"
+      component={SettingsScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Availability"
       component={AvailabilityScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Password update"
       component={PasswordUpdateScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Email update"
       component={EmailUpdateScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Withdrawal Earning"
       component={WithdrawalEarningScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Bank Account details"
       component={BankAccountdetailsScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Notifications Setting"
       component={NotificationsSettingScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Appearance"
       component={AppearanceScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Wallet"
       component={WalletScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="WalletClient"
       component={WalletClientScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Payment"
       component={PaymentScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Security"
       component={SecurityScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="TermsAndConditions"
       component={TermsAndConditionsScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="Feedback"
       component={FeedbackScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="PrivacyPolicy"
       component={PrivacyPolicyScreen}
-      options={{headerShown: false}}
-       />
-      <Stack.Screen
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
       name="BlogsAndForum"
       component={BlogsAndForumScreen}
-      options={{headerShown: false}}
-       />
-       <Stack.Screen
-       name="Portfolio"
-       component={PortfolioScreen}
-       options={{headerShown: false}}
-        />
-    </Stack.Navigator>
-  );
-}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Portfolio"
+      component={PortfolioScreen}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
+
+
+export default ProfileStack

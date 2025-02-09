@@ -7,19 +7,20 @@ import Chat from '../screens/Chat';
 
 const Stack = createStackNavigator();
 
-export default function JobStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="JobsPostedScreen"
-        component={JobsPostedScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="AppliersScreen"
-        component={AppliersScreen}
-        options={{headerShown: false}}
-      />
-    </Stack.Navigator>
-  );
-}
+const JobStack = () =>
+(
+  <Stack.Navigator>
+    <Stack.Screen
+      name="JobsPostedScreen"
+      component={JobsPostedScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="AppliersScreen"
+      component={AppliersScreen}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
+
+export default JobStack;

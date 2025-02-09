@@ -8,8 +8,8 @@ import Inbox from "../screens/Inbox";
 
 const Stack = createStackNavigator();
 
-export default function HomeStack() {
-  return (
+const HomeStack = () =>
+  (
     <Stack.Navigator>
       <Stack.Screen
         name="HomeScreen"
@@ -36,4 +36,5 @@ export default function HomeStack() {
       />
     </Stack.Navigator>
   );
-}
+
+  export default HomeStack;
