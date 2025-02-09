@@ -9,20 +9,20 @@ import Inbox from "../screens/Inbox";
 
 const Stack = createStackNavigator();
 
-export default function ClientHomeStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="HomeScreen"
-        component={ClientHomeScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Notification"
-        component={NotificationScreen}
-        options={{ headerShown: false }}
-      />
-      {/* <Stack.Screen
+const ClientHomeStack = () =>
+(
+  <Stack.Navigator>
+    <Stack.Screen
+      name="HomeScreen"
+      component={ClientHomeScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Notification"
+      component={NotificationScreen}
+      options={{ headerShown: false }}
+    />
+    {/* <Stack.Screen
         name="ChatList"
         component={ChatList}
         options={{ headerShown: false }}
@@ -37,6 +37,8 @@ export default function ClientHomeStack() {
         component={Inbox}
         options={{ headerShown: false }}
       /> */}
-    </Stack.Navigator>
-  );
-}
+  </Stack.Navigator>
+);
+
+
+export default ClientHomeStack;

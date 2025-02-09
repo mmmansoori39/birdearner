@@ -7,24 +7,26 @@ import JobSubmissionTimmerScreen from '../screens/JobSubmissionTimmer';
 
 const Stack = createStackNavigator();
 
-export default function JobRequirementStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="JobRequirements"
-        component={JobRequirementsScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="JobDetails"
-        component={JobDetailsScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="JobSubmissionTimmer"
-        component={JobSubmissionTimmerScreen}
-        options={{headerShown: false}}
-      />
-    </Stack.Navigator>
-  );
-}
+const JobRequirementStack = () =>
+(
+  <Stack.Navigator>
+    <Stack.Screen
+      name="JobRequirements"
+      component={JobRequirementsScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="JobDetails"
+      component={JobDetailsScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="JobSubmissionTimmer"
+      component={JobSubmissionTimmerScreen}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
+
+
+export default JobRequirementStack
