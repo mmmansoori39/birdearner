@@ -7,14 +7,14 @@ import { NavigationContainer } from '@react-navigation/native';
 
 export default function App() {
   return (
-    <NavigationContainer>
+    // <NavigationContainer>
       <ThemeProvider>
         <AuthProvider>
           <Slot />
           <StatusBar style="auto" />
         </AuthProvider>
       </ThemeProvider>
-    </NavigationContainer>
+    // </NavigationContainer>
 
   );
 }

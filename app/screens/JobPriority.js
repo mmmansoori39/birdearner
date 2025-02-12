@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { PanResponder, Animated } from "react-native";
-// import Sound from 'react-native-sound';
 import { appwriteConfig, databases } from "../lib/appwrite";
 import { useTheme } from "../context/ThemeContext";
 

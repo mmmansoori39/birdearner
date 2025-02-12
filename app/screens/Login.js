@@ -110,10 +110,10 @@ const Login = ({ navigation }) => {
       ))}
 
       {/* Google Login */}
-      <TouchableOpacity style={styles.googleButton}>
+      {/* <TouchableOpacity style={styles.googleButton}>
         <FontAwesome name="google" size={24} color="black" />
         <Text style={styles.googleButtonText}>Log in with Google</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Social Icons */}
       <View style={styles.socialContainer}>
